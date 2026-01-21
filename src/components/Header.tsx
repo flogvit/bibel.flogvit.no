@@ -7,8 +7,10 @@ import styles from './Header.module.scss';
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   // Keyboard shortcut: "/" or Ctrl+K / Cmd+K to focus search
@@ -37,6 +39,18 @@ export function Header() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     const query = searchQuery.trim();
@@ -61,6 +75,11 @@ export function Header() {
     router.push(`/sok?q=${encodeURIComponent(query)}`);
     setSearchQuery('');
     setMenuOpen(false);
+  }
+
+  function handleNavClick() {
+    setMenuOpen(false);
+    setDropdownOpen(false);
   }
 
   return (
@@ -94,25 +113,62 @@ export function Header() {
         </button>
 
         <nav className={`${styles.nav} ${menuOpen ? styles.open : ''}`}>
-          <Link href="/" className={styles.navLink} onClick={() => setMenuOpen(false)}>
+          <Link href="/" className={styles.navLink} onClick={handleNavClick}>
             Bøker
           </Link>
-          <Link href="/sok" className={styles.navLink} onClick={() => setMenuOpen(false)}>
+          <Link href="/sok" className={styles.navLink} onClick={handleNavClick}>
             Søk
           </Link>
-          <Link href="/kjente-vers" className={styles.navLink} onClick={() => setMenuOpen(false)}>
-            Kjente vers
-          </Link>
-          <Link href="/favoritter" className={styles.navLink} onClick={() => setMenuOpen(false)}>
-            Favoritter
-          </Link>
-          <Link href="/leseplan" className={styles.navLink} onClick={() => setMenuOpen(false)}>
-            Leseplan
-          </Link>
-          <Link href="/temaer" className={styles.navLink} onClick={() => setMenuOpen(false)}>
-            Temaer
-          </Link>
-          <Link href="/om" className={styles.navLink} onClick={() => setMenuOpen(false)}>
+
+          {/* Dropdown for desktop */}
+          <div className={styles.dropdown} ref={dropdownRef}>
+            <button
+              className={`${styles.navLink} ${styles.dropdownTrigger}`}
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              aria-expanded={dropdownOpen}
+            >
+              Ressurser
+              <span className={`${styles.dropdownArrow} ${dropdownOpen ? styles.open : ''}`}>▾</span>
+            </button>
+            <div className={`${styles.dropdownMenu} ${dropdownOpen ? styles.open : ''}`}>
+              <Link href="/kjente-vers" className={styles.dropdownLink} onClick={handleNavClick}>
+                Kjente vers
+              </Link>
+              <Link href="/favoritter" className={styles.dropdownLink} onClick={handleNavClick}>
+                Favoritter
+              </Link>
+              <Link href="/emner" className={styles.dropdownLink} onClick={handleNavClick}>
+                Emner
+              </Link>
+              <Link href="/leseplan" className={styles.dropdownLink} onClick={handleNavClick}>
+                Leseplan
+              </Link>
+              <Link href="/temaer" className={styles.dropdownLink} onClick={handleNavClick}>
+                Temaer
+              </Link>
+            </div>
+          </div>
+
+          {/* Mobile: show dropdown items inline */}
+          <div className={styles.mobileDropdownItems}>
+            <Link href="/kjente-vers" className={styles.navLink} onClick={handleNavClick}>
+              Kjente vers
+            </Link>
+            <Link href="/favoritter" className={styles.navLink} onClick={handleNavClick}>
+              Favoritter
+            </Link>
+            <Link href="/emner" className={styles.navLink} onClick={handleNavClick}>
+              Emner
+            </Link>
+            <Link href="/leseplan" className={styles.navLink} onClick={handleNavClick}>
+              Leseplan
+            </Link>
+            <Link href="/temaer" className={styles.navLink} onClick={handleNavClick}>
+              Temaer
+            </Link>
+          </div>
+
+          <Link href="/om" className={styles.navLink} onClick={handleNavClick}>
             Om
           </Link>
         </nav>

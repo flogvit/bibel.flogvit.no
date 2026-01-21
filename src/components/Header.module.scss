@@ -70,7 +70,7 @@
 .nav {
   display: flex;
   align-items: center;
-  gap: $spacing-lg;
+  gap: $spacing-md;
 
   @include mobile {
     position: fixed;
@@ -99,6 +99,10 @@
   padding: $spacing-sm $spacing-md;
   border-radius: $radius-sm;
   transition: background $transition-fast, color $transition-fast;
+  background: none;
+  border: none;
+  font-family: $font-sans;
+  cursor: pointer;
 
   &:hover {
     background: $color-background;
@@ -110,6 +114,83 @@
     width: 100%;
     text-align: center;
     padding: $spacing-md;
+  }
+}
+
+// Dropdown styles
+.dropdown {
+  position: relative;
+
+  @include mobile {
+    display: none;
+  }
+}
+
+.dropdownTrigger {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.dropdownArrow {
+  font-size: 0.8em;
+  transition: transform $transition-fast;
+
+  &.open {
+    transform: rotate(180deg);
+  }
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 180px;
+  background: $color-paper;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  box-shadow: $shadow-md;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all $transition-fast;
+  z-index: 101;
+
+  &.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(4px);
+  }
+}
+
+.dropdownLink {
+  display: block;
+  padding: $spacing-sm $spacing-md;
+  color: $color-text;
+  text-decoration: none;
+  font-size: $font-size-sm;
+  transition: background $transition-fast, color $transition-fast;
+
+  &:first-child {
+    border-radius: $radius-sm $radius-sm 0 0;
+  }
+
+  &:last-child {
+    border-radius: 0 0 $radius-sm $radius-sm;
+  }
+
+  &:hover {
+    background: $color-background;
+    color: $color-secondary;
+  }
+}
+
+// Mobile: show items inline instead of dropdown
+.mobileDropdownItems {
+  display: none;
+
+  @include mobile {
+    display: contents;
   }
 }
 
@@ -175,6 +256,20 @@
   }
 
   .navLink {
+    color: $dark-color-text;
+
+    &:hover {
+      background: $dark-color-background;
+      color: $dark-color-secondary;
+    }
+  }
+
+  .dropdownMenu {
+    background: $dark-color-paper;
+    border-color: $dark-color-border;
+  }
+
+  .dropdownLink {
     color: $dark-color-text;
 
     &:hover {
