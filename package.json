@@ -3,17 +3,24 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3018",
     "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "start": "next start -p 3018",
+    "start:prod": "next start -p 8080",
+    "lint": "eslint",
+    "import-bible": "npx tsx scripts/import-bible.ts",
+    "deploy": "bash deploy/deploy-docker.sh",
+    "deploy:scaleway": "bash deploy/deploy-scaleway.sh"
   },
   "dependencies": {
+    "better-sqlite3": "^12.6.2",
     "next": "16.1.4",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "sass": "^1.97.2"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
