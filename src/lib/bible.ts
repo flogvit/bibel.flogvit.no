@@ -92,6 +92,62 @@ export function getOriginalLanguage(bookId: number): 'hebrew' | 'greek' {
   return bookId <= 39 ? 'hebrew' : 'greek';
 }
 
+export interface VerseRef {
+  bookId: number;
+  chapter: number;
+  verse?: number;
+  verses?: number[];
+}
+
+export interface VerseWithOriginal {
+  verse: Verse;
+  originalText: string | null;
+  originalLanguage: 'hebrew' | 'greek';
+  bookShortName: string;
+}
+
+export function getVerse(bookId: number, chapter: number, verseNum: number, bible = 'osnb1'): Verse | undefined {
+  const db = getDb();
+  return db.prepare(
+    'SELECT * FROM verses WHERE book_id = ? AND chapter = ? AND verse = ? AND bible = ?'
+  ).get(bookId, chapter, verseNum, bible) as Verse | undefined;
+}
+
+export function getOriginalVerse(bookId: number, chapter: number, verseNum: number): Verse | undefined {
+  const db = getDb();
+  const bible = bookId <= 39 ? 'tanach' : 'sblgnt';
+  return db.prepare(
+    'SELECT * FROM verses WHERE book_id = ? AND chapter = ? AND verse = ? AND bible = ?'
+  ).get(bookId, chapter, verseNum, bible) as Verse | undefined;
+}
+
+export function getVersesWithOriginal(refs: VerseRef[], bible = 'osnb1'): VerseWithOriginal[] {
+  const results: VerseWithOriginal[] = [];
+
+  for (const ref of refs) {
+    const book = getBookById(ref.bookId);
+    if (!book) continue;
+
+    const verseNums = ref.verses || (ref.verse ? [ref.verse] : []);
+
+    for (const verseNum of verseNums) {
+      const verse = getVerse(ref.bookId, ref.chapter, verseNum, bible);
+      if (!verse) continue;
+
+      const originalVerse = getOriginalVerse(ref.bookId, ref.chapter, verseNum);
+
+      results.push({
+        verse,
+        originalText: originalVerse?.text || null,
+        originalLanguage: getOriginalLanguage(ref.bookId),
+        bookShortName: book.short_name
+      });
+    }
+  }
+
+  return results;
+}
+
 export function getWord4Word(bookId: number, chapter: number, verse: number, bible = 'osnb1'): Word4Word[] {
   const db = getDb();
   return db.prepare(
@@ -220,9 +276,30 @@ export interface Theme {
   content: string;
 }
 
+// Gammelt format (txt-filer)
 export interface ThemeItem {
   title: string;
   description: string;
+}
+
+// Nytt JSON-format
+export interface ThemeVerseRef {
+  bookId: number;
+  chapter: number;
+  verse?: number;
+  verses?: number[];
+}
+
+export interface ThemeSection {
+  title: string;
+  description?: string;
+  verses: ThemeVerseRef[];
+}
+
+export interface ThemeData {
+  title: string;
+  introduction?: string;
+  sections: ThemeSection[];
 }
 
 export function getAllThemes(): Theme[] {
@@ -235,6 +312,24 @@ export function getThemeByName(name: string): Theme | undefined {
   return db.prepare('SELECT * FROM themes WHERE name = ?').get(name) as Theme | undefined;
 }
 
+export function isJsonTheme(content: string): boolean {
+  try {
+    const parsed = JSON.parse(content);
+    return parsed && typeof parsed === 'object' && 'sections' in parsed;
+  } catch {
+    return false;
+  }
+}
+
+export function parseThemeJson(content: string): ThemeData | null {
+  try {
+    return JSON.parse(content) as ThemeData;
+  } catch {
+    return null;
+  }
+}
+
+// Beholdes for bakoverkompatibilitet med txt-filer
 export function parseThemeContent(content: string): ThemeItem[] {
   return content.split('\n')
     .filter(line => line.includes(':'))
