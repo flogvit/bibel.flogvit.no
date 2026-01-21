@@ -1,0 +1,174 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+
+  @include mobile {
+    font-size: 15px;
+  }
+}
+
+body {
+  font-family: $font-sans;
+  font-size: $font-size-base;
+  line-height: $line-height-base;
+  color: $color-text;
+  background: $color-background;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Headings
+h1, h2, h3, h4, h5, h6 {
+  font-family: $font-serif;
+  font-weight: 400;
+  line-height: $line-height-heading;
+  color: $color-primary;
+}
+
+h1 {
+  font-size: $font-size-3xl;
+
+  @include mobile {
+    font-size: $font-size-2xl;
+  }
+}
+
+h2 {
+  font-size: $font-size-2xl;
+
+  @include mobile {
+    font-size: $font-size-xl;
+  }
+}
+
+h3 {
+  font-size: $font-size-xl;
+}
+
+// Links
+a {
+  color: $color-secondary;
+  text-decoration: none;
+  transition: color $transition-fast;
+
+  &:hover {
+    color: $color-primary;
+  }
+}
+
+// Images
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+// Lists
+ul, ol {
+  padding-left: $spacing-lg;
+}
+
+// Paragraphs
+p {
+  margin-bottom: $spacing-md;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+// Main container
+.container {
+  @include container;
+}
+
+.reading-container {
+  @include reading-container;
+}
+
+// Page wrapper
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main {
+  flex: 1;
+  padding: $spacing-2xl 0;
+}
+
+// Utility classes
+.text-center {
+  text-align: center;
+}
+
+.text-muted {
+  color: $color-text-muted;
+}
+
+.mt-1 { margin-top: $spacing-md; }
+.mt-2 { margin-top: $spacing-lg; }
+.mt-3 { margin-top: $spacing-xl; }
+.mb-1 { margin-bottom: $spacing-md; }
+.mb-2 { margin-bottom: $spacing-lg; }
+.mb-3 { margin-bottom: $spacing-xl; }
+
+// Verse highlight animation
+.verse-highlight {
+  animation: verseHighlight 2s ease-out;
+}
+
+@keyframes verseHighlight {
+  0% {
+    background-color: $color-verse-highlight;
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+// Font size variations
+html[data-font-size="small"] {
+  font-size: 14px;
+}
+
+html[data-font-size="medium"] {
+  font-size: 16px;
+}
+
+html[data-font-size="large"] {
+  font-size: 18px;
+}
+
+// Dark mode
+html.dark {
+  body {
+    background: $dark-color-background;
+    color: $dark-color-text;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    color: $dark-color-primary;
+  }
+
+  a {
+    color: $dark-color-secondary;
+
+    &:hover {
+      color: $dark-color-primary;
+    }
+  }
+
+  .text-muted {
+    color: $dark-color-text-muted;
+  }
+}
