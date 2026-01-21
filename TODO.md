@@ -34,6 +34,12 @@
 - [x] Bønn basert på vers (verse_prayer)
 - [x] Andakt/preken for vers (verse_sermon)
 - [x] Tematiske oversikter (themes)
+  - [x] Tema-oversiktside med søk/filter (/temaer)
+  - [x] ThemeList-komponent med ranked søk
+  - [x] Støtte for nytt JSON-format med seksjoner og vers-referanser
+  - [x] ThemeVerseDisplay-komponent for visning av bibelvers i tema
+  - [x] API-endepunkt for å hente flere vers (/api/verses)
+  - [x] Lenker til vers i kontekst ("Vis i kontekst")
 
 ## Fase 5: Grunntekst ✓
 - [x] Bestemme visningsformat (under vers / parallell / kun popup)
@@ -73,14 +79,14 @@
 - [ ] Bokmerkefunksjon
 - [ ] Lesehistorikk
 - [ ] Notater på vers
-- [ ] Emnetagging av vers
-  - [ ] Knytte ett eller flere emner til et vers
-  - [ ] Autocomplete-søk i egne tidligere emner
-  - [ ] Opprette nye emner ved å skrive inn
-  - [ ] Emneside (/emner) med oversikt over alle dine emner
-  - [ ] Klikk på emne → vis alle vers tagget med emnet
-  - [ ] Redigere/slette emner
-  - [ ] localStorage-versjon (uten innlogging)
+- [x] Emnetagging av vers (localStorage-versjon)
+  - [x] Knytte ett eller flere emner til et vers
+  - [x] Autocomplete-søk i egne tidligere emner
+  - [x] Opprette nye emner ved å skrive inn
+  - [x] Emneside (/emner) med oversikt over alle dine emner
+  - [x] Klikk på emne → vis alle vers tagget med emnet
+  - [x] Redigere/slette emner
+  - [x] localStorage-versjon (uten innlogging)
   - [ ] Database-versjon (med innlogging, users.db)
 
 ## Fase 10: Produksjon
