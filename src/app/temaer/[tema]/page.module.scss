@@ -1,0 +1,67 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.main {
+  padding: $spacing-2xl 0;
+}
+
+.backLink {
+  display: inline-block;
+  margin-bottom: $spacing-xl;
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+
+  &:hover {
+    color: $color-primary;
+  }
+}
+
+.themeItems {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+  margin-top: $spacing-xl;
+}
+
+.themeItem {
+  @include card;
+  padding: $spacing-lg;
+
+  h2 {
+    color: $color-secondary;
+    font-size: $font-size-lg;
+    margin-bottom: $spacing-sm;
+    font-family: $font-sans;
+    font-weight: 600;
+  }
+
+  p {
+    color: $color-text;
+    line-height: $line-height-base;
+    margin: 0;
+  }
+}
+
+// Dark mode
+:global(html.dark) {
+  .backLink {
+    color: $dark-color-text-muted;
+
+    &:hover {
+      color: $dark-color-secondary;
+    }
+  }
+
+  .themeItem {
+    background: $dark-color-paper;
+    border-color: $dark-color-border;
+
+    h2 {
+      color: $dark-color-secondary;
+    }
+
+    p {
+      color: $dark-color-text;
+    }
+  }
+}

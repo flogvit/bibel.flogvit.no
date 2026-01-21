@@ -1,0 +1,54 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.main {
+  padding: $spacing-2xl 0;
+}
+
+.backLink {
+  display: inline-block;
+  margin-bottom: $spacing-xl;
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+
+  &:hover {
+    color: $color-primary;
+  }
+}
+
+.section {
+  margin-bottom: $spacing-2xl;
+
+  h2 {
+    margin-bottom: $spacing-md;
+    padding-bottom: $spacing-sm;
+    border-bottom: 1px solid $color-border;
+  }
+
+  h3 {
+    font-size: $font-size-lg;
+    margin-top: $spacing-lg;
+    margin-bottom: $spacing-sm;
+  }
+
+  p {
+    margin-bottom: $spacing-md;
+  }
+
+  a {
+    color: $color-secondary;
+    text-decoration: underline;
+
+    &:hover {
+      color: $color-primary;
+    }
+  }
+
+  ul {
+    margin-top: $spacing-sm;
+
+    li {
+      margin-bottom: $spacing-sm;
+    }
+  }
+}

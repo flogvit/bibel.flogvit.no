@@ -1,0 +1,154 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.main {
+  padding: $spacing-2xl 0;
+
+  h1 {
+    margin-bottom: $spacing-xl;
+  }
+}
+
+.searchForm {
+  display: flex;
+  gap: $spacing-md;
+  margin-bottom: $spacing-xl;
+
+  @include mobile {
+    flex-direction: column;
+  }
+}
+
+.searchInput {
+  flex: 1;
+  padding: $spacing-md $spacing-lg;
+  font-size: $font-size-lg;
+  border: 2px solid $color-border;
+  border-radius: $radius-md;
+  font-family: $font-sans;
+  transition: border-color $transition-fast;
+
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+  }
+}
+
+.searchButton {
+  @include button-primary;
+  padding: $spacing-md $spacing-xl;
+  font-size: $font-size-base;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.resultCount {
+  color: $color-text-muted;
+  margin-bottom: $spacing-lg;
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.result {
+  @include card;
+  padding: $spacing-lg;
+  text-decoration: none;
+  display: block;
+
+  &:hover {
+    box-shadow: $shadow-md;
+  }
+}
+
+.reference {
+  font-weight: 600;
+  color: $color-secondary;
+  display: block;
+  margin-bottom: $spacing-sm;
+}
+
+.text {
+  color: $color-text;
+  line-height: $line-height-base;
+  margin: 0;
+}
+
+.highlight {
+  background: $color-verse-highlight;
+  color: inherit;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.loadMoreButton {
+  @include button-primary;
+  display: block;
+  margin: $spacing-xl auto 0;
+  padding: $spacing-md $spacing-2xl;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// Dark mode
+:global(html.dark) {
+  .searchInput {
+    background: $dark-color-paper;
+    border-color: $dark-color-border;
+    color: $dark-color-text;
+
+    &:focus {
+      border-color: $dark-color-secondary;
+    }
+  }
+
+  .searchButton {
+    background: $dark-color-secondary;
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+
+  .resultCount {
+    color: $dark-color-text-muted;
+  }
+
+  .result {
+    background: $dark-color-paper;
+    border-color: $dark-color-border;
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  .reference {
+    color: $dark-color-secondary;
+  }
+
+  .text {
+    color: $dark-color-text;
+  }
+
+  .highlight {
+    background: $dark-color-verse-highlight;
+  }
+
+  .loadMoreButton {
+    background: $dark-color-secondary;
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+}

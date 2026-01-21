@@ -1,0 +1,85 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.main {
+  padding: $spacing-2xl 0;
+}
+
+.backLink {
+  display: inline-block;
+  margin-bottom: $spacing-xl;
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+
+  &:hover {
+    color: $color-primary;
+  }
+}
+
+.noThemes {
+  color: $color-text-muted;
+  font-style: italic;
+}
+
+.themeList {
+  display: grid;
+  gap: $spacing-lg;
+  margin-top: $spacing-xl;
+}
+
+.themeCard {
+  @include card;
+  padding: $spacing-lg;
+  text-decoration: none;
+  display: block;
+  transition: box-shadow $transition-fast, transform $transition-fast;
+
+  &:hover {
+    box-shadow: $shadow-md;
+    transform: translateY(-2px);
+  }
+
+  h2 {
+    color: $color-primary;
+    margin-bottom: $spacing-sm;
+    font-size: $font-size-xl;
+  }
+}
+
+.themePreview {
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+  margin: 0;
+}
+
+// Dark mode
+:global(html.dark) {
+  .backLink {
+    color: $dark-color-text-muted;
+
+    &:hover {
+      color: $dark-color-secondary;
+    }
+  }
+
+  .noThemes {
+    color: $dark-color-text-muted;
+  }
+
+  .themeCard {
+    background: $dark-color-paper;
+    border-color: $dark-color-border;
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    h2 {
+      color: $dark-color-primary;
+    }
+  }
+
+  .themePreview {
+    color: $dark-color-text-muted;
+  }
+}
