@@ -134,7 +134,7 @@
   margin: $spacing-md 0 $spacing-md $spacing-lg;
   background: $color-background;
   border-radius: $radius-md;
-  overflow: hidden;
+  overflow: visible;
   animation: fadeIn 0.2s ease;
 }
 
@@ -348,6 +348,132 @@
   padding-left: $spacing-md;
 }
 
+// Topics tab
+.topicsContent {
+  border-left: 3px solid $color-primary;
+  padding-left: $spacing-md;
+
+  p {
+    line-height: $line-height-base;
+    color: $color-text;
+    margin: 0 0 $spacing-md 0;
+  }
+}
+
+.topicsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+}
+
+.topicTag {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+  padding: $spacing-xs $spacing-sm;
+  background: $color-paper;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  font-size: $font-size-sm;
+  color: $color-text;
+  transition: all $transition-fast;
+
+  &:hover {
+    border-color: $color-secondary;
+  }
+}
+
+.topicRemove {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: $spacing-xs;
+  font-size: 1.1em;
+  color: $color-text-muted;
+  cursor: pointer;
+  line-height: 1;
+  transition: color $transition-fast;
+
+  &:hover {
+    color: $color-text;
+  }
+}
+
+.topicInputWrapper {
+  position: relative;
+  margin-top: $spacing-sm;
+}
+
+.topicInput {
+  width: 100%;
+  padding: $spacing-sm $spacing-md;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  font-family: $font-sans;
+  font-size: $font-size-base;
+  background: $color-paper;
+  transition: border-color $transition-fast;
+
+  &:focus {
+    outline: none;
+    border-color: $color-secondary;
+  }
+
+  &::placeholder {
+    color: $color-text-muted;
+  }
+}
+
+.topicSuggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: $color-paper;
+  border: 1px solid $color-border;
+  border-top: none;
+  border-radius: 0 0 $radius-sm $radius-sm;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.topicSuggestion {
+  padding: $spacing-sm $spacing-md;
+  cursor: pointer;
+  font-size: $font-size-sm;
+  transition: background $transition-fast;
+
+  &:hover,
+  &.selected {
+    background: $color-background;
+  }
+}
+
+.topicNewLabel {
+  color: $color-secondary;
+  font-size: 0.75rem;
+  margin-left: $spacing-xs;
+}
+
+.noTopics {
+  color: $color-text-muted;
+  font-style: italic;
+  margin-bottom: $spacing-md;
+}
+
+.topicIndicator {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: $color-primary;
+  margin-right: 2px;
+  vertical-align: middle;
+}
+
 // Dark mode
 :global(html.dark) {
   .verseNumber {
@@ -503,5 +629,57 @@
     p {
       color: $dark-color-text;
     }
+  }
+
+  .topicsContent {
+    border-left-color: $dark-color-primary;
+
+    p {
+      color: $dark-color-text;
+    }
+  }
+
+  .topicTag {
+    background: $dark-color-paper;
+    border-color: $dark-color-border;
+    color: $dark-color-text;
+
+    &:hover {
+      border-color: $dark-color-secondary;
+    }
+  }
+
+  .topicRemove {
+    color: $dark-color-text-muted;
+
+    &:hover {
+      color: $dark-color-text;
+    }
+  }
+
+  .topicInput {
+    background: $dark-color-paper;
+    border-color: $dark-color-border;
+    color: $dark-color-text;
+
+    &:focus {
+      border-color: $dark-color-secondary;
+    }
+  }
+
+  .topicSuggestions {
+    background: $dark-color-paper;
+    border-color: $dark-color-border;
+  }
+
+  .topicSuggestion {
+    &:hover,
+    &.selected {
+      background: $dark-color-background;
+    }
+  }
+
+  .topicIndicator {
+    background: $dark-color-primary;
   }
 }

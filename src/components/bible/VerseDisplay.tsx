@@ -7,6 +7,7 @@ import type { Verse } from '@/lib/bible';
 import { toUrlSlug } from '@/lib/url-utils';
 import { useSettings } from '@/components/SettingsContext';
 import { useFavorites } from '@/components/FavoritesContext';
+import { useTopics, Topic } from '@/components/TopicsContext';
 
 interface VerseDisplayProps {
   verse: Verse;
@@ -37,15 +38,18 @@ interface VerseExtras {
   sermon: string | null;
 }
 
-type TabType = 'original' | 'references' | 'prayer' | 'sermon';
+type TabType = 'original' | 'references' | 'prayer' | 'sermon' | 'topics';
 
 export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: VerseDisplayProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { settings } = useSettings();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { topics, addTopic, addTopicToVerse, removeTopicFromVerse, getTopicsForVerse, searchTopics } = useTopics();
   const [expanded, setExpanded] = useState(false);
   const favorited = isFavorite(bookId, verse.chapter, verse.verse);
+  const verseTopics = getTopicsForVerse(bookId, verse.chapter, verse.verse);
+  const hasTopics = verseTopics.length > 0;
 
   // Check which bible version is being used
   const currentBible = searchParams.get('bible') || 'osnb1';
@@ -59,6 +63,9 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
   const [verseExtras, setVerseExtras] = useState<VerseExtras | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('original');
   const [loading, setLoading] = useState(false);
+  const [topicInput, setTopicInput] = useState('');
+  const [showTopicSuggestions, setShowTopicSuggestions] = useState(false);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
 
   // Auto-expand if URL hash matches this verse with -open suffix
   useEffect(() => {
@@ -177,6 +184,40 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
     toggleFavorite({ bookId, chapter: verse.chapter, verse: verse.verse });
   }
 
+  function getTopicSuggestions(): Topic[] {
+    // Get existing topic IDs for this verse to filter them out
+    const existingTopicIds = verseTopics.map(t => t.id);
+
+    // If no input, show all available topics (not already on this verse)
+    if (!topicInput.trim()) {
+      return topics
+        .filter(t => !existingTopicIds.includes(t.id))
+        .slice(0, 8);
+    }
+
+    // Otherwise filter by search
+    return searchTopics(topicInput)
+      .filter(t => !existingTopicIds.includes(t.id))
+      .slice(0, 8);
+  }
+
+  function handleAddTopic(existingTopic: Topic | null) {
+    const trimmedInput = topicInput.trim();
+    if (!trimmedInput && !existingTopic) return;
+
+    let topic: Topic;
+    if (existingTopic) {
+      topic = existingTopic;
+    } else {
+      topic = addTopic(trimmedInput);
+    }
+
+    addTopicToVerse(bookId, verse.chapter, verse.verse, topic.id);
+    setTopicInput('');
+    setShowTopicSuggestions(false);
+    setSelectedSuggestionIndex(0);
+  }
+
   return (
     <div id={`v${verse.verse}`} className={styles.verse}>
       <span
@@ -185,6 +226,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
         title="Klikk for å se original tekst og referanser"
       >
         {favorited && <span className={styles.favoriteIndicator}>★</span>}
+        {hasTopics && <span className={styles.topicIndicator} title={`${verseTopics.length} emne${verseTopics.length > 1 ? 'r' : ''}`} />}
         {verse.verse}
       </span>
 
@@ -282,6 +324,12 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
                     Andakt
                   </button>
                 )}
+                <button
+                  className={`${styles.tab} ${activeTab === 'topics' ? styles.active : ''}`}
+                  onClick={() => setActiveTab('topics')}
+                >
+                  Emner {verseTopics.length > 0 && `(${verseTopics.length})`}
+                </button>
               </div>
 
               <div className={styles.tabContent}>
@@ -389,6 +437,86 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
                 {activeTab === 'sermon' && verseExtras?.sermon && (
                   <div className={styles.sermonContent}>
                     <p>{verseExtras.sermon}</p>
+                  </div>
+                )}
+
+                {activeTab === 'topics' && (
+                  <div className={styles.topicsContent}>
+                    {verseTopics.length > 0 ? (
+                      <div className={styles.topicsList}>
+                        {verseTopics.map(topic => (
+                          <span key={topic.id} className={styles.topicTag}>
+                            {topic.name}
+                            <button
+                              className={styles.topicRemove}
+                              onClick={() => removeTopicFromVerse(bookId, verse.chapter, verse.verse, topic.id)}
+                              title="Fjern emne"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className={styles.noTopics}>Ingen emner lagt til ennå</p>
+                    )}
+
+                    <div className={styles.topicInputWrapper}>
+                      <input
+                        type="text"
+                        className={styles.topicInput}
+                        placeholder="Legg til emne..."
+                        value={topicInput}
+                        onChange={(e) => {
+                          setTopicInput(e.target.value);
+                          setShowTopicSuggestions(true);
+                          setSelectedSuggestionIndex(0);
+                        }}
+                        onFocus={() => setShowTopicSuggestions(true)}
+                        onBlur={() => setTimeout(() => setShowTopicSuggestions(false), 150)}
+                        onKeyDown={(e) => {
+                          const suggestions = getTopicSuggestions();
+                          if (e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            setSelectedSuggestionIndex(prev => Math.min(prev + 1, suggestions.length - 1));
+                          } else if (e.key === 'ArrowUp') {
+                            e.preventDefault();
+                            setSelectedSuggestionIndex(prev => Math.max(prev - 1, 0));
+                          } else if (e.key === 'Enter' && topicInput.trim()) {
+                            e.preventDefault();
+                            if (suggestions.length > 0 && selectedSuggestionIndex < suggestions.length) {
+                              handleAddTopic(suggestions[selectedSuggestionIndex]);
+                            } else {
+                              handleAddTopic(null);
+                            }
+                          } else if (e.key === 'Escape') {
+                            setShowTopicSuggestions(false);
+                          }
+                        }}
+                      />
+                      {showTopicSuggestions && (getTopicSuggestions().length > 0 || topicInput.trim()) && (
+                        <div className={styles.topicSuggestions}>
+                          {getTopicSuggestions().map((topic, index) => (
+                            <div
+                              key={topic.id}
+                              className={`${styles.topicSuggestion} ${index === selectedSuggestionIndex ? styles.selected : ''}`}
+                              onClick={() => handleAddTopic(topic)}
+                            >
+                              {topic.name}
+                            </div>
+                          ))}
+                          {topicInput.trim() && !topics.some(t => t.name.toLowerCase() === topicInput.trim().toLowerCase()) && (
+                            <div
+                              className={`${styles.topicSuggestion} ${getTopicSuggestions().length === selectedSuggestionIndex ? styles.selected : ''}`}
+                              onClick={() => handleAddTopic(null)}
+                            >
+                              {topicInput.trim()}
+                              <span className={styles.topicNewLabel}>(nytt emne)</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
