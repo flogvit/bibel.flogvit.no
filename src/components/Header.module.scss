@@ -1,0 +1,213 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.header {
+  background: $color-paper;
+  border-bottom: 1px solid $color-border;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.container {
+  @include container;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+}
+
+.logo {
+  font-family: $font-serif;
+  font-size: $font-size-xl;
+  color: $color-primary;
+  text-decoration: none;
+
+  &:hover {
+    color: $color-secondary;
+  }
+}
+
+.searchForm {
+  display: flex;
+  flex: 1;
+  max-width: 300px;
+  margin: 0 $spacing-lg;
+
+  @include mobile {
+    display: none;
+  }
+}
+
+.searchInput {
+  flex: 1;
+  padding: $spacing-sm $spacing-md;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm 0 0 $radius-sm;
+  font-family: $font-sans;
+  font-size: $font-size-sm;
+
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+  }
+}
+
+.searchButton {
+  padding: $spacing-sm $spacing-md;
+  background: $color-background;
+  border: 1px solid $color-border;
+  border-left: none;
+  border-radius: 0 $radius-sm $radius-sm 0;
+  cursor: pointer;
+  transition: background $transition-fast;
+
+  &:hover {
+    background: $color-border;
+  }
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: $spacing-lg;
+
+  @include mobile {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: $color-paper;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding-top: $spacing-xl;
+    gap: $spacing-md;
+    transform: translateX(100%);
+    transition: transform $transition-base;
+
+    &.open {
+      transform: translateX(0);
+    }
+  }
+}
+
+.navLink {
+  font-size: $font-size-base;
+  color: $color-text;
+  text-decoration: none;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-sm;
+  transition: background $transition-fast, color $transition-fast;
+
+  &:hover {
+    background: $color-background;
+    color: $color-secondary;
+  }
+
+  @include mobile {
+    font-size: $font-size-lg;
+    width: 100%;
+    text-align: center;
+    padding: $spacing-md;
+  }
+}
+
+.menuButton {
+  display: none;
+  background: none;
+  border: none;
+  padding: $spacing-sm;
+  cursor: pointer;
+
+  @include mobile {
+    display: block;
+  }
+}
+
+.hamburger {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: $color-primary;
+  position: relative;
+  transition: background $transition-fast;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 2px;
+    background: $color-primary;
+    left: 0;
+    transition: transform $transition-fast;
+  }
+
+  &::before {
+    top: -7px;
+  }
+
+  &::after {
+    bottom: -7px;
+  }
+}
+
+// Dark mode
+:global(html.dark) {
+  .header {
+    background: $dark-color-paper;
+    border-bottom-color: $dark-color-border;
+  }
+
+  .logo {
+    color: $dark-color-primary;
+
+    &:hover {
+      color: $dark-color-secondary;
+    }
+  }
+
+  .nav {
+    @include mobile {
+      background: $dark-color-paper;
+    }
+  }
+
+  .navLink {
+    color: $dark-color-text;
+
+    &:hover {
+      background: $dark-color-background;
+      color: $dark-color-secondary;
+    }
+  }
+
+  .hamburger {
+    background: $dark-color-primary;
+
+    &::before,
+    &::after {
+      background: $dark-color-primary;
+    }
+  }
+
+  .searchInput {
+    background: $dark-color-background;
+    border-color: $dark-color-border;
+    color: $dark-color-text;
+
+    &:focus {
+      border-color: $dark-color-secondary;
+    }
+  }
+
+  .searchButton {
+    background: $dark-color-background;
+    border-color: $dark-color-border;
+
+    &:hover {
+      background: $dark-color-border;
+    }
+  }
+}
