@@ -375,10 +375,10 @@ const insertBookSummary = db.prepare(`
 
 const bookSummariesPath = path.join(GENERATE_PATH, 'book_summaries', 'nb');
 if (fs.existsSync(bookSummariesPath)) {
-  const files = fs.readdirSync(bookSummariesPath).filter(f => f.endsWith('.txt'));
+  const files = fs.readdirSync(bookSummariesPath).filter(f => f.endsWith('.md'));
 
   for (const file of files) {
-    const bookId = parseInt(file.replace('.txt', ''));
+    const bookId = parseInt(file.replace('.md', ''));
     if (isNaN(bookId)) continue;
 
     const summary = fs.readFileSync(path.join(bookSummariesPath, file), 'utf-8');
@@ -394,10 +394,10 @@ const insertChapterSummary = db.prepare(`
 
 const chapterSummariesPath = path.join(GENERATE_PATH, 'chapter_summaries', 'nb');
 if (fs.existsSync(chapterSummariesPath)) {
-  const files = fs.readdirSync(chapterSummariesPath).filter(f => f.endsWith('.txt'));
+  const files = fs.readdirSync(chapterSummariesPath).filter(f => f.endsWith('.md'));
 
   for (const file of files) {
-    const match = file.match(/^(\d+)-(\d+)\.txt$/);
+    const match = file.match(/^(\d+)-(\d+)\.md$/);
     if (!match) continue;
 
     const [, bookId, chapter] = match;
@@ -558,9 +558,23 @@ const insertTheme = db.prepare(`
 
 const themesPath = path.join(GENERATE_PATH, 'themes', 'nb');
 if (fs.existsSync(themesPath)) {
-  const files = fs.readdirSync(themesPath).filter(f => f.endsWith('.txt'));
+  // Støtter både .json (nytt format) og .txt (gammelt format)
+  const jsonFiles = fs.readdirSync(themesPath).filter(f => f.endsWith('.json'));
+  const txtFiles = fs.readdirSync(themesPath).filter(f => f.endsWith('.txt'));
 
-  for (const file of files) {
+  for (const file of jsonFiles) {
+    const name = file.replace('.json', '');
+    const content = fs.readFileSync(path.join(themesPath, file), 'utf-8');
+    // Valider at det er gyldig JSON
+    try {
+      JSON.parse(content);
+      insertTheme.run(name, content);
+    } catch (e) {
+      console.error(`Ugyldig JSON i ${file}:`, e);
+    }
+  }
+
+  for (const file of txtFiles) {
     const name = file.replace('.txt', '');
     const content = fs.readFileSync(path.join(themesPath, file), 'utf-8');
     insertTheme.run(name, content);
