@@ -1,0 +1,215 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.panel {
+  padding: $spacing-md;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-sm;
+  border-bottom: 1px solid $color-border;
+
+  h4 {
+    font-size: $font-size-sm;
+    font-family: $font-sans;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: $color-text-muted;
+    margin: 0;
+  }
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: $font-size-lg;
+  color: $color-text-muted;
+  cursor: pointer;
+  padding: $spacing-xs;
+  line-height: 1;
+
+  &:hover {
+    color: $color-text;
+  }
+}
+
+.tools {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.tool {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  cursor: pointer;
+  padding: $spacing-xs 0;
+
+  input {
+    display: none;
+  }
+}
+
+.checkmark {
+  width: 18px;
+  height: 18px;
+  border: 2px solid $color-border;
+  border-radius: $radius-sm;
+  position: relative;
+  transition: all $transition-fast;
+
+  .tool:hover & {
+    border-color: $color-secondary;
+  }
+
+  input:checked + & {
+    background: $color-primary;
+    border-color: $color-primary;
+
+    &::after {
+      content: '✓';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+    }
+  }
+}
+
+.label {
+  font-size: $font-size-sm;
+  color: $color-text;
+}
+
+.section {
+  margin-bottom: $spacing-lg;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  h5 {
+    font-size: $font-size-sm;
+    font-family: $font-sans;
+    color: $color-text-muted;
+    margin: 0 0 $spacing-sm 0;
+    font-weight: 500;
+  }
+}
+
+.bibleVersions {
+  display: flex;
+  gap: $spacing-xs;
+}
+
+.bibleVersionButton {
+  flex: 1;
+  padding: $spacing-sm;
+  background: $color-background;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  font-family: $font-sans;
+  font-size: $font-size-sm;
+  color: $color-text;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    border-color: $color-secondary;
+  }
+
+  &.active {
+    background: $color-primary;
+    border-color: $color-primary;
+    color: white;
+  }
+}
+
+.fontSizes {
+  display: flex;
+  gap: $spacing-xs;
+}
+
+.fontSizeButton {
+  flex: 1;
+  padding: $spacing-sm;
+  background: $color-background;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  font-family: $font-sans;
+  font-size: $font-size-sm;
+  color: $color-text;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    border-color: $color-secondary;
+  }
+
+  &.active {
+    background: $color-primary;
+    border-color: $color-primary;
+    color: white;
+  }
+}
+
+// Dark mode support
+:global(html.dark) {
+  .header h4 {
+    color: $dark-color-text-muted;
+  }
+
+  .closeButton {
+    color: $dark-color-text-muted;
+
+    &:hover {
+      color: $dark-color-text;
+    }
+  }
+
+  .checkmark {
+    border-color: $dark-color-border;
+
+    .tool:hover & {
+      border-color: $dark-color-secondary;
+    }
+
+    input:checked + & {
+      background: $dark-color-secondary;
+      border-color: $dark-color-secondary;
+    }
+  }
+
+  .label {
+    color: $dark-color-text;
+  }
+
+  .section h5 {
+    color: $dark-color-text-muted;
+  }
+
+  .fontSizeButton,
+  .bibleVersionButton {
+    background: $dark-color-background;
+    border-color: $dark-color-border;
+    color: $dark-color-text;
+
+    &:hover {
+      border-color: $dark-color-secondary;
+    }
+
+    &.active {
+      background: $dark-color-secondary;
+      border-color: $dark-color-secondary;
+      color: $dark-color-background;
+    }
+  }
+}

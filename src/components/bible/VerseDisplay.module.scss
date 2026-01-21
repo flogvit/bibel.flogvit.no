@@ -1,0 +1,507 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.verse {
+  margin-bottom: $spacing-md;
+  line-height: $line-height-verse;
+}
+
+.verseNumber {
+  display: inline-block;
+  font-weight: bold;
+  color: $color-verse-number;
+  cursor: pointer;
+  margin-right: $spacing-sm;
+  user-select: none;
+  transition: color $transition-fast;
+  min-width: 1.5em;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.favoriteIndicator {
+  color: $color-accent;
+  font-size: 0.8em;
+  margin-right: 2px;
+}
+
+.expandedHeader {
+  padding: $spacing-sm $spacing-md;
+  border-bottom: 1px solid $color-border;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.favoriteToggle {
+  background: none;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  padding: $spacing-xs $spacing-sm;
+  font-size: $font-size-sm;
+  font-family: $font-sans;
+  cursor: pointer;
+  color: $color-text-muted;
+  transition: all $transition-fast;
+
+  &:hover {
+    border-color: $color-accent;
+    color: $color-accent;
+  }
+
+  &.favorited {
+    color: $color-accent;
+    border-color: $color-accent;
+  }
+}
+
+.verseText {
+  font-size: $font-size-lg;
+}
+
+.word {
+  &.clickable {
+    cursor: pointer;
+    transition: background $transition-fast;
+
+    &:hover {
+      text-decoration: underline;
+      text-decoration-color: $color-secondary;
+    }
+  }
+
+  &.selected {
+    background: $color-verse-highlight;
+    border-radius: 2px;
+  }
+}
+
+.wordDetail {
+  background: $color-background;
+  margin: $spacing-sm 0 $spacing-sm $spacing-lg;
+  padding: $spacing-md;
+  border-left: 3px solid $color-verse-number;
+  border-radius: 0 $radius-sm $radius-sm 0;
+  animation: fadeIn 0.2s ease;
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+.original {
+  font-size: $font-size-xl;
+  font-weight: bold;
+  color: $color-original-text;
+  margin-right: $spacing-sm;
+}
+
+.pronunciation {
+  font-style: italic;
+  color: $color-text-muted;
+}
+
+.explanation {
+  margin-top: $spacing-sm;
+  font-size: $font-size-sm;
+  color: $color-text-light;
+}
+
+.originalVerse {
+  margin: $spacing-sm 0 $spacing-sm $spacing-lg;
+  padding: $spacing-sm $spacing-md;
+  background: $color-background;
+  border-radius: $radius-sm;
+  font-size: $font-size-lg;
+  line-height: 1.8;
+  color: $color-original-text;
+
+  &.hebrew {
+    font-family: 'SBL Hebrew', 'Ezra SIL', 'Times New Roman', serif;
+    font-size: $font-size-xl;
+    text-align: right;
+  }
+
+  &.greek {
+    font-family: 'SBL Greek', 'Gentium Plus', 'Times New Roman', serif;
+    font-size: $font-size-lg;
+  }
+}
+
+.expanded {
+  margin: $spacing-md 0 $spacing-md $spacing-lg;
+  background: $color-background;
+  border-radius: $radius-md;
+  overflow: hidden;
+  animation: fadeIn 0.2s ease;
+}
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid $color-border;
+}
+
+.tab {
+  flex: 1;
+  padding: $spacing-sm $spacing-md;
+  background: transparent;
+  border: none;
+  font-family: $font-sans;
+  font-size: $font-size-sm;
+  cursor: pointer;
+  transition: all $transition-fast;
+  border-bottom: 2px solid transparent;
+
+  &:hover {
+    background: $color-paper;
+  }
+
+  &.active {
+    font-weight: 500;
+    border-bottom-color: $color-verse-number;
+    background: $color-paper;
+  }
+}
+
+.tabContent {
+  padding: $spacing-md;
+}
+
+.loading {
+  text-align: center;
+  color: $color-text-muted;
+  padding: $spacing-md;
+}
+
+.originalTextTab {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.sectionTitle {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+  margin: 0;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.clickableWord {
+  cursor: pointer;
+  transition: background $transition-fast;
+  padding: $spacing-xs;
+  border-radius: $radius-sm;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.05);
+  }
+}
+
+.selectedWord {
+  background: $color-verse-highlight !important;
+}
+
+.wordExplanation {
+  background: $color-paper;
+  padding: $spacing-md;
+  border-left: 3px solid $color-accent;
+  border-radius: 0 $radius-sm $radius-sm 0;
+  margin-top: $spacing-sm;
+
+  strong {
+    font-size: $font-size-lg;
+    color: $color-original-text;
+  }
+
+  p {
+    margin: $spacing-sm 0 0 0;
+    line-height: $line-height-base;
+    color: $color-text-light;
+  }
+}
+
+.pronunciationInline {
+  color: $color-text-muted;
+  font-style: italic;
+}
+
+.searchOriginalButton {
+  display: block;
+  margin-top: $spacing-md;
+  padding: $spacing-sm $spacing-md;
+  background: $color-secondary;
+  color: white;
+  border: none;
+  border-radius: $radius-sm;
+  font-family: $font-sans;
+  font-size: $font-size-sm;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    opacity: 0.85;
+  }
+}
+
+.fullOriginalText {
+  font-size: $font-size-xl;
+  line-height: 1.8;
+  color: $color-original-text;
+  padding: $spacing-sm;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: $radius-sm;
+
+  &.hebrew {
+    font-family: 'SBL Hebrew', 'Ezra SIL', 'Times New Roman', serif;
+    font-size: 1.75rem;
+  }
+
+  &.greek {
+    font-family: 'SBL Greek', 'Gentium Plus', 'Times New Roman', serif;
+  }
+}
+
+.originalText {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-md;
+
+  &.hebrewWords {
+    flex-direction: row-reverse;
+    justify-content: flex-start;
+  }
+}
+
+.originalWord {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.originalScript {
+  font-size: $font-size-xl;
+  color: $color-original-text;
+}
+
+.translatedWord {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+}
+
+.referencesList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.reference {
+  display: block;
+  padding: $spacing-sm;
+  border-left: 3px solid $color-secondary;
+  background: $color-paper;
+  border-radius: 0 $radius-sm $radius-sm 0;
+  text-decoration: none;
+  transition: all $transition-fast;
+
+  &:hover {
+    border-left-color: $color-primary;
+    background: white;
+  }
+}
+
+.refLink {
+  font-weight: 500;
+  color: $color-secondary;
+  display: block;
+}
+
+.refDescription {
+  font-size: $font-size-sm;
+  color: $color-text-light;
+  display: block;
+  margin-top: $spacing-xs;
+}
+
+.prayerContent,
+.sermonContent {
+  p {
+    line-height: $line-height-base;
+    color: $color-text;
+    white-space: pre-line;
+    margin: 0;
+  }
+}
+
+.prayerContent {
+  font-style: italic;
+  border-left: 3px solid $color-accent;
+  padding-left: $spacing-md;
+}
+
+.sermonContent {
+  border-left: 3px solid $color-secondary;
+  padding-left: $spacing-md;
+}
+
+// Dark mode
+:global(html.dark) {
+  .verseNumber {
+    color: $dark-color-verse-number;
+  }
+
+  .favoriteIndicator {
+    color: $dark-color-accent;
+  }
+
+  .expandedHeader {
+    border-bottom-color: $dark-color-border;
+  }
+
+  .favoriteToggle {
+    color: $dark-color-text-muted;
+    border-color: $dark-color-border;
+
+    &:hover,
+    &.favorited {
+      color: $dark-color-accent;
+      border-color: $dark-color-accent;
+    }
+  }
+
+  .word {
+    &.selected {
+      background: $dark-color-verse-highlight;
+    }
+  }
+
+  .wordDetail {
+    background: $dark-color-background;
+    border-left-color: $dark-color-verse-number;
+  }
+
+  .original {
+    color: $dark-color-original-text;
+  }
+
+  .pronunciation {
+    color: $dark-color-text-muted;
+  }
+
+  .explanation {
+    color: $dark-color-text-light;
+  }
+
+  .originalVerse {
+    background: $dark-color-background;
+    color: $dark-color-original-text;
+  }
+
+  .fullOriginalText {
+    background: rgba(255, 255, 255, 0.05);
+    color: $dark-color-original-text;
+  }
+
+  .sectionTitle {
+    color: $dark-color-text-muted;
+  }
+
+  .clickableWord {
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  .selectedWord {
+    background: $dark-color-verse-highlight !important;
+  }
+
+  .wordExplanation {
+    background: $dark-color-paper;
+    border-left-color: $dark-color-accent;
+
+    strong {
+      color: $dark-color-original-text;
+    }
+
+    p {
+      color: $dark-color-text-light;
+    }
+  }
+
+  .pronunciationInline {
+    color: $dark-color-text-muted;
+  }
+
+  .searchOriginalButton {
+    background: $dark-color-secondary;
+
+    &:hover {
+      opacity: 0.85;
+    }
+  }
+
+  .expanded {
+    background: $dark-color-background;
+  }
+
+  .tabs {
+    border-bottom-color: $dark-color-border;
+  }
+
+  .tab {
+    &:hover {
+      background: $dark-color-paper;
+    }
+
+    &.active {
+      border-bottom-color: $dark-color-verse-number;
+      background: $dark-color-paper;
+    }
+  }
+
+  .originalScript {
+    color: $dark-color-original-text;
+  }
+
+  .translatedWord {
+    color: $dark-color-text-muted;
+  }
+
+  .reference {
+    border-left-color: $dark-color-secondary;
+    background: $dark-color-paper;
+
+    &:hover {
+      border-left-color: $dark-color-primary;
+    }
+  }
+
+  .refLink {
+    color: $dark-color-secondary;
+  }
+
+  .refDescription {
+    color: $dark-color-text-light;
+  }
+
+  .prayerContent {
+    border-left-color: $dark-color-accent;
+
+    p {
+      color: $dark-color-text;
+    }
+  }
+
+  .sermonContent {
+    border-left-color: $dark-color-secondary;
+
+    p {
+      color: $dark-color-text;
+    }
+  }
+}
