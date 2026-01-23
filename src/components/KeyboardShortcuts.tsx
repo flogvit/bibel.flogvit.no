@@ -135,6 +135,10 @@ export function KeyboardShortcuts({
             e.preventDefault();
             router.push('/kjente-vers');
             break;
+          case 'KeyO':
+            e.preventDefault();
+            router.push('/personer');
+            break;
         }
       }
     }
@@ -249,6 +253,10 @@ export function KeyboardShortcuts({
               <div className={styles.shortcut}>
                 <dt>{isMac ? <><kbd>⌥</kbd>+<kbd>⇧</kbd>+<kbd>K</kbd></> : <><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd></>}</dt>
                 <dd>Kjente vers</dd>
+              </div>
+              <div className={styles.shortcut}>
+                <dt>{isMac ? <><kbd>⌥</kbd>+<kbd>⇧</kbd>+<kbd>O</kbd></> : <><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>O</kbd></>}</dt>
+                <dd>Personer</dd>
               </div>
             </dl>
           </section>
