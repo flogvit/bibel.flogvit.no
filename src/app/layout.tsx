@@ -6,8 +6,8 @@ import { Footer } from '@/components/Footer';
 
 export const metadata: Metadata = {
   title: {
-    default: 'Bibelen - bibel.flogvit.com',
-    template: '%s | Bibelen',
+    default: 'FLOGVIT.bibel',
+    template: '%s | FLOGVIT.bibel',
   },
   description: 'Norsk bibel med oppslagsverk og verktøy for bibellesning. Gratis tilgang til bibelteksten med ord-for-ord forklaringer, kryssreferanser og studieverktøy.',
   keywords: ['bibel', 'norsk bibel', 'bibelen', 'bibellesning', 'bibelstudie', 'kristen', 'GT', 'NT'],
@@ -22,9 +22,9 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'nb_NO',
     url: 'https://bibel.flogvit.com',
-    siteName: 'Bibelen',
+    siteName: 'FLOGVIT.bibel',
     title: 'Bibelen - Les Guds ord på norsk',
-    description: 'Norsk bibel med oppslagsverk og verktøy for bibellesning. Gratis tilgang til bibelteksten med ord-for-ord forklaringer, kryssreferanser og studieverktøy.',
+    description: 'Åpen norsk bibel med oppslagsverk og verktøy for bibellesning. Gratis tilgang til bibelteksten med ord-for-ord forklaringer, kryssreferanser og studieverktøy.',
   },
   twitter: {
     card: 'summary',
