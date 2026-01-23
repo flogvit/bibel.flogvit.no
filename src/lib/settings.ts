@@ -9,10 +9,12 @@ export const bibleVersions: { value: BibleVersion; label: string }[] = [
 export interface BibleSettings {
   showBookSummary: boolean;
   showChapterSummary: boolean;
+  showChapterContext: boolean;
   showImportantWords: boolean;
   showWord4Word: boolean;
   showReferences: boolean;
   showOriginalText: boolean;
+  showTimeline: boolean;
   fontSize: FontSize;
   darkMode: boolean;
   bible: BibleVersion;
@@ -21,10 +23,12 @@ export interface BibleSettings {
 export const defaultSettings: BibleSettings = {
   showBookSummary: true,
   showChapterSummary: true,
+  showChapterContext: false,
   showImportantWords: false,
   showWord4Word: true,
   showReferences: true,
   showOriginalText: false,
+  showTimeline: true,
   fontSize: 'medium',
   darkMode: false,
   bible: 'osnb1',

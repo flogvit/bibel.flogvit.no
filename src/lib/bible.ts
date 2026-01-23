@@ -188,6 +188,14 @@ export function getChapterSummary(bookId: number, chapter: number): string | nul
   return result?.summary ?? null;
 }
 
+export function getChapterContext(bookId: number, chapter: number): string | null {
+  const db = getDb();
+  const result = db.prepare(
+    'SELECT context FROM chapter_context WHERE book_id = ? AND chapter = ?'
+  ).get(bookId, chapter) as { context: string } | undefined;
+  return result?.context ?? null;
+}
+
 export function getImportantWords(bookId: number, chapter: number): { word: string; explanation: string }[] {
   const db = getDb();
   return db.prepare(
@@ -543,4 +551,532 @@ export function searchOriginalWord(word: string, limit = 50, offset = 0): Origin
   });
 
   return { results, total, hasMore: offset + results.length < total, word, language, matchingWords };
+}
+
+// Timeline types and functions
+
+export interface TimelinePeriod {
+  id: string;
+  name: string;
+  color: string | null;
+  description: string | null;
+  sort_order: number;
+}
+
+export interface TimelineReference {
+  book_id: number;
+  chapter: number;
+  verse_start: number;
+  verse_end: number;
+  book_short_name?: string;
+  book_name_no?: string;
+}
+
+export interface TimelineEvent {
+  id: string;
+  title: string;
+  description: string | null;
+  year: number | null;
+  year_display: string | null;
+  period_id: string | null;
+  importance: string;
+  sort_order: number;
+  references?: TimelineReference[];
+  period?: TimelinePeriod;
+}
+
+export interface TimelineData {
+  periods: TimelinePeriod[];
+  events: TimelineEvent[];
+}
+
+export function getTimelinePeriods(): TimelinePeriod[] {
+  const db = getDb();
+  return db.prepare('SELECT * FROM timeline_periods ORDER BY sort_order').all() as TimelinePeriod[];
+}
+
+export function getTimelineEvents(): TimelineEvent[] {
+  const db = getDb();
+  const events = db.prepare(`
+    SELECT e.*, p.name as period_name, p.color as period_color
+    FROM timeline_events e
+    LEFT JOIN timeline_periods p ON e.period_id = p.id
+    ORDER BY e.sort_order
+  `).all() as (TimelineEvent & { period_name?: string; period_color?: string })[];
+
+  // Get references for each event
+  return events.map(event => {
+    const refs = db.prepare(`
+      SELECT tr.book_id, tr.chapter, tr.verse_start, tr.verse_end, b.short_name as book_short_name, b.name_no as book_name_no
+      FROM timeline_references tr
+      JOIN books b ON tr.book_id = b.id
+      WHERE tr.event_id = ?
+    `).all(event.id) as TimelineReference[];
+
+    return {
+      ...event,
+      references: refs,
+      period: event.period_id ? {
+        id: event.period_id,
+        name: event.period_name || '',
+        color: event.period_color || null,
+        description: null,
+        sort_order: 0
+      } : undefined
+    };
+  });
+}
+
+export function getTimelineEventById(id: string): TimelineEvent | undefined {
+  const db = getDb();
+  const event = db.prepare(`
+    SELECT e.*, p.name as period_name, p.color as period_color, p.description as period_description
+    FROM timeline_events e
+    LEFT JOIN timeline_periods p ON e.period_id = p.id
+    WHERE e.id = ?
+  `).get(id) as (TimelineEvent & { period_name?: string; period_color?: string; period_description?: string }) | undefined;
+
+  if (!event) return undefined;
+
+  const refs = db.prepare(`
+    SELECT tr.book_id, tr.chapter, tr.verse_start, tr.verse_end, b.short_name as book_short_name, b.name_no as book_name_no
+    FROM timeline_references tr
+    JOIN books b ON tr.book_id = b.id
+    WHERE tr.event_id = ?
+  `).all(id) as TimelineReference[];
+
+  return {
+    ...event,
+    references: refs,
+    period: event.period_id ? {
+      id: event.period_id,
+      name: event.period_name || '',
+      color: event.period_color || null,
+      description: event.period_description || null,
+      sort_order: 0
+    } : undefined
+  };
+}
+
+export function getTimelineEventsByPeriod(periodId: string): TimelineEvent[] {
+  const db = getDb();
+  const events = db.prepare(`
+    SELECT e.*, p.name as period_name, p.color as period_color
+    FROM timeline_events e
+    LEFT JOIN timeline_periods p ON e.period_id = p.id
+    WHERE e.period_id = ?
+    ORDER BY e.sort_order
+  `).all(periodId) as (TimelineEvent & { period_name?: string; period_color?: string })[];
+
+  return events.map(event => {
+    const refs = db.prepare(`
+      SELECT tr.book_id, tr.chapter, tr.verse_start, tr.verse_end, b.short_name as book_short_name, b.name_no as book_name_no
+      FROM timeline_references tr
+      JOIN books b ON tr.book_id = b.id
+      WHERE tr.event_id = ?
+    `).all(event.id) as TimelineReference[];
+
+    return {
+      ...event,
+      references: refs,
+      period: event.period_id ? {
+        id: event.period_id,
+        name: event.period_name || '',
+        color: event.period_color || null,
+        description: null,
+        sort_order: 0
+      } : undefined
+    };
+  });
+}
+
+export function getFullTimeline(): TimelineData {
+  return {
+    periods: getTimelinePeriods(),
+    events: getTimelineEvents()
+  };
+}
+
+export function getTimelineEventsForChapter(bookId: number, chapter: number): TimelineEvent[] {
+  const db = getDb();
+
+  // Find events that have references to this book and chapter
+  const eventIds = db.prepare(`
+    SELECT DISTINCT event_id
+    FROM timeline_references
+    WHERE book_id = ? AND chapter = ?
+  `).all(bookId, chapter) as { event_id: string }[];
+
+  if (eventIds.length === 0) return [];
+
+  const events: TimelineEvent[] = [];
+  for (const { event_id } of eventIds) {
+    const event = getTimelineEventById(event_id);
+    if (event) {
+      events.push(event);
+    }
+  }
+
+  // Sort by sort_order
+  return events.sort((a, b) => a.sort_order - b.sort_order);
+}
+
+// Prophecy types and functions
+
+export interface ProphecyCategory {
+  id: string;
+  name: string;
+  description: string | null;
+}
+
+export interface ProphecyReference {
+  book_id: number;
+  chapter: number;
+  verse_start: number;
+  verse_end: number;
+  book_short_name?: string;
+  book_name_no?: string;
+  reference?: string;
+}
+
+export interface Prophecy {
+  id: string;
+  category_id: string;
+  title: string;
+  explanation: string | null;
+  prophecy: ProphecyReference;
+  fulfillments: ProphecyReference[];
+  category?: ProphecyCategory;
+}
+
+export interface ProphecyData {
+  categories: ProphecyCategory[];
+  prophecies: Prophecy[];
+}
+
+export function getProphecyCategories(): ProphecyCategory[] {
+  const db = getDb();
+  return db.prepare('SELECT * FROM prophecy_categories').all() as ProphecyCategory[];
+}
+
+export function getProphecies(): Prophecy[] {
+  const db = getDb();
+  const prophecies = db.prepare(`
+    SELECT p.*, c.name as category_name, c.description as category_description,
+           b.short_name as prophecy_book_short_name, b.name_no as prophecy_book_name_no
+    FROM prophecies p
+    LEFT JOIN prophecy_categories c ON p.category_id = c.id
+    LEFT JOIN books b ON p.prophecy_book_id = b.id
+  `).all() as (Prophecy & {
+    category_name?: string;
+    category_description?: string;
+    prophecy_book_id: number;
+    prophecy_chapter: number;
+    prophecy_verse_start: number;
+    prophecy_verse_end: number;
+    prophecy_book_short_name?: string;
+    prophecy_book_name_no?: string;
+  })[];
+
+  return prophecies.map(p => {
+    // Get fulfillments
+    const fulfillments = db.prepare(`
+      SELECT pf.book_id, pf.chapter, pf.verse_start, pf.verse_end,
+             b.short_name as book_short_name, b.name_no as book_name_no
+      FROM prophecy_fulfillments pf
+      JOIN books b ON pf.book_id = b.id
+      WHERE pf.prophecy_id = ?
+    `).all(p.id) as ProphecyReference[];
+
+    // Format reference strings
+    const formatRef = (ref: ProphecyReference): string => {
+      const verseRange = ref.verse_start === ref.verse_end
+        ? `${ref.verse_start}`
+        : `${ref.verse_start}-${ref.verse_end}`;
+      return `${ref.book_short_name} ${ref.chapter}:${verseRange}`;
+    };
+
+    const prophecyRef: ProphecyReference = {
+      book_id: p.prophecy_book_id,
+      chapter: p.prophecy_chapter,
+      verse_start: p.prophecy_verse_start,
+      verse_end: p.prophecy_verse_end,
+      book_short_name: p.prophecy_book_short_name,
+      book_name_no: p.prophecy_book_name_no
+    };
+    prophecyRef.reference = formatRef(prophecyRef);
+
+    const fulfillmentsWithRef = fulfillments.map(f => ({
+      ...f,
+      reference: formatRef(f)
+    }));
+
+    return {
+      id: p.id,
+      category_id: p.category_id,
+      title: p.title,
+      explanation: p.explanation,
+      prophecy: prophecyRef,
+      fulfillments: fulfillmentsWithRef,
+      category: p.category_id ? {
+        id: p.category_id,
+        name: p.category_name || '',
+        description: p.category_description || null
+      } : undefined
+    };
+  });
+}
+
+export function getProphecyById(id: string): Prophecy | undefined {
+  const db = getDb();
+  const prophecy = db.prepare(`
+    SELECT p.*, c.name as category_name, c.description as category_description,
+           b.short_name as prophecy_book_short_name, b.name_no as prophecy_book_name_no
+    FROM prophecies p
+    LEFT JOIN prophecy_categories c ON p.category_id = c.id
+    LEFT JOIN books b ON p.prophecy_book_id = b.id
+    WHERE p.id = ?
+  `).get(id) as (Prophecy & {
+    category_name?: string;
+    category_description?: string;
+    prophecy_book_id: number;
+    prophecy_chapter: number;
+    prophecy_verse_start: number;
+    prophecy_verse_end: number;
+    prophecy_book_short_name?: string;
+    prophecy_book_name_no?: string;
+  }) | undefined;
+
+  if (!prophecy) return undefined;
+
+  const fulfillments = db.prepare(`
+    SELECT pf.book_id, pf.chapter, pf.verse_start, pf.verse_end,
+           b.short_name as book_short_name, b.name_no as book_name_no
+    FROM prophecy_fulfillments pf
+    JOIN books b ON pf.book_id = b.id
+    WHERE pf.prophecy_id = ?
+  `).all(id) as ProphecyReference[];
+
+  const formatRef = (ref: ProphecyReference): string => {
+    const verseRange = ref.verse_start === ref.verse_end
+      ? `${ref.verse_start}`
+      : `${ref.verse_start}-${ref.verse_end}`;
+    return `${ref.book_short_name} ${ref.chapter}:${verseRange}`;
+  };
+
+  const prophecyRef: ProphecyReference = {
+    book_id: prophecy.prophecy_book_id,
+    chapter: prophecy.prophecy_chapter,
+    verse_start: prophecy.prophecy_verse_start,
+    verse_end: prophecy.prophecy_verse_end,
+    book_short_name: prophecy.prophecy_book_short_name,
+    book_name_no: prophecy.prophecy_book_name_no
+  };
+  prophecyRef.reference = formatRef(prophecyRef);
+
+  return {
+    id: prophecy.id,
+    category_id: prophecy.category_id,
+    title: prophecy.title,
+    explanation: prophecy.explanation,
+    prophecy: prophecyRef,
+    fulfillments: fulfillments.map(f => ({ ...f, reference: formatRef(f) })),
+    category: prophecy.category_id ? {
+      id: prophecy.category_id,
+      name: prophecy.category_name || '',
+      description: prophecy.category_description || null
+    } : undefined
+  };
+}
+
+export function getPropheciesByCategory(categoryId: string): Prophecy[] {
+  const all = getProphecies();
+  return all.filter(p => p.category_id === categoryId);
+}
+
+export function getFullProphecyData(): ProphecyData {
+  return {
+    categories: getProphecyCategories(),
+    prophecies: getProphecies()
+  };
+}
+
+export function getPropheciesForChapter(bookId: number, chapter: number): Prophecy[] {
+  const db = getDb();
+
+  // Find prophecies that reference this chapter (either as prophecy or fulfillment)
+  const prophecyIds = db.prepare(`
+    SELECT DISTINCT p.id
+    FROM prophecies p
+    WHERE (p.prophecy_book_id = ? AND p.prophecy_chapter = ?)
+    UNION
+    SELECT DISTINCT pf.prophecy_id
+    FROM prophecy_fulfillments pf
+    WHERE pf.book_id = ? AND pf.chapter = ?
+  `).all(bookId, chapter, bookId, chapter) as { id: string }[];
+
+  if (prophecyIds.length === 0) return [];
+
+  const prophecies: Prophecy[] = [];
+  for (const { id } of prophecyIds) {
+    const prophecy = getProphecyById(id);
+    if (prophecy) {
+      prophecies.push(prophecy);
+    }
+  }
+
+  return prophecies;
+}
+
+export function getPropheciesForVerse(bookId: number, chapter: number, verse: number): Prophecy[] {
+  const db = getDb();
+
+  // Find prophecies where this verse is part of the prophecy reference or a fulfillment
+  const prophecyIds = db.prepare(`
+    SELECT DISTINCT p.id
+    FROM prophecies p
+    WHERE p.prophecy_book_id = ? AND p.prophecy_chapter = ?
+      AND ? >= p.prophecy_verse_start AND ? <= p.prophecy_verse_end
+    UNION
+    SELECT DISTINCT pf.prophecy_id
+    FROM prophecy_fulfillments pf
+    WHERE pf.book_id = ? AND pf.chapter = ?
+      AND ? >= pf.verse_start AND ? <= pf.verse_end
+  `).all(bookId, chapter, verse, verse, bookId, chapter, verse, verse) as { id: string }[];
+
+  if (prophecyIds.length === 0) return [];
+
+  const prophecies: Prophecy[] = [];
+  for (const { id } of prophecyIds) {
+    const prophecy = getProphecyById(id);
+    if (prophecy) {
+      prophecies.push(prophecy);
+    }
+  }
+
+  return prophecies;
+}
+
+// Person types and functions
+
+export interface PersonVerseRef {
+  bookId: number;
+  chapter: number;
+  verse?: number;
+  verses?: number[];
+}
+
+export interface PersonKeyEvent {
+  title: string;
+  description: string;
+  verses: PersonVerseRef[];
+}
+
+export interface PersonFamily {
+  father?: string | null;
+  mother?: string | null;
+  siblings?: string[];
+  spouse?: string | null;
+  children?: string[];
+}
+
+export interface PersonData {
+  id: string;
+  name: string;
+  title: string;
+  era: string;
+  lifespan?: string;
+  summary: string;
+  roles: string[];
+  family?: PersonFamily;
+  relatedPersons?: string[];
+  keyEvents: PersonKeyEvent[];
+}
+
+export interface Person {
+  id: number;
+  name: string;
+  content: string;
+}
+
+// Era labels in Norwegian
+export const eraLabels: Record<string, string> = {
+  'creation': 'Skapelsen',
+  'patriarchs': 'Patriarkene',
+  'exodus': 'Utgang fra Egypt',
+  'conquest': 'Erobringen',
+  'judges': 'Dommertiden',
+  'united-kingdom': 'Det forente kongerike',
+  'divided-kingdom': 'Det delte kongerike',
+  'exile': 'Eksilet',
+  'return': 'Tilbakekomsten',
+  'intertestamental': 'Mellomtestamentlig tid',
+  'jesus': 'Jesu tid',
+  'early-church': 'Den tidlige kirke'
+};
+
+// Role labels in Norwegian
+export const roleLabels: Record<string, string> = {
+  'profet': 'Profet',
+  'konge': 'Konge',
+  'dommer': 'Dommer',
+  'prest': 'Prest',
+  'apostel': 'Apostel',
+  'disippel': 'Disippel',
+  'leder': 'Leder',
+  'matriark': 'Matriark',
+  'patriark': 'Patriark',
+  'martyr': 'Martyr',
+  'kriger': 'Kriger',
+  'vismann': 'Vismann'
+};
+
+export function getAllPersons(): Person[] {
+  const db = getDb();
+  return db.prepare('SELECT * FROM persons ORDER BY name').all() as Person[];
+}
+
+export function getPersonByName(name: string): Person | undefined {
+  const db = getDb();
+  return db.prepare('SELECT * FROM persons WHERE name = ?').get(name) as Person | undefined;
+}
+
+export function parsePersonContent(content: string): PersonData | null {
+  try {
+    return JSON.parse(content) as PersonData;
+  } catch {
+    return null;
+  }
+}
+
+export function getPersonData(name: string): PersonData | null {
+  const person = getPersonByName(name);
+  if (!person) return null;
+  return parsePersonContent(person.content);
+}
+
+export function getAllPersonsData(): PersonData[] {
+  const persons = getAllPersons();
+  return persons
+    .map(p => parsePersonContent(p.content))
+    .filter((p): p is PersonData => p !== null);
+}
+
+export function getPersonsByRole(role: string): PersonData[] {
+  const allPersons = getAllPersonsData();
+  return allPersons.filter(p => p.roles.includes(role));
+}
+
+export function getPersonsByEra(era: string): PersonData[] {
+  const allPersons = getAllPersonsData();
+  return allPersons.filter(p => p.era === era);
+}
+
+export function getRelatedPersonsData(personId: string): PersonData[] {
+  const person = getPersonData(personId);
+  if (!person || !person.relatedPersons) return [];
+
+  return person.relatedPersons
+    .map(id => getPersonData(id))
+    .filter((p): p is PersonData => p !== null);
 }
