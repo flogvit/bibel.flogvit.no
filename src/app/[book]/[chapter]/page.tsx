@@ -11,6 +11,7 @@ import {
   getChapterContext,
   getBookSummary,
   getTimelineEvents,
+  getChapterInsight,
   Book,
   Verse,
 } from '@/lib/bible';
@@ -24,6 +25,7 @@ import { ImportantWords } from '@/components/bible/ImportantWords';
 import { TimelinePanel } from '@/components/bible/TimelinePanel';
 import { ChapterKeyboardShortcuts } from '@/components/bible/ChapterKeyboardShortcuts';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { ChapterInsightsPanel } from '@/components/bible/ChapterInsightsPanel';
 
 interface PageProps {
   params: Promise<{
@@ -57,6 +59,7 @@ export default async function ChapterPage({ params, searchParams }: PageProps) {
   const chapterContext = getChapterContext(book.id, chapter);
   const bookSummary = chapter === 1 ? getBookSummary(book.id) : null;
   const allTimelineEvents = getTimelineEvents();
+  const chapterInsight = getChapterInsight(book.id, chapter);
   const nextBook = chapter === book.chapters ? getBookById(book.id + 1) : null;
   const nextBookSlug = nextBook ? getBookUrlSlug(nextBook) : null;
 
@@ -144,6 +147,8 @@ export default async function ChapterPage({ params, searchParams }: PageProps) {
           )}
 
           <ImportantWords bookId={book.id} chapter={chapter} />
+
+          <ChapterInsightsPanel bookId={book.id} chapter={chapter} insight={chapterInsight} />
 
           <section className={styles.verses}>
             {verses.map(verse => (

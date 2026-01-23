@@ -276,6 +276,16 @@ db.exec(`
     name TEXT NOT NULL UNIQUE,
     content TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS chapter_insights (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    book_id INTEGER NOT NULL,
+    chapter INTEGER NOT NULL,
+    type TEXT NOT NULL,
+    content TEXT NOT NULL,
+    FOREIGN KEY (book_id) REFERENCES books(id),
+    UNIQUE (book_id, chapter)
+  );
 `);
 
 // Importer bøker
@@ -841,6 +851,33 @@ if (fs.existsSync(personsPath)) {
   console.log(`  Importerte ${files.length} personer`);
 }
 
+// Importer kapittel-innsikter
+console.log('Importerer kapittel-innsikter...');
+const insertChapterInsight = db.prepare(`
+  INSERT OR REPLACE INTO chapter_insights (book_id, chapter, type, content) VALUES (?, ?, ?, ?)
+`);
+
+const chapterInsightsPath = path.join(GENERATE_PATH, 'chapter_insights', 'nb');
+if (fs.existsSync(chapterInsightsPath)) {
+  const files = fs.readdirSync(chapterInsightsPath).filter(f => f.endsWith('.json'));
+
+  for (const file of files) {
+    const match = file.match(/^(\d+)-(\d+)\.json$/);
+    if (!match) continue;
+
+    const [, bookId, chapter] = match;
+    const content = fs.readFileSync(path.join(chapterInsightsPath, file), 'utf-8');
+
+    try {
+      const insight = JSON.parse(content);
+      insertChapterInsight.run(parseInt(bookId), parseInt(chapter), insight.type, content);
+    } catch (e) {
+      console.error(`Ugyldig JSON i ${file}:`, e);
+    }
+  }
+  console.log(`  Importerte ${files.length} kapittel-innsikter`);
+}
+
 // Opprett indekser
 console.log('Oppretter indekser...');
 db.exec(`
@@ -855,6 +892,7 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_prophecies_category ON prophecies(category_id);
   CREATE INDEX IF NOT EXISTS idx_prophecy_fulfillments_prophecy ON prophecy_fulfillments(prophecy_id);
   CREATE INDEX IF NOT EXISTS idx_prophecy_fulfillments_book ON prophecy_fulfillments(book_id, chapter);
+  CREATE INDEX IF NOT EXISTS idx_chapter_insights_book ON chapter_insights(book_id, chapter);
 `);
 
 db.close();

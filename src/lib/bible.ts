@@ -1080,3 +1080,36 @@ export function getRelatedPersonsData(personId: string): PersonData[] {
     .map(id => getPersonData(id))
     .filter((p): p is PersonData => p !== null);
 }
+
+// Chapter Insights types and functions
+
+export interface ChapterInsightBase {
+  type: string;
+  title: string;
+  buttonText: string;
+  hint: string;
+  intro: string;
+}
+
+export interface ChapterInsightDbRow {
+  book_id: number;
+  chapter: number;
+  type: string;
+  content: string;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getChapterInsight(bookId: number, chapter: number): any | null {
+  const db = getDb();
+  const result = db.prepare(
+    'SELECT content FROM chapter_insights WHERE book_id = ? AND chapter = ?'
+  ).get(bookId, chapter) as { content: string } | undefined;
+
+  if (!result) return null;
+
+  try {
+    return JSON.parse(result.content);
+  } catch {
+    return null;
+  }
+}
