@@ -29,6 +29,7 @@ All bibeldata hentes fra `../free-bible/generate/`:
 - `prophecies/prophecies.json` - Profetier og oppfyllelser (47 profetier i 7 kategorier)
 - `timeline/timeline.json` - Bibelske hendelser (103 hendelser i 11 perioder)
 - `reading_plans/` - Leseplaner (årlig, kronologisk, NT, etc.)
+- `chapter_insights/nb/[bok]-[kapittel].json` - Strukturerte kapittel-innsikter (ættetavler, lister, etc.)
 
 ### Bokstruktur
 - Bøker 1-39: Det gamle testamente (Tanach/hebraisk)
@@ -96,6 +97,7 @@ bibel.flogvit.no/
 - `chapter_summaries` - Kapittelsammendrag
 - `important_words` - Viktige ord per kapittel
 - `themes` - Tematiske oversikter
+- `chapter_insights` - Strukturerte kapittel-innsikter (JSON)
 
 **Studiebibel:**
 - `prophecy_categories` - Profetikategorier

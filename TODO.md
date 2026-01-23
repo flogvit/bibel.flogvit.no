@@ -251,5 +251,58 @@ Mål: Full WCAG 2.2 AA-støtte for alle brukere.
 - [x] Oppdater erklæringen når WCAG-arbeidet er fullført
 - [x] Legg til lenke til erklæringen i footer
 
+## Kapittel-innsikter (spesialvisninger)
+
+Filen `src/data/chapterInsights.ts` inneholder strukturerte visninger for spesielle kapitler.
+Nåværende: 53 kapitler. Ideer til flere:
+
+### Johannes - Jesu tegn/mirakler
+- [x] Joh 2 - Vann til vin (tegn 1)
+- [x] Joh 4 - Embetsmannens sønn (tegn 2)
+- [x] Joh 5 - Mannen ved Betesda (tegn 3)
+- [x] Joh 9 - Den blindfødte (tegn 5)
+- [x] Joh 11 - Lasarus oppvekkes (tegn 6)
+- [x] Joh 21 - Fiskefangsten (tegn 7)
+
+### GT - Strukturer og lister
+- [ ] 2 Mos 25-27 - Tabernakelet (kan samles i kap 25)
+- [ ] 2 Mos 28 - Presteklærne
+- [ ] 3 Mos 1-7 - De 5 offertypene (kan samles i kap 1)
+- [ ] 3 Mos 11 - Rene og urene dyr
+- [ ] 4 Mos 33 - Israels 42 leirplasser
+- [ ] Neh 3 - Jerusalems 10 porter
+
+### GT - Profetier og syn
+- [ ] Esek 37 - De tørre bein
+- [ ] Esek 47 - Vannet fra tempelet
+- [ ] Sak 14 - Herrens dag
+
+### Salmer
+- [x] Sal 1 - De to veier
+- [x] Sal 51 - Botssalmen
+- [x] Sal 91 - Trygghet hos Gud
+- [x] Sal 139 - Gud kjenner meg
+
+### Evangeliene - Påskeuken
+- [ ] Matt 21/Mark 11/Luk 19 - Palmesøndag
+- [ ] Matt 26/Mark 14/Luk 22 - Skjærtorsdag
+- [ ] Matt 27/Mark 15/Luk 23 - Langfredag
+- [ ] Matt 28/Mark 16/Luk 24 - Påskedag
+
+### NT - Brev
+- [x] Rom 12 - Lev som et offer
+- [x] 1 Kor 12 - Nådegavene
+- [x] 1 Kor 15 - Oppstandelsen
+- [x] Fil 2 - Kristi ydmykhet (Kristus-hymnen)
+- [x] Kol 1 - Kristus-hymnen
+- [ ] 1 Tess 4 - Herrens gjenkomst
+- [x] Heb 1 - Jesus > englene
+- [x] Jak 3 - Tungen
+
+### Øvrige
+- [ ] Dom 2 eller 3 - Dommersyklusen / oversikt over dommerne
+- [ ] 1 Kong 17-19 - Elia-syklusen (kan samles i kap 17)
+- [ ] 2 Kong 2, 4 - Elisas mirakler
+
 ## Bugs/Forbedringer
 - (ingen kjente)
