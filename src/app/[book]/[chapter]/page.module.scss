@@ -7,7 +7,7 @@
 
 .layout {
   display: grid;
-  grid-template-columns: $sidebar-width 1fr;
+  grid-template-columns: $sidebar-width 1fr $sidebar-width;
   min-height: 100vh;
 
   @include tablet {
@@ -27,6 +27,12 @@
   flex-direction: column;
   gap: $spacing-xl;
 
+  @include tablet {
+    display: none;
+  }
+}
+
+.rightSidebar {
   @include tablet {
     display: none;
   }

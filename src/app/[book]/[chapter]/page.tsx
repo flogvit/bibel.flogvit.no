@@ -2,12 +2,15 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import {
   getBookByShortName,
+  getBookById,
   getBookUrlSlug,
   getVerses,
   getOriginalVerses,
   getOriginalLanguage,
   getChapterSummary,
+  getChapterContext,
   getBookSummary,
+  getTimelineEvents,
   Book,
   Verse,
 } from '@/lib/bible';
@@ -18,6 +21,7 @@ import { MobileToolbar } from '@/components/bible/MobileToolbar';
 import { ScrollToVerse } from '@/components/bible/ScrollToVerse';
 import { Summary } from '@/components/bible/Summary';
 import { ImportantWords } from '@/components/bible/ImportantWords';
+import { TimelinePanel } from '@/components/bible/TimelinePanel';
 
 interface PageProps {
   params: Promise<{
@@ -48,7 +52,11 @@ export default async function ChapterPage({ params, searchParams }: PageProps) {
   const originalVerses = getOriginalVerses(book.id, chapter);
   const originalLanguage = getOriginalLanguage(book.id);
   const chapterSummary = getChapterSummary(book.id, chapter);
+  const chapterContext = getChapterContext(book.id, chapter);
   const bookSummary = chapter === 1 ? getBookSummary(book.id) : null;
+  const allTimelineEvents = getTimelineEvents();
+  const nextBook = chapter === book.chapters ? getBookById(book.id + 1) : null;
+  const nextBookSlug = nextBook ? getBookUrlSlug(nextBook) : null;
 
   // Create a map of original verses by verse number
   const originalVersesMap = new Map(originalVerses.map(v => [v.verse, v.text]));
@@ -85,9 +93,13 @@ export default async function ChapterPage({ params, searchParams }: PageProps) {
                   ← Forrige
                 </Link>
               )}
-              {chapter < book.chapters && (
+              {chapter < book.chapters ? (
                 <Link href={`/${urlSlug}/${chapter + 1}${bibleQuery}`} className={styles.navButton}>
                   Neste →
+                </Link>
+              ) : nextBook && nextBookSlug && (
+                <Link href={`/${nextBookSlug}/1${bibleQuery}`} className={styles.navButton}>
+                  {nextBook.name_no} →
                 </Link>
               )}
             </div>
@@ -106,6 +118,14 @@ export default async function ChapterPage({ params, searchParams }: PageProps) {
               type="chapter"
               title={`Kapittel ${chapter}`}
               content={chapterSummary}
+            />
+          )}
+
+          {chapterContext && (
+            <Summary
+              type="context"
+              title="Historisk kontekst"
+              content={chapterContext}
             />
           )}
 
@@ -130,20 +150,34 @@ export default async function ChapterPage({ params, searchParams }: PageProps) {
                   ← Forrige kapittel
                 </Link>
               )}
-              {chapter < book.chapters && (
+              {chapter < book.chapters ? (
                 <Link href={`/${urlSlug}/${chapter + 1}${bibleQuery}`} className={styles.navButton}>
                   Neste kapittel →
+                </Link>
+              ) : nextBook && nextBookSlug && (
+                <Link href={`/${nextBookSlug}/1${bibleQuery}`} className={styles.navButton}>
+                  {nextBook.name_no} →
                 </Link>
               )}
             </div>
           </footer>
         </article>
+
+        <aside className={styles.rightSidebar}>
+          <TimelinePanel
+            events={allTimelineEvents}
+            currentBookId={book.id}
+            currentChapter={chapter}
+          />
+        </aside>
       </div>
       <MobileToolbar
         bookName={book.name_no}
         chapter={chapter}
         maxChapter={book.chapters}
         bookSlug={urlSlug}
+        bookId={book.id}
+        timelineEvents={allTimelineEvents}
       />
     </main>
   );
