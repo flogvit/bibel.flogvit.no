@@ -161,6 +161,122 @@
   }
 }
 
+// Data export/import section
+.dataActions {
+  display: flex;
+  gap: $spacing-xs;
+}
+
+.dataButton {
+  flex: 1;
+  padding: $spacing-sm;
+  background: $color-background;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  font-family: $font-sans;
+  font-size: $font-size-sm;
+  color: $color-text;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    border-color: $color-secondary;
+    background: rgba($color-secondary, 0.05);
+  }
+}
+
+.importError {
+  margin-top: $spacing-sm;
+  padding: $spacing-sm;
+  background: rgba(220, 53, 69, 0.1);
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  border-radius: $radius-sm;
+  color: #dc3545;
+  font-size: $font-size-sm;
+}
+
+.importSuccess {
+  margin-top: $spacing-sm;
+  padding: $spacing-sm;
+  background: rgba(40, 167, 69, 0.1);
+  border: 1px solid rgba(40, 167, 69, 0.3);
+  border-radius: $radius-sm;
+  color: #28a745;
+  font-size: $font-size-sm;
+}
+
+.importPreview {
+  margin-top: $spacing-sm;
+  padding: $spacing-sm;
+  background: $color-background;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+}
+
+.importPreviewTitle {
+  font-size: $font-size-sm;
+  font-weight: 500;
+  color: $color-text;
+  margin: 0 0 $spacing-xs 0;
+}
+
+.importList {
+  margin: 0 0 $spacing-sm 0;
+  padding-left: $spacing-md;
+  font-size: $font-size-sm;
+  color: $color-text;
+
+  li {
+    margin-bottom: 2px;
+  }
+}
+
+.importDate {
+  font-size: 0.75rem;
+  color: $color-text-muted;
+  margin: 0 0 $spacing-sm 0;
+}
+
+.importButtons {
+  display: flex;
+  gap: $spacing-xs;
+  flex-wrap: wrap;
+}
+
+.importButton {
+  padding: $spacing-xs $spacing-sm;
+  background: $color-background;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  font-family: $font-sans;
+  font-size: 0.75rem;
+  color: $color-text;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    border-color: $color-secondary;
+  }
+
+  &.primary {
+    background: $color-primary;
+    border-color: $color-primary;
+    color: white;
+
+    &:hover {
+      background: darken($color-primary, 10%);
+    }
+  }
+
+  &.cancel {
+    color: $color-text-muted;
+
+    &:hover {
+      color: $color-text;
+    }
+  }
+}
+
 // Dark mode support
 :global(html.dark) {
   .header h4 {
@@ -210,6 +326,62 @@
       background: $dark-color-secondary;
       border-color: $dark-color-secondary;
       color: $dark-color-background;
+    }
+  }
+
+  .dataButton {
+    background: $dark-color-background;
+    border-color: $dark-color-border;
+    color: $dark-color-text;
+
+    &:hover {
+      border-color: $dark-color-secondary;
+      background: rgba($dark-color-secondary, 0.1);
+    }
+  }
+
+  .importPreview {
+    background: $dark-color-paper;
+    border-color: $dark-color-border;
+  }
+
+  .importPreviewTitle {
+    color: $dark-color-text;
+  }
+
+  .importList {
+    color: $dark-color-text;
+  }
+
+  .importDate {
+    color: $dark-color-text-muted;
+  }
+
+  .importButton {
+    background: $dark-color-background;
+    border-color: $dark-color-border;
+    color: $dark-color-text;
+
+    &:hover {
+      border-color: $dark-color-secondary;
+    }
+
+    &.primary {
+      background: $dark-color-secondary;
+      border-color: $dark-color-secondary;
+      color: $dark-color-background;
+
+      &:hover {
+        background: lighten($dark-color-secondary, 10%);
+      }
+    }
+
+    &.cancel {
+      color: $dark-color-text-muted;
+
+      &:hover {
+        color: $dark-color-text;
+      }
     }
   }
 }

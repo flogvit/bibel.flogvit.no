@@ -18,6 +18,11 @@
   @include tablet {
     display: flex;
   }
+
+  // Skjul når hovedmenyen er åpen
+  :global(body.menu-open) & {
+    display: none;
+  }
 }
 
 .navButton {
@@ -45,6 +50,19 @@
   font-family: $font-serif;
   font-size: $font-size-base;
   color: $color-primary;
+}
+
+.timelineButton {
+  @include button;
+  background: $color-secondary;
+  color: white;
+  width: 44px;
+  height: 44px;
+  font-size: $font-size-lg;
+
+  &:hover {
+    opacity: 0.9;
+  }
 }
 
 .toolsButton {
@@ -86,5 +104,38 @@
   @keyframes slideUp {
     from { transform: translateY(100%); }
     to { transform: translateY(0); }
+  }
+}
+
+// Dark mode
+:global(html.dark) {
+  .toolbar {
+    background: $dark-color-paper;
+    border-top-color: $dark-color-border;
+  }
+
+  .navButton {
+    background: $dark-color-background;
+    color: $dark-color-primary;
+
+    &:hover:not(.disabled) {
+      background: $dark-color-border;
+    }
+  }
+
+  .title {
+    color: $dark-color-primary;
+  }
+
+  .timelineButton {
+    background: $dark-color-secondary;
+  }
+
+  .toolsButton {
+    background: $dark-color-primary;
+  }
+
+  .sheet {
+    background: $dark-color-paper;
   }
 }

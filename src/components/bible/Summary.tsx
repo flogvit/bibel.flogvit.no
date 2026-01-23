@@ -5,7 +5,7 @@ import Markdown from 'react-markdown';
 import styles from './Summary.module.scss';
 
 interface SummaryProps {
-  type: 'book' | 'chapter';
+  type: 'book' | 'chapter' | 'context';
   title: string;
   content: string;
 }
@@ -15,6 +15,8 @@ export function Summary({ type, title, content }: SummaryProps) {
 
   const isVisible = type === 'book'
     ? settings.showBookSummary
+    : type === 'context'
+    ? settings.showChapterContext
     : settings.showChapterSummary;
 
   if (!isVisible) {

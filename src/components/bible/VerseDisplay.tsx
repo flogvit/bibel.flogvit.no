@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import styles from './VerseDisplay.module.scss';
-import type { Verse } from '@/lib/bible';
+import type { Verse, Prophecy } from '@/lib/bible';
 import { toUrlSlug } from '@/lib/url-utils';
 import { useSettings } from '@/components/SettingsContext';
 import { useFavorites } from '@/components/FavoritesContext';
 import { useTopics, Topic } from '@/components/TopicsContext';
+import { useNotes, Note } from '@/components/NotesContext';
 
 interface VerseDisplayProps {
   verse: Verse;
@@ -38,7 +39,7 @@ interface VerseExtras {
   sermon: string | null;
 }
 
-type TabType = 'original' | 'references' | 'prayer' | 'sermon' | 'topics';
+type TabType = 'original' | 'references' | 'prophecies' | 'prayer' | 'sermon' | 'topics' | 'notes';
 
 export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: VerseDisplayProps) {
   const router = useRouter();
@@ -46,10 +47,13 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
   const { settings } = useSettings();
   const { isFavorite, toggleFavorite } = useFavorites();
   const { topics, addTopic, addTopicToVerse, removeTopicFromVerse, getTopicsForVerse, searchTopics } = useTopics();
+  const { addNote, updateNote, deleteNote, getNotesForVerse } = useNotes();
   const [expanded, setExpanded] = useState(false);
   const favorited = isFavorite(bookId, verse.chapter, verse.verse);
   const verseTopics = getTopicsForVerse(bookId, verse.chapter, verse.verse);
+  const verseNotes = getNotesForVerse(bookId, verse.chapter, verse.verse);
   const hasTopics = verseTopics.length > 0;
+  const hasNotes = verseNotes.length > 0;
 
   // Check which bible version is being used
   const currentBible = searchParams.get('bible') || 'osnb1';
@@ -60,12 +64,16 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
   const [word4word, setWord4Word] = useState<Word4WordData[] | null>(null);
   const [originalWord4word, setOriginalWord4Word] = useState<Word4WordData[] | null>(null);
   const [references, setReferences] = useState<ReferenceData[] | null>(null);
+  const [prophecies, setProphecies] = useState<Prophecy[] | null>(null);
   const [verseExtras, setVerseExtras] = useState<VerseExtras | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('original');
   const [loading, setLoading] = useState(false);
   const [topicInput, setTopicInput] = useState('');
   const [showTopicSuggestions, setShowTopicSuggestions] = useState(false);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
+  const [noteInput, setNoteInput] = useState('');
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editNoteContent, setEditNoteContent] = useState('');
 
   // Auto-expand if URL hash matches this verse with -open suffix
   useEffect(() => {
@@ -109,6 +117,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
       const fetches: Promise<Response>[] = [
         fetch(`/api/word4word?bookId=${bookId}&chapter=${verse.chapter}&verse=${verse.verse}&bible=original`),
         fetch(`/api/references?bookId=${bookId}&chapter=${verse.chapter}&verse=${verse.verse}`),
+        fetch(`/api/prophecies?book=${bookId}&chapter=${verse.chapter}&verse=${verse.verse}`),
         fetch(`/api/verse-extras?bookId=${bookId}&chapter=${verse.chapter}&verse=${verse.verse}`)
       ];
 
@@ -127,11 +136,13 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
 
       const origW4wData = await responses[responseIndex++].json();
       const refsData = await responses[responseIndex++].json();
+      const propheciesData = await responses[responseIndex++].json();
       const extrasData = await responses[responseIndex++].json();
 
       setWord4Word(w4wData);
       setOriginalWord4Word(origW4wData);
       setReferences(refsData);
+      setProphecies(propheciesData.prophecies || []);
       setVerseExtras(extrasData);
       setLoading(false);
       return w4wData;
@@ -227,6 +238,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
       >
         {favorited && <span className={styles.favoriteIndicator}>★</span>}
         {hasTopics && <span className={styles.topicIndicator} title={`${verseTopics.length} emne${verseTopics.length > 1 ? 'r' : ''}`} />}
+        {hasNotes && <span className={styles.noteIndicator} title={`${verseNotes.length} notat${verseNotes.length > 1 ? 'er' : ''}`} />}
         {verse.verse}
       </span>
 
@@ -234,10 +246,13 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
         {words.map((word, index) => {
           const wordData = word4word?.find(w => w.word_index === index + 1);
           const isSelected = selectedWord?.word_index === index + 1;
+          // Make word clickable if setting is enabled and we have word4word for this bible
+          // Data will be loaded on click if not already loaded
+          const isClickable = settings.showWord4Word && hasWord4Word;
 
           return (
             <span key={index}>
-              {hasWord4Word ? (
+              {isClickable ? (
                 <span
                   className={`${styles.word} ${styles.clickable} ${isSelected ? styles.selected : ''}`}
                   onClick={() => handleWordClick(index)}
@@ -254,7 +269,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
         })}
       </span>
 
-      {selectedWord && selectedWord.original && (
+      {settings.showWord4Word && selectedWord && selectedWord.original && (
         <div className={styles.wordDetail}>
           <span className={styles.original}>{selectedWord.original}</span>
           {selectedWord.pronunciation && (
@@ -302,12 +317,22 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
                 >
                   Grunntekst
                 </button>
-                <button
-                  className={`${styles.tab} ${activeTab === 'references' ? styles.active : ''}`}
-                  onClick={() => setActiveTab('references')}
-                >
-                  Referanser
-                </button>
+                {settings.showReferences && (
+                  <button
+                    className={`${styles.tab} ${activeTab === 'references' ? styles.active : ''}`}
+                    onClick={() => setActiveTab('references')}
+                  >
+                    Referanser
+                  </button>
+                )}
+                {prophecies && prophecies.length > 0 && (
+                  <button
+                    className={`${styles.tab} ${activeTab === 'prophecies' ? styles.active : ''}`}
+                    onClick={() => setActiveTab('prophecies')}
+                  >
+                    Profetier ({prophecies.length})
+                  </button>
+                )}
                 {verseExtras?.prayer && (
                   <button
                     className={`${styles.tab} ${activeTab === 'prayer' ? styles.active : ''}`}
@@ -329,6 +354,12 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
                   onClick={() => setActiveTab('topics')}
                 >
                   Emner {verseTopics.length > 0 && `(${verseTopics.length})`}
+                </button>
+                <button
+                  className={`${styles.tab} ${activeTab === 'notes' ? styles.active : ''}`}
+                  onClick={() => setActiveTab('notes')}
+                >
+                  Notater {verseNotes.length > 0 && `(${verseNotes.length})`}
                 </button>
               </div>
 
@@ -407,7 +438,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
                   </div>
                 )}
 
-                {activeTab === 'references' && (
+                {settings.showReferences && activeTab === 'references' && (
                   <div className={styles.referencesList}>
                     {references && references.length > 0 ? (
                       references.map((ref, index) => (
@@ -425,6 +456,24 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
                     ) : (
                       <p className="text-muted">Ingen referanser</p>
                     )}
+                  </div>
+                )}
+
+                {activeTab === 'prophecies' && prophecies && prophecies.length > 0 && (
+                  <div className={styles.propheciesList}>
+                    {prophecies.map((prophecy) => (
+                      <a
+                        key={prophecy.id}
+                        href={`/profetier#${prophecy.id}`}
+                        className={styles.prophecyItem}
+                      >
+                        <span className={styles.prophecyTitle}>{prophecy.title}</span>
+                        <span className={styles.prophecyCategory}>{prophecy.category?.name}</span>
+                        {prophecy.explanation && (
+                          <p className={styles.prophecyExplanation}>{prophecy.explanation}</p>
+                        )}
+                      </a>
+                    ))}
                   </div>
                 )}
 
@@ -516,6 +565,111 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
                           )}
                         </div>
                       )}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'notes' && (
+                  <div className={styles.notesContent}>
+                    {verseNotes.length > 0 && (
+                      <div className={styles.notesList}>
+                        {verseNotes.map(note => (
+                          <div key={note.id} className={styles.noteItem}>
+                            {editingNoteId === note.id ? (
+                              <div className={styles.noteEditForm}>
+                                <textarea
+                                  className={styles.noteTextarea}
+                                  value={editNoteContent}
+                                  onChange={(e) => setEditNoteContent(e.target.value)}
+                                  rows={4}
+                                  autoFocus
+                                />
+                                <div className={styles.noteActions}>
+                                  <button
+                                    className={styles.noteSaveButton}
+                                    onClick={() => {
+                                      if (editNoteContent.trim()) {
+                                        updateNote(note.id, editNoteContent);
+                                      }
+                                      setEditingNoteId(null);
+                                      setEditNoteContent('');
+                                    }}
+                                  >
+                                    Lagre
+                                  </button>
+                                  <button
+                                    className={styles.noteCancelButton}
+                                    onClick={() => {
+                                      setEditingNoteId(null);
+                                      setEditNoteContent('');
+                                    }}
+                                  >
+                                    Avbryt
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <p className={styles.noteText}>{note.content}</p>
+                                <div className={styles.noteFooter}>
+                                  <span className={styles.noteDate}>
+                                    {new Date(note.updatedAt).toLocaleDateString('nb-NO', {
+                                      day: 'numeric',
+                                      month: 'short',
+                                      year: 'numeric',
+                                    })}
+                                  </span>
+                                  <div className={styles.noteActions}>
+                                    <button
+                                      className={styles.noteEditButton}
+                                      onClick={() => {
+                                        setEditingNoteId(note.id);
+                                        setEditNoteContent(note.content);
+                                      }}
+                                      title="Rediger"
+                                    >
+                                      ✎
+                                    </button>
+                                    <button
+                                      className={styles.noteDeleteButton}
+                                      onClick={() => {
+                                        if (confirm('Er du sikker på at du vil slette dette notatet?')) {
+                                          deleteNote(note.id);
+                                        }
+                                      }}
+                                      title="Slett"
+                                    >
+                                      ×
+                                    </button>
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className={styles.noteInputWrapper}>
+                      <textarea
+                        className={styles.noteTextarea}
+                        placeholder="Skriv et notat..."
+                        value={noteInput}
+                        onChange={(e) => setNoteInput(e.target.value)}
+                        rows={3}
+                      />
+                      <button
+                        className={styles.noteAddButton}
+                        onClick={() => {
+                          if (noteInput.trim()) {
+                            addNote(bookId, verse.chapter, verse.verse, noteInput);
+                            setNoteInput('');
+                          }
+                        }}
+                        disabled={!noteInput.trim()}
+                      >
+                        Legg til notat
+                      </button>
                     </div>
                   </div>
                 )}

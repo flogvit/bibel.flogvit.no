@@ -3,17 +3,24 @@
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ToolsPanel } from './ToolsPanel';
+import { TimelineMobileOverlay } from './TimelineMobileOverlay';
+import { useSettings } from '@/components/SettingsContext';
 import styles from './MobileToolbar.module.scss';
+import type { TimelineEvent } from '@/lib/bible';
 
 interface MobileToolbarProps {
   bookName: string;
   chapter: number;
   maxChapter: number;
   bookSlug: string;
+  bookId: number;
+  timelineEvents?: TimelineEvent[];
 }
 
-export function MobileToolbar({ bookName, chapter, maxChapter, bookSlug }: MobileToolbarProps) {
+export function MobileToolbar({ bookName, chapter, maxChapter, bookSlug, bookId, timelineEvents = [] }: MobileToolbarProps) {
   const [showTools, setShowTools] = useState(false);
+  const [showTimeline, setShowTimeline] = useState(false);
+  const { settings } = useSettings();
   const searchParams = useSearchParams();
   const bible = searchParams.get('bible');
   const bibleQuery = bible ? `?bible=${bible}` : '';
@@ -31,6 +38,16 @@ export function MobileToolbar({ bookName, chapter, maxChapter, bookSlug }: Mobil
         <span className={styles.title}>
           {bookName} {chapter}
         </span>
+
+        {settings.showTimeline && timelineEvents.length > 0 && (
+          <button
+            className={styles.timelineButton}
+            onClick={() => setShowTimeline(true)}
+            title="Tidslinje"
+          >
+            📅
+          </button>
+        )}
 
         <button
           className={styles.toolsButton}
@@ -54,6 +71,15 @@ export function MobileToolbar({ bookName, chapter, maxChapter, bookSlug }: Mobil
             <ToolsPanel onClose={() => setShowTools(false)} />
           </div>
         </div>
+      )}
+
+      {showTimeline && (
+        <TimelineMobileOverlay
+          events={timelineEvents}
+          currentBookId={bookId}
+          currentChapter={chapter}
+          onClose={() => setShowTimeline(false)}
+        />
       )}
     </>
   );

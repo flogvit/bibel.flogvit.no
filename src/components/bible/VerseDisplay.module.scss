@@ -327,6 +327,48 @@
   margin-top: $spacing-xs;
 }
 
+// Prophecies tab
+.propheciesList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.prophecyItem {
+  display: block;
+  padding: $spacing-sm $spacing-md;
+  border-left: 3px solid $color-accent;
+  background: $color-paper;
+  border-radius: 0 $radius-sm $radius-sm 0;
+  text-decoration: none;
+  transition: all $transition-fast;
+
+  &:hover {
+    border-left-color: $color-primary;
+    background: white;
+  }
+}
+
+.prophecyTitle {
+  font-weight: 500;
+  color: $color-primary;
+  display: block;
+}
+
+.prophecyCategory {
+  font-size: $font-size-sm;
+  color: $color-secondary;
+  display: block;
+  margin-top: $spacing-xs;
+}
+
+.prophecyExplanation {
+  font-size: $font-size-sm;
+  color: $color-text-light;
+  margin: $spacing-sm 0 0 0;
+  line-height: $line-height-base;
+}
+
 .prayerContent,
 .sermonContent {
   p {
@@ -474,6 +516,156 @@
   vertical-align: middle;
 }
 
+// Notes tab
+.noteIndicator {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: $color-accent;
+  margin-right: 2px;
+  vertical-align: middle;
+}
+
+.notesContent {
+  border-left: 3px solid $color-accent;
+  padding-left: $spacing-md;
+}
+
+.notesList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.noteItem {
+  background: $color-paper;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  padding: $spacing-md;
+}
+
+.noteText {
+  margin: 0;
+  line-height: $line-height-base;
+  color: $color-text;
+  white-space: pre-wrap;
+}
+
+.noteFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: $spacing-sm;
+  padding-top: $spacing-sm;
+  border-top: 1px solid $color-border;
+}
+
+.noteDate {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+}
+
+.noteActions {
+  display: flex;
+  gap: $spacing-xs;
+}
+
+.noteEditButton,
+.noteDeleteButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: $font-size-lg;
+  padding: $spacing-xs;
+  color: $color-text-muted;
+  transition: color $transition-fast;
+  line-height: 1;
+
+  &:hover {
+    color: $color-text;
+  }
+}
+
+.noteDeleteButton:hover {
+  color: #c00;
+}
+
+.noteEditForm {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.noteInputWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.noteTextarea {
+  width: 100%;
+  padding: $spacing-sm $spacing-md;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  font-family: $font-sans;
+  font-size: $font-size-base;
+  background: $color-paper;
+  resize: vertical;
+  min-height: 80px;
+  line-height: $line-height-base;
+  transition: border-color $transition-fast;
+
+  &:focus {
+    outline: none;
+    border-color: $color-secondary;
+  }
+
+  &::placeholder {
+    color: $color-text-muted;
+  }
+}
+
+.noteAddButton,
+.noteSaveButton {
+  align-self: flex-start;
+  padding: $spacing-sm $spacing-md;
+  background: $color-secondary;
+  color: white;
+  border: none;
+  border-radius: $radius-sm;
+  font-family: $font-sans;
+  font-size: $font-size-sm;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover:not(:disabled) {
+    opacity: 0.85;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.noteCancelButton {
+  padding: $spacing-sm $spacing-md;
+  background: $color-border;
+  color: $color-text;
+  border: none;
+  border-radius: $radius-sm;
+  font-family: $font-sans;
+  font-size: $font-size-sm;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: darken($color-border, 5%);
+  }
+}
+
 // Dark mode
 :global(html.dark) {
   .verseNumber {
@@ -615,6 +807,27 @@
     color: $dark-color-text-light;
   }
 
+  .prophecyItem {
+    border-left-color: $dark-color-accent;
+    background: $dark-color-paper;
+
+    &:hover {
+      border-left-color: $dark-color-primary;
+    }
+  }
+
+  .prophecyTitle {
+    color: $dark-color-primary;
+  }
+
+  .prophecyCategory {
+    color: $dark-color-secondary;
+  }
+
+  .prophecyExplanation {
+    color: $dark-color-text-light;
+  }
+
   .prayerContent {
     border-left-color: $dark-color-accent;
 
@@ -681,5 +894,69 @@
 
   .topicIndicator {
     background: $dark-color-primary;
+  }
+
+  // Notes dark mode
+  .noteIndicator {
+    background: $dark-color-accent;
+  }
+
+  .notesContent {
+    border-left-color: $dark-color-accent;
+  }
+
+  .noteItem {
+    background: $dark-color-paper;
+    border-color: $dark-color-border;
+  }
+
+  .noteText {
+    color: $dark-color-text;
+  }
+
+  .noteFooter {
+    border-top-color: $dark-color-border;
+  }
+
+  .noteDate {
+    color: $dark-color-text-muted;
+  }
+
+  .noteEditButton,
+  .noteDeleteButton {
+    color: $dark-color-text-muted;
+
+    &:hover {
+      color: $dark-color-text;
+    }
+  }
+
+  .noteTextarea {
+    background: $dark-color-paper;
+    border-color: $dark-color-border;
+    color: $dark-color-text;
+
+    &:focus {
+      border-color: $dark-color-secondary;
+    }
+
+    &::placeholder {
+      color: $dark-color-text-muted;
+    }
+  }
+
+  .noteAddButton,
+  .noteSaveButton {
+    background: $dark-color-secondary;
+    color: $dark-color-background;
+  }
+
+  .noteCancelButton {
+    background: $dark-color-border;
+    color: $dark-color-text;
+
+    &:hover {
+      background: lighten($dark-color-border, 5%);
+    }
   }
 }
