@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect, useRef } from 'react';
+import { Suspense, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './Header.module.scss';
+import { LoadingIndicator } from './LoadingIndicator';
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -51,6 +52,21 @@ export function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Lock body scroll and add class when mobile menu is open
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.classList.add('menu-open');
+    } else {
+      document.body.style.overflow = '';
+      document.body.classList.remove('menu-open');
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.classList.remove('menu-open');
+    };
+  }, [menuOpen]);
+
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     const query = searchQuery.trim();
@@ -86,8 +102,11 @@ export function Header() {
     <header className={styles.header}>
       <div className={styles.container}>
         <Link href="/" className={styles.logo}>
-          Bibelen
+          FLOGVIT.bibel
         </Link>
+        <Suspense fallback={null}>
+          <LoadingIndicator />
+        </Suspense>
 
         <form onSubmit={handleSearch} className={styles.searchForm}>
           <input
@@ -140,11 +159,23 @@ export function Header() {
               <Link href="/emner" className={styles.dropdownLink} onClick={handleNavClick}>
                 Emner
               </Link>
+              <Link href="/notater" className={styles.dropdownLink} onClick={handleNavClick}>
+                Notater
+              </Link>
               <Link href="/leseplan" className={styles.dropdownLink} onClick={handleNavClick}>
                 Leseplan
               </Link>
               <Link href="/temaer" className={styles.dropdownLink} onClick={handleNavClick}>
                 Temaer
+              </Link>
+              <Link href="/tidslinje" className={styles.dropdownLink} onClick={handleNavClick}>
+                Tidslinje
+              </Link>
+              <Link href="/profetier" className={styles.dropdownLink} onClick={handleNavClick}>
+                Profetier
+              </Link>
+              <Link href="/personer" className={styles.dropdownLink} onClick={handleNavClick}>
+                Personer
               </Link>
             </div>
           </div>
@@ -160,11 +191,23 @@ export function Header() {
             <Link href="/emner" className={styles.navLink} onClick={handleNavClick}>
               Emner
             </Link>
+            <Link href="/notater" className={styles.navLink} onClick={handleNavClick}>
+              Notater
+            </Link>
             <Link href="/leseplan" className={styles.navLink} onClick={handleNavClick}>
               Leseplan
             </Link>
             <Link href="/temaer" className={styles.navLink} onClick={handleNavClick}>
               Temaer
+            </Link>
+            <Link href="/tidslinje" className={styles.navLink} onClick={handleNavClick}>
+              Tidslinje
+            </Link>
+            <Link href="/profetier" className={styles.navLink} onClick={handleNavClick}>
+              Profetier
+            </Link>
+            <Link href="/personer" className={styles.navLink} onClick={handleNavClick}>
+              Personer
             </Link>
           </div>
 
