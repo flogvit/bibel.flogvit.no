@@ -1,5 +1,5 @@
 #!/bin/bash
-# Deploy script for bibel.flogvit.com
+# Deploy script for bibel.flogvit.no
 
 set -e  # Exit on error
 
@@ -39,4 +39,4 @@ ssh root@$SERVER << 'ENDSSH'
 ENDSSH
 
 echo "✅ Deploy complete!"
-echo "🌐 https://bibel.flogvit.com"
+echo "🌐 https://bibel.flogvit.no"

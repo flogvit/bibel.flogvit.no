@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import { getAllBooks, getAllThemes, toUrlSlug } from '@/lib/bible';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://bibel.flogvit.com';
+  const baseUrl = 'https://bibel.flogvit.no';
   const books = getAllBooks();
   const themes = getAllThemes();
 

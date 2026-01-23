@@ -1,5 +1,5 @@
 #!/bin/bash
-# Deploy script for bibel.flogvit.com using Docker
+# Deploy script for bibel.flogvit.no using Docker
 # Builds locally and transfers image to server
 
 set -e
@@ -51,4 +51,4 @@ ENDSSH
 rm -f $IMAGE_FILE
 
 echo "✅ Deploy complete!"
-echo "🌐 https://bibel.flogvit.com"
+echo "🌐 https://bibel.flogvit.no"

@@ -3,6 +3,9 @@ import '@/styles/globals.scss';
 import { Providers } from '@/components/Providers';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { KeyboardShortcuts } from '@/components/KeyboardShortcuts';
+import { AxeAccessibility } from '@/components/AxeAccessibility';
+import { NavigationAnnouncer } from '@/components/NavigationAnnouncer';
 
 export const metadata: Metadata = {
   title: {
@@ -13,7 +16,7 @@ export const metadata: Metadata = {
   keywords: ['bibel', 'norsk bibel', 'bibelen', 'bibellesning', 'bibelstudie', 'kristen', 'GT', 'NT'],
   authors: [{ name: 'Flogvit' }],
   creator: 'Flogvit',
-  metadataBase: new URL('https://bibel.flogvit.com'),
+  metadataBase: new URL('https://bibel.flogvit.no'),
   icons: {
     icon: '/favicon.svg',
     apple: '/favicon.svg',
@@ -21,14 +24,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'nb_NO',
-    url: 'https://bibel.flogvit.com',
+    url: 'https://bibel.flogvit.no',
     siteName: 'FLOGVIT.bibel',
     title: 'Bibelen - Les Guds ord på norsk',
     description: 'Åpen norsk bibel med oppslagsverk og verktøy for bibellesning. Gratis tilgang til bibelteksten med ord-for-ord forklaringer, kryssreferanser og studieverktøy.',
   },
   twitter: {
     card: 'summary',
-    title: 'Bibelen - bibel.flogvit.com',
+    title: 'Bibelen - bibel.flogvit.no',
     description: 'Norsk bibel med oppslagsverk og verktøy for bibellesning',
   },
   robots: {
@@ -43,14 +46,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="no">
+    <html lang="nb">
       <body>
         <Providers>
+          <a href="#main-content" className="skip-link">
+            Hopp til hovedinnhold
+          </a>
           <div className="page">
             <Header />
-            {children}
+            <main id="main-content">
+              {children}
+            </main>
             <Footer />
           </div>
+          <KeyboardShortcuts />
+          <NavigationAnnouncer />
+          <AxeAccessibility />
         </Providers>
       </body>
     </html>

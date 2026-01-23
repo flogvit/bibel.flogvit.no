@@ -7,12 +7,14 @@ export function Footer() {
   return (
     <footer className={styles.footer}>
       <div className={styles.container}>
-        <div className={styles.links}>
+        <nav className={styles.links} aria-label="Bunntekstnavigasjon">
           <Link href="/">Forside</Link>
           <Link href="/om">Om siden</Link>
-        </div>
+          <Link href="/om#hjelp">Hjelp</Link>
+          <Link href="/tilgjengelighet">Tilgjengelighet</Link>
+        </nav>
         <p className={styles.copyright}>
-          © {currentYear} bibel.flogvit.com
+          © {currentYear} bibel.flogvit.no
         </p>
       </div>
     </footer>

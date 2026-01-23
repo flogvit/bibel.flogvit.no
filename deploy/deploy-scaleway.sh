@@ -8,7 +8,7 @@ REGISTRY="rg.${REGION}.scw.cloud"
 NAMESPACE="bibel"  # Din registry namespace
 IMAGE_NAME="bibel-flogvit"
 CONTAINER_NAME="bibel"
-CUSTOM_DOMAIN="bibel.flogvit.com"
+CUSTOM_DOMAIN="bibel.flogvit.no"
 
 echo "🔧 Checking Registry namespace..."
 if ! scw registry namespace list region=${REGION} -o json | jq -e ".[] | select(.name==\"${NAMESPACE}\")" > /dev/null 2>&1; then
