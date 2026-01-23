@@ -31,6 +31,8 @@ export function MobileToolbar({ bookName, chapter, maxChapter, bookSlug, bookId,
         <a
           href={chapter > 1 ? `/${bookSlug}/${chapter - 1}${bibleQuery}` : undefined}
           className={`${styles.navButton} ${chapter === 1 ? styles.disabled : ''}`}
+          aria-label={`Forrige kapittel${chapter > 1 ? `: ${bookName} ${chapter - 1}` : ' (ikke tilgjengelig)'}`}
+          aria-disabled={chapter === 1}
         >
           ←
         </a>
@@ -60,6 +62,8 @@ export function MobileToolbar({ bookName, chapter, maxChapter, bookSlug, bookId,
         <a
           href={chapter < maxChapter ? `/${bookSlug}/${chapter + 1}${bibleQuery}` : undefined}
           className={`${styles.navButton} ${chapter === maxChapter ? styles.disabled : ''}`}
+          aria-label={`Neste kapittel${chapter < maxChapter ? `: ${bookName} ${chapter + 1}` : ' (ikke tilgjengelig)'}`}
+          aria-disabled={chapter === maxChapter}
         >
           →
         </a>

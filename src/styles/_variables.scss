@@ -1,16 +1,16 @@
 // Farger - klassisk, stilren palett
 $color-primary: #2c3e50;
-$color-secondary: #8b7355;
+$color-secondary: #6b5a45; // Mørkere for WCAG AA kontrast (4.5:1)
 $color-accent: #c9a959;
 $color-background: #faf8f5;
 $color-paper: #ffffff;
 $color-text: #333333;
 $color-text-light: #666666;
-$color-text-muted: #999999;
+$color-text-muted: #717171; // Mørkere for WCAG AA kontrast (4.5:1)
 $color-border: #e5e0d8;
 
 // Bibelspesifikke farger
-$color-verse-number: #0077cc;
+$color-verse-number: #0066aa; // Mørkere for WCAG AA kontrast (4.5:1 mot #faf8f5)
 $color-verse-highlight: #fff8e1;
 $color-original-text: #6b5b4f;
 
@@ -19,6 +19,7 @@ $font-serif: 'Georgia', 'Times New Roman', serif;
 $font-sans: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
 
 $font-size-base: 1rem;
+$font-size-xs: 0.75rem;
 $font-size-sm: 0.875rem;
 $font-size-lg: 1.125rem;
 $font-size-xl: 1.5rem;
@@ -65,7 +66,7 @@ $dark-color-background: #1a1a2e;
 $dark-color-paper: #16213e;
 $dark-color-text: #e2e8f0;
 $dark-color-text-light: #a0aec0;
-$dark-color-text-muted: #718096;
+$dark-color-text-muted: #94a3b8; // Lysere for WCAG AA kontrast mot mørk bakgrunn
 $dark-color-border: #2d3748;
 $dark-color-verse-number: #63b3ed;
 $dark-color-verse-highlight: #3d3d1a;

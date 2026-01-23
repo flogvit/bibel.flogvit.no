@@ -231,16 +231,32 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
 
   return (
     <div id={`v${verse.verse}`} className={styles.verse}>
-      <span
-        className={styles.verseNumber}
-        onClick={handleVerseClick}
-        title="Klikk for å se original tekst og referanser"
-      >
-        {favorited && <span className={styles.favoriteIndicator}>★</span>}
-        {hasTopics && <span className={styles.topicIndicator} title={`${verseTopics.length} emne${verseTopics.length > 1 ? 'r' : ''}`} />}
-        {hasNotes && <span className={styles.noteIndicator} title={`${verseNotes.length} notat${verseNotes.length > 1 ? 'er' : ''}`} />}
-        {verse.verse}
-      </span>
+      {settings.showVerseDetails ? (
+        <span
+          className={styles.verseNumber}
+          onClick={handleVerseClick}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleVerseClick();
+            }
+          }}
+          tabIndex={0}
+          role="button"
+          aria-expanded={expanded}
+          aria-label={`Vers ${verse.verse}. Klikk for å se original tekst og referanser`}
+        >
+          {favorited && <span className={styles.favoriteIndicator} aria-label="Favoritt">★</span>}
+          {hasTopics && <span className={styles.topicIndicator} aria-label={`${verseTopics.length} emne${verseTopics.length > 1 ? 'r' : ''}`} />}
+          {hasNotes && <span className={styles.noteIndicator} aria-label={`${verseNotes.length} notat${verseNotes.length > 1 ? 'er' : ''}`} />}
+          {verse.verse}
+        </span>
+      ) : (
+        <span className={styles.verseNumberStatic}>
+          {favorited && <span className={styles.favoriteIndicator} aria-label="Favoritt">★</span>}
+          {verse.verse}
+        </span>
+      )}
 
       <span className={styles.verseText}>
         {words.map((word, index) => {
@@ -256,7 +272,16 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
                 <span
                   className={`${styles.word} ${styles.clickable} ${isSelected ? styles.selected : ''}`}
                   onClick={() => handleWordClick(index)}
-                  title="Klikk for ordforklaring"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleWordClick(index);
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-pressed={isSelected}
+                  aria-label={`${word}. Klikk for ordforklaring`}
                 >
                   {word}
                 </span>
@@ -291,6 +316,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
         <div
           className={`${styles.originalVerse} ${originalLanguage === 'hebrew' ? styles.hebrew : styles.greek}`}
           dir={originalLanguage === 'hebrew' ? 'rtl' : 'ltr'}
+          lang={originalLanguage === 'hebrew' ? 'he' : 'el'}
         >
           {originalText}
         </div>
@@ -299,7 +325,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
       {expanded && (
         <div className={styles.expanded}>
           {loading ? (
-            <p className={styles.loading}>Laster...</p>
+            <p className={styles.loading} role="status" aria-live="polite">Laster...</p>
           ) : (
             <>
               <div className={styles.expandedHeader}>
@@ -317,7 +343,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
                 >
                   Grunntekst
                 </button>
-                {settings.showReferences && (
+                {true && (
                   <button
                     className={`${styles.tab} ${activeTab === 'references' ? styles.active : ''}`}
                     onClick={() => setActiveTab('references')}
@@ -370,6 +396,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
                       <div
                         className={`${styles.fullOriginalText} ${originalLanguage === 'hebrew' ? styles.hebrew : styles.greek}`}
                         dir={originalLanguage === 'hebrew' ? 'rtl' : 'ltr'}
+                        lang={originalLanguage === 'hebrew' ? 'he' : 'el'}
                       >
                         {originalText}
                       </div>
@@ -382,12 +409,23 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
                         <div
                           className={`${styles.originalText} ${originalLanguage === 'hebrew' ? styles.hebrewWords : ''}`}
                           dir={originalLanguage === 'hebrew' ? 'rtl' : 'ltr'}
+                          lang={originalLanguage === 'hebrew' ? 'he' : 'el'}
                         >
                           {originalWord4word.map(w => (
                             <span
                               key={w.word_index}
                               className={`${styles.originalWord} ${styles.clickableWord} ${selectedOriginalWord?.word_index === w.word_index ? styles.selectedWord : ''}`}
                               onClick={() => setSelectedOriginalWord(selectedOriginalWord?.word_index === w.word_index ? null : w)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  setSelectedOriginalWord(selectedOriginalWord?.word_index === w.word_index ? null : w);
+                                }
+                              }}
+                              tabIndex={0}
+                              role="button"
+                              aria-pressed={selectedOriginalWord?.word_index === w.word_index}
+                              aria-label={`${w.word}${w.pronunciation ? ` (${w.pronunciation})` : ''}. Klikk for forklaring`}
                             >
                               <span className={styles.originalScript}>{w.word}</span>
                               {w.pronunciation && (
@@ -438,7 +476,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
                   </div>
                 )}
 
-                {settings.showReferences && activeTab === 'references' && (
+                {true && activeTab === 'references' && (
                   <div className={styles.referencesList}>
                     {references && references.length > 0 ? (
                       references.map((ref, index) => (
@@ -516,6 +554,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
                         className={styles.topicInput}
                         placeholder="Legg til emne..."
                         value={topicInput}
+                        aria-label="Legg til emne for dette verset"
                         onChange={(e) => {
                           setTopicInput(e.target.value);
                           setShowTopicSuggestions(true);
@@ -583,6 +622,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
                                   onChange={(e) => setEditNoteContent(e.target.value)}
                                   rows={4}
                                   autoFocus
+                                  aria-label="Rediger notat"
                                 />
                                 <div className={styles.noteActions}>
                                   <button
@@ -657,6 +697,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
                         value={noteInput}
                         onChange={(e) => setNoteInput(e.target.value)}
                         rows={3}
+                        aria-label="Skriv et notat for dette verset"
                       />
                       <button
                         className={styles.noteAddButton}

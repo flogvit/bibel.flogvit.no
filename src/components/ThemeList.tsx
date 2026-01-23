@@ -75,6 +75,7 @@ export function ThemeList({ themes }: ThemeListProps) {
           placeholder="Søk i temaer..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          aria-label="Søk i bibelske temaer"
         />
         {searchQuery && (
           <button

@@ -20,8 +20,8 @@
   border-right: 1px solid $color-border;
   padding: $spacing-lg;
   position: sticky;
-  top: 60px;
-  height: calc(100vh - 60px);
+  top: 3.75rem; // Matches header, scales with zoom
+  height: calc(100vh - 3.75rem);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -39,10 +39,16 @@
 }
 
 .nav {
-  h3 {
-    font-size: $font-size-lg;
-    margin-bottom: $spacing-md;
-  }
+  // Empty - styles moved to navTitle
+}
+
+.navTitle {
+  display: block;
+  font-family: $font-serif;
+  font-size: $font-size-lg;
+  font-weight: 400;
+  color: $color-primary;
+  margin-bottom: $spacing-md;
 }
 
 .backLink {
@@ -158,7 +164,7 @@
     border-right-color: $dark-color-border;
   }
 
-  .nav h3 {
+  .navTitle {
     color: $dark-color-primary;
   }
 

@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useTopics, Topic, VerseTopic } from '@/components/TopicsContext';
+import { useTopics, Topic } from '@/components/TopicsContext';
 import { useEffect, useState } from 'react';
 import styles from './page.module.scss';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 
 interface VerseWithText {
   bookId: number;
@@ -95,10 +96,13 @@ export default function TopicsPage() {
   }
 
   return (
-    <main className={styles.main}>
+    <div className={styles.main}>
       <div className={styles.container}>
+        <Breadcrumbs items={[
+          { label: 'Hjem', href: '/' },
+          { label: 'Emner' }
+        ]} />
         <header className={styles.header}>
-          <Link href="/" className={styles.backLink}>← Tilbake</Link>
           <h1>Mine emner</h1>
           <p className={styles.intro}>
             Organiser bibelvers etter emner. Åpne et vers og gå til &quot;Emner&quot;-fanen for å legge til emner.
@@ -130,6 +134,7 @@ export default function TopicsPage() {
                           if (e.key === 'Escape') setEditingTopic(null);
                         }}
                         autoFocus
+                        aria-label="Rediger emnenavn"
                       />
                       <button onClick={handleSaveEdit} className={styles.saveButton}>Lagre</button>
                       <button onClick={() => setEditingTopic(null)} className={styles.cancelButton}>Avbryt</button>
@@ -205,6 +210,6 @@ export default function TopicsPage() {
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 }

@@ -1,7 +1,7 @@
 import styles from './page.module.scss';
-import Link from 'next/link';
-import { getAllPersonsData, eraLabels, roleLabels, type PersonData } from '@/lib/bible';
+import { getAllPersonsData, eraLabels, roleLabels } from '@/lib/bible';
 import { PersonList } from '@/components/PersonList';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 
 export const metadata = {
   title: 'Bibelske personer - Bibelen',
@@ -30,9 +30,12 @@ export default function PersonsPage() {
   }));
 
   return (
-    <main className={styles.main}>
+    <div className={styles.main}>
       <div className="reading-container">
-        <Link href="/" className={styles.backLink}>← Tilbake til Bibelen</Link>
+        <Breadcrumbs items={[
+          { label: 'Hjem', href: '/' },
+          { label: 'Personer' }
+        ]} />
 
         <h1>Bibelske personer</h1>
         <p className={styles.intro}>
@@ -46,6 +49,6 @@ export default function PersonsPage() {
           roles={roles.map(r => ({ id: r, label: roleLabels[r] || r }))}
         />
       </div>
-    </main>
+    </div>
   );
 }

@@ -12,15 +12,15 @@
   margin-bottom: $spacing-md;
   padding-bottom: $spacing-sm;
   border-bottom: 1px solid $color-border;
+}
 
-  h4 {
-    font-size: $font-size-sm;
-    font-family: $font-sans;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: $color-text-muted;
-    margin: 0;
-  }
+.title {
+  font-size: $font-size-sm;
+  font-family: $font-sans;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: $color-text-muted;
+  font-weight: 600;
 }
 
 .closeButton {
@@ -31,6 +31,12 @@
   cursor: pointer;
   padding: $spacing-xs;
   line-height: 1;
+  // WCAG 2.5.8: Minimum target size 24x24px
+  min-width: 24px;
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &:hover {
     color: $color-text;
@@ -56,12 +62,16 @@
 }
 
 .checkmark {
-  width: 18px;
-  height: 18px;
+  // Visual size is 18px but touch target is 24px for WCAG 2.5.8
+  width: 24px;
+  height: 24px;
   border: 2px solid $color-border;
   border-radius: $radius-sm;
   position: relative;
   transition: all $transition-fast;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   .tool:hover & {
     border-color: $color-secondary;
@@ -73,12 +83,8 @@
 
     &::after {
       content: '✓';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
       color: white;
-      font-size: 12px;
+      font-size: 14px;
       font-weight: bold;
     }
   }
@@ -95,14 +101,15 @@
   &:last-child {
     margin-bottom: 0;
   }
+}
 
-  h5 {
-    font-size: $font-size-sm;
-    font-family: $font-sans;
-    color: $color-text-muted;
-    margin: 0 0 $spacing-sm 0;
-    font-weight: 500;
-  }
+.sectionTitle {
+  display: block;
+  font-size: $font-size-sm;
+  font-family: $font-sans;
+  color: $color-text-muted;
+  margin: 0 0 $spacing-sm 0;
+  font-weight: 500;
 }
 
 .bibleVersions {
@@ -130,6 +137,9 @@
     background: $color-primary;
     border-color: $color-primary;
     color: white;
+    // WCAG: Visuell indikator utover farge
+    font-weight: 600;
+    box-shadow: inset 0 -2px 0 0 rgba(255, 255, 255, 0.5);
   }
 }
 
@@ -158,6 +168,9 @@
     background: $color-primary;
     border-color: $color-primary;
     color: white;
+    // WCAG: Visuell indikator utover farge
+    font-weight: 600;
+    box-shadow: inset 0 -2px 0 0 rgba(255, 255, 255, 0.5);
   }
 }
 
@@ -279,7 +292,7 @@
 
 // Dark mode support
 :global(html.dark) {
-  .header h4 {
+  .title {
     color: $dark-color-text-muted;
   }
 
@@ -308,7 +321,7 @@
     color: $dark-color-text;
   }
 
-  .section h5 {
+  .sectionTitle {
     color: $dark-color-text-muted;
   }
 

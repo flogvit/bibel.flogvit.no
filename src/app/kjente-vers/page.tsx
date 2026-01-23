@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getAllWellKnownVerses, toUrlSlug } from '@/lib/bible';
 import styles from './page.module.scss';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 
 export const metadata = {
   title: 'Kjente bibelvers - Bibelen',
@@ -15,10 +16,13 @@ export default function WellKnownVersesPage() {
   const ntVerses = verses.filter(v => v.book_id >= 40);
 
   return (
-    <main className={styles.main}>
+    <div className={styles.main}>
       <div className={styles.container}>
+        <Breadcrumbs items={[
+          { label: 'Hjem', href: '/' },
+          { label: 'Kjente vers' }
+        ]} />
         <header className={styles.header}>
-          <Link href="/" className={styles.backLink}>← Tilbake</Link>
           <h1>Kjente bibelvers</h1>
           <p className={styles.intro}>
             En samling av kjente og ofte siterte bibelvers. Klikk på et vers for å lese det i kontekst.
@@ -61,6 +65,6 @@ export default function WellKnownVersesPage() {
           </div>
         </section>
       </div>
-    </main>
+    </div>
   );
 }

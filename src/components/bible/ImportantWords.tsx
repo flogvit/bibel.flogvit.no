@@ -43,8 +43,8 @@ export function ImportantWords({ bookId, chapter }: ImportantWordsProps) {
   if (loading) {
     return (
       <section className={styles.container}>
-        <h3>Viktige ord</h3>
-        <p className={styles.loading}>Laster...</p>
+        <h2>Viktige ord</h2>
+        <p className={styles.loading} role="status" aria-live="polite">Laster...</p>
       </section>
     );
   }
@@ -55,19 +55,21 @@ export function ImportantWords({ bookId, chapter }: ImportantWordsProps) {
 
   return (
     <section className={styles.container}>
-      <h3>Viktige ord i dette kapittelet</h3>
+      <h2>Viktige ord i dette kapittelet</h2>
       <div className={styles.wordList}>
         {words.map((word, index) => (
           <div key={index} className={styles.wordItem}>
             <button
               className={styles.wordButton}
               onClick={() => setExpanded(expanded === index ? null : index)}
+              aria-expanded={expanded === index}
+              aria-controls={`word-explanation-${index}`}
             >
               <span className={styles.word}>{word.word}</span>
-              <span className={styles.toggle}>{expanded === index ? '−' : '+'}</span>
+              <span className={styles.toggle} aria-hidden="true">{expanded === index ? '−' : '+'}</span>
             </button>
             {expanded === index && (
-              <p className={styles.explanation}>{word.explanation}</p>
+              <p id={`word-explanation-${index}`} className={styles.explanation}>{word.explanation}</p>
             )}
           </div>
         ))}

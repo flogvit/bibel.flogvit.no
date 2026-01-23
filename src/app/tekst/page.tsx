@@ -5,6 +5,7 @@ import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import styles from './page.module.scss';
 import { VerseDisplay } from '@/components/bible/VerseDisplay';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import type { VerseWithOriginal, VerseRef, Book } from '@/lib/bible';
 import { toUrlSlug } from '@/lib/url-utils';
 
@@ -196,9 +197,12 @@ function PassageContent() {
 
 export default function TekstPage() {
   return (
-    <main className={styles.main}>
+    <div className={styles.main}>
       <div className="reading-container">
-        <Link href="/" className={styles.backLink}>← Tilbake til Bibelen</Link>
+        <Breadcrumbs items={[
+          { label: 'Hjem', href: '/' },
+          { label: 'Bibelpassasjer' }
+        ]} />
 
         <h1>Bibelpassasjer</h1>
 
@@ -206,6 +210,6 @@ export default function TekstPage() {
           <PassageContent />
         </Suspense>
       </div>
-    </main>
+    </div>
   );
 }

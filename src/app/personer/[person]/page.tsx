@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getPersonData, getAllPersonsData, eraLabels, roleLabels } from '@/lib/bible';
 import { PersonVerseDisplay } from '@/components/PersonVerseDisplay';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 
 interface Props {
   params: Promise<{ person: string }>;
@@ -66,9 +67,13 @@ export default async function PersonPage({ params }: Props) {
   }
 
   return (
-    <main className={styles.main}>
+    <div className={styles.main}>
       <div className="reading-container">
-        <Link href="/personer" className={styles.backLink}>← Tilbake til personer</Link>
+        <Breadcrumbs items={[
+          { label: 'Hjem', href: '/' },
+          { label: 'Personer', href: '/personer' },
+          { label: personData.name }
+        ]} />
 
         <header className={styles.personHeader}>
           <h1>{personData.name}</h1>
@@ -122,6 +127,6 @@ export default async function PersonPage({ params }: Props) {
           </section>
         )}
       </div>
-    </main>
+    </div>
   );
 }

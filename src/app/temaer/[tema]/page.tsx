@@ -1,8 +1,8 @@
 import styles from './page.module.scss';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getThemeByName, parseThemeContent, getAllThemes, isJsonTheme, parseThemeJson } from '@/lib/bible';
 import { ThemeVerseDisplay } from '@/components/bible/ThemeVerseDisplay';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 
 interface Props {
   params: Promise<{ tema: string }>;
@@ -54,15 +54,19 @@ export default async function ThemePage({ params }: Props) {
     }
 
     return (
-      <main className={styles.main}>
+      <div className={styles.main}>
         <div className="reading-container">
-          <Link href="/temaer" className={styles.backLink}>← Tilbake til temaer</Link>
+          <Breadcrumbs items={[
+            { label: 'Hjem', href: '/' },
+            { label: 'Temaer', href: '/temaer' },
+            { label: themeData.title }
+          ]} />
 
           <h1>{themeData.title}</h1>
 
           <ThemeVerseDisplay themeData={themeData} />
         </div>
-      </main>
+      </div>
     );
   }
 
@@ -71,9 +75,13 @@ export default async function ThemePage({ params }: Props) {
   const displayName = tema.charAt(0).toUpperCase() + tema.slice(1);
 
   return (
-    <main className={styles.main}>
+    <div className={styles.main}>
       <div className="reading-container">
-        <Link href="/temaer" className={styles.backLink}>← Tilbake til temaer</Link>
+        <Breadcrumbs items={[
+          { label: 'Hjem', href: '/' },
+          { label: 'Temaer', href: '/temaer' },
+          { label: displayName }
+        ]} />
 
         <h1>{displayName}</h1>
 
@@ -86,6 +94,6 @@ export default async function ThemePage({ params }: Props) {
           ))}
         </div>
       </div>
-    </main>
+    </div>
   );
 }

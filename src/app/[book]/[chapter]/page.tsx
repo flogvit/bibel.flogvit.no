@@ -22,6 +22,8 @@ import { ScrollToVerse } from '@/components/bible/ScrollToVerse';
 import { Summary } from '@/components/bible/Summary';
 import { ImportantWords } from '@/components/bible/ImportantWords';
 import { TimelinePanel } from '@/components/bible/TimelinePanel';
+import { ChapterKeyboardShortcuts } from '@/components/bible/ChapterKeyboardShortcuts';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 
 interface PageProps {
   params: Promise<{
@@ -62,13 +64,20 @@ export default async function ChapterPage({ params, searchParams }: PageProps) {
   const originalVersesMap = new Map(originalVerses.map(v => [v.verse, v.text]));
 
   return (
-    <main className={styles.main}>
+    <div className={styles.main}>
       <ScrollToVerse />
+      <ChapterKeyboardShortcuts
+        bookSlug={urlSlug}
+        currentChapter={chapter}
+        maxChapter={book.chapters}
+        nextBookSlug={nextBookSlug}
+        bibleQuery={bibleQuery}
+      />
       <div className={styles.layout}>
-        <aside className={styles.sidebar}>
-          <nav className={styles.nav}>
+        <aside className={styles.sidebar} aria-label="Kapittelnavigasjon og innstillinger">
+          <nav className={styles.nav} aria-label="Kapittelliste">
             <Link href="/" className={styles.backLink}>← Alle bøker</Link>
-            <h3>{book.name_no}</h3>
+            <span className={styles.navTitle}>{book.name_no}</span>
             <div className={styles.chapterList}>
               {Array.from({ length: book.chapters }, (_, i) => i + 1).map(ch => (
                 <Link
@@ -85,6 +94,11 @@ export default async function ChapterPage({ params, searchParams }: PageProps) {
         </aside>
 
         <article className={styles.content}>
+          <Breadcrumbs items={[
+            { label: 'Hjem', href: '/' },
+            { label: book.name_no, href: `/${urlSlug}/1${bibleQuery}` },
+            { label: `Kapittel ${chapter}` }
+          ]} />
           <header className={styles.header}>
             <h1>{book.name_no} {chapter}</h1>
             <div className={styles.navButtons}>
@@ -163,7 +177,7 @@ export default async function ChapterPage({ params, searchParams }: PageProps) {
           </footer>
         </article>
 
-        <aside className={styles.rightSidebar}>
+        <aside className={styles.rightSidebar} aria-label="Tidslinje">
           <TimelinePanel
             events={allTimelineEvents}
             currentBookId={book.id}
@@ -179,7 +193,7 @@ export default async function ChapterPage({ params, searchParams }: PageProps) {
         bookId={book.id}
         timelineEvents={allTimelineEvents}
       />
-    </main>
+    </div>
   );
 }
 

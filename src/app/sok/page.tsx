@@ -7,6 +7,7 @@ import { ReferenceInput } from '@/components/ReferenceInput';
 import { useSettings } from '@/components/SettingsContext';
 import { toUrlSlug } from '@/lib/url-utils';
 import styles from './page.module.scss';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 
 interface SearchResult {
   book_id: number;
@@ -101,8 +102,12 @@ function SearchContent() {
   }
 
   return (
-    <main className={styles.main}>
+    <div className={styles.main}>
       <div className="container">
+        <Breadcrumbs items={[
+          { label: 'Hjem', href: '/' },
+          { label: 'Søk' }
+        ]} />
         <h1>Søk i Bibelen</h1>
 
         <div className={styles.searchForm}>
@@ -113,13 +118,16 @@ function SearchContent() {
           />
         </div>
 
-        {searched && (
-          <p className={styles.resultCount}>
-            {total === 0
-              ? 'Ingen resultater funnet'
-              : `Viser ${results.length} av ${total} resultater`}
-          </p>
-        )}
+        <div role="status" aria-live="polite" aria-atomic="true">
+          {loading && <p className="text-muted">Søker...</p>}
+          {searched && !loading && (
+            <p className={styles.resultCount}>
+              {total === 0
+                ? 'Ingen resultater funnet'
+                : `Viser ${results.length} av ${total} resultater`}
+            </p>
+          )}
+        </div>
 
         {results.length > 0 && (
           <>
@@ -145,6 +153,7 @@ function SearchContent() {
                 onClick={() => performSearch(query, results.length, true)}
                 className={styles.loadMoreButton}
                 disabled={loadingMore}
+                aria-busy={loadingMore}
               >
                 {loadingMore ? 'Laster...' : 'Last flere resultater'}
               </button>
@@ -152,19 +161,19 @@ function SearchContent() {
           </>
         )}
       </div>
-    </main>
+    </div>
   );
 }
 
 export default function SearchPage() {
   return (
     <Suspense fallback={
-      <main className={styles.main}>
+      <div className={styles.main}>
         <div className="container">
           <h1>Søk i Bibelen</h1>
           <p className="text-muted">Laster...</p>
         </div>
-      </main>
+      </div>
     }>
       <SearchContent />
     </Suspense>

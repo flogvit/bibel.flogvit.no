@@ -9,7 +9,7 @@ export default function Home() {
   const ntBooks = books.filter(b => b.testament === 'NT');
 
   return (
-    <main className={styles.main}>
+    <div className={styles.main}>
       <div className="container">
         <header className={styles.header}>
           <h1>Bibelen</h1>
@@ -50,6 +50,6 @@ export default function Home() {
           </div>
         </section>
       </div>
-    </main>
+    </div>
   );
 }

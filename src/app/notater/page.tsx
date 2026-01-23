@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useNotes, Note } from '@/components/NotesContext';
 import { useEffect, useState } from 'react';
 import styles from './page.module.scss';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 
 interface VerseWithText {
   bookId: number;
@@ -149,10 +150,13 @@ export default function NotesPage() {
   const totalNotes = notesWithText.length;
 
   return (
-    <main className={styles.main}>
+    <div className={styles.main}>
       <div className={styles.container}>
+        <Breadcrumbs items={[
+          { label: 'Hjem', href: '/' },
+          { label: 'Notater' }
+        ]} />
         <header className={styles.header}>
-          <Link href="/" className={styles.backLink}>← Tilbake</Link>
           <h1>Mine notater</h1>
           <p className={styles.intro}>
             Dine personlige studienotater. Klikk på et vers og velg &quot;Notater&quot;-fanen for å legge til nye notater.
@@ -176,6 +180,7 @@ export default function NotesPage() {
                 placeholder="Søk i notater..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Søk i notater"
               />
             </div>
 
@@ -229,6 +234,7 @@ export default function NotesPage() {
                                     onChange={(e) => setEditContent(e.target.value)}
                                     rows={4}
                                     autoFocus
+                                    aria-label="Rediger notat"
                                   />
                                   <div className={styles.editActions}>
                                     <button className={styles.saveButton} onClick={handleSaveEdit}>
@@ -266,6 +272,6 @@ export default function NotesPage() {
           </>
         )}
       </div>
-    </main>
+    </div>
   );
 }

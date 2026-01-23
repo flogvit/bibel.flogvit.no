@@ -205,6 +205,14 @@
     background: $color-accent;
     border-color: $color-accent;
     color: white;
+    // WCAG: Visuell indikator utover farge - hake-symbol
+    &::after {
+      content: '✓';
+      position: absolute;
+      font-size: 0.6em;
+      font-weight: bold;
+    }
+    position: relative;
   }
 
   &.current {
@@ -212,6 +220,9 @@
     border-width: 2px;
     font-weight: 600;
     color: $color-primary;
+    // WCAG: Visuell indikator utover farge - understrek
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
 }
 

@@ -14,7 +14,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 60px;
+  min-height: 3.75rem; // 60px at 16px base, scales with zoom
+  padding-top: $spacing-sm;
+  padding-bottom: $spacing-sm;
 }
 
 .logo {
@@ -74,7 +76,7 @@
 
   @include mobile {
     position: fixed;
-    top: 60px;
+    top: 3.75rem; // Matches header min-height, scales with zoom
     left: 0;
     right: 0;
     bottom: 0;

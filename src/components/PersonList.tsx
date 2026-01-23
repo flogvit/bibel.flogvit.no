@@ -100,6 +100,7 @@ export function PersonList({ persons, eras, roles }: PersonListProps) {
           placeholder="Søk etter personer..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          aria-label="Søk etter bibelske personer"
         />
         {searchQuery && (
           <button

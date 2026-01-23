@@ -1,7 +1,7 @@
 import styles from './page.module.scss';
-import Link from 'next/link';
 import { getAllThemes, isJsonTheme, parseThemeJson } from '@/lib/bible';
 import { ThemeList } from '@/components/ThemeList';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 
 export const metadata = {
   title: 'Tematiske bibelstudier - Bibelen',
@@ -52,14 +52,17 @@ export default function ThemesPage() {
   });
 
   return (
-    <main className={styles.main}>
+    <div className={styles.main}>
       <div className="reading-container">
-        <Link href="/" className={styles.backLink}>← Tilbake til Bibelen</Link>
+        <Breadcrumbs items={[
+          { label: 'Hjem', href: '/' },
+          { label: 'Temaer' }
+        ]} />
 
         <h1>Tematiske bibelstudier</h1>
 
         <ThemeList themes={themeList} />
       </div>
-    </main>
+    </div>
   );
 }

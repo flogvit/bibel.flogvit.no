@@ -1,7 +1,7 @@
 import styles from './page.module.scss';
-import Link from 'next/link';
 import { getFullProphecyData } from '@/lib/bible';
 import { ProphecyView } from '@/components/ProphecyView';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 
 export const metadata = {
   title: 'Profetier og oppfyllelser - Bibelen',
@@ -12,9 +12,12 @@ export default function PropheciesPage() {
   const prophecyData = getFullProphecyData();
 
   return (
-    <main className={styles.main}>
+    <div className={styles.main}>
       <div className="reading-container">
-        <Link href="/" className={styles.backLink}>← Tilbake til Bibelen</Link>
+        <Breadcrumbs items={[
+          { label: 'Hjem', href: '/' },
+          { label: 'Profetier' }
+        ]} />
 
         <h1>Profetier og oppfyllelser</h1>
         <p className={styles.intro}>
@@ -27,6 +30,6 @@ export default function PropheciesPage() {
           prophecies={prophecyData.prophecies}
         />
       </div>
-    </main>
+    </div>
   );
 }

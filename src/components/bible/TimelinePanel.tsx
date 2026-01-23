@@ -225,7 +225,7 @@ export function TimelinePanel({ events, currentBookId, currentChapter }: Timelin
   return (
     <div className={styles.panel} ref={setContainerRef}>
       <div className={styles.header}>
-        <h3 className={styles.title}>Tidslinje</h3>
+        <h2 className={styles.title}>Tidslinje</h2>
         <Link href="/tidslinje" className={styles.viewAllLink}>
           Se alt →
         </Link>
@@ -261,7 +261,7 @@ export function TimelinePanel({ events, currentBookId, currentChapter }: Timelin
                   onClick={() => setExpandedEvent(isExpanded ? null : event.id)}
                 >
                   <span className={styles.eventYear}>{event.year_display}</span>
-                  <h4 className={styles.eventTitle}>{event.title}</h4>
+                  <h3 className={styles.eventTitle}>{event.title}</h3>
 
                   {isExpanded && (
                     <div className={styles.eventDetails}>

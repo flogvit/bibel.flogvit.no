@@ -108,7 +108,7 @@ export function ToolsPanel({ onClose }: ToolsPanelProps) {
     { key: 'showChapterContext' as const, label: 'Historisk kontekst' },
     { key: 'showImportantWords' as const, label: 'Viktige ord' },
     { key: 'showWord4Word' as const, label: 'Ordforklaring' },
-    { key: 'showReferences' as const, label: 'Referanser' },
+    { key: 'showVerseDetails' as const, label: 'Versdetaljer' },
     { key: 'showOriginalText' as const, label: 'Grunntekst' },
     { key: 'showTimeline' as const, label: 'Tidslinje' },
   ];
@@ -120,18 +120,18 @@ export function ToolsPanel({ onClose }: ToolsPanelProps) {
   ];
 
   return (
-    <div className={styles.panel}>
+    <div className={styles.panel} role="region" aria-label="Hjelpemidler">
       <div className={styles.header}>
-        <h4>Hjelpemidler</h4>
+        <span className={styles.title}>Hjelpemidler</span>
         {onClose && (
-          <button className={styles.closeButton} onClick={onClose}>
+          <button className={styles.closeButton} onClick={onClose} aria-label="Lukk hjelpemidler">
             ✕
           </button>
         )}
       </div>
 
       <div className={styles.section}>
-        <h5>Oversettelse</h5>
+        <span className={styles.sectionTitle}>Oversettelse</span>
         <div className={styles.bibleVersions}>
           {bibleVersions.map(version => (
             <button
@@ -146,7 +146,7 @@ export function ToolsPanel({ onClose }: ToolsPanelProps) {
       </div>
 
       <div className={styles.section}>
-        <h5>Vis/skjul</h5>
+        <span className={styles.sectionTitle}>Vis/skjul</span>
         <div className={styles.tools}>
           {tools.map(tool => (
             <label key={tool.key} className={styles.tool}>
@@ -163,7 +163,7 @@ export function ToolsPanel({ onClose }: ToolsPanelProps) {
       </div>
 
       <div className={styles.section}>
-        <h5>Skriftstørrelse</h5>
+        <span className={styles.sectionTitle}>Skriftstørrelse</span>
         <div className={styles.fontSizes}>
           {fontSizes.map(size => (
             <button
@@ -178,7 +178,7 @@ export function ToolsPanel({ onClose }: ToolsPanelProps) {
       </div>
 
       <div className={styles.section}>
-        <h5>Utseende</h5>
+        <span className={styles.sectionTitle}>Utseende</span>
         <label className={styles.tool}>
           <input
             type="checkbox"
@@ -191,7 +191,7 @@ export function ToolsPanel({ onClose }: ToolsPanelProps) {
       </div>
 
       <div className={styles.section}>
-        <h5>Data</h5>
+        <span className={styles.sectionTitle}>Data</span>
         <div className={styles.dataActions}>
           <button className={styles.dataButton} onClick={handleExport}>
             Eksporter data
@@ -212,11 +212,11 @@ export function ToolsPanel({ onClose }: ToolsPanelProps) {
         </div>
 
         {importError && (
-          <div className={styles.importError}>{importError}</div>
+          <div className={styles.importError} role="alert">{importError}</div>
         )}
 
         {importSuccess && (
-          <div className={styles.importSuccess}>
+          <div className={styles.importSuccess} role="status" aria-live="polite">
             Data importert! Laster siden på nytt...
           </div>
         )}

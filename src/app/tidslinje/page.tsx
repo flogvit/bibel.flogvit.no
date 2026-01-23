@@ -1,7 +1,7 @@
 import styles from './page.module.scss';
-import Link from 'next/link';
 import { getFullTimeline } from '@/lib/bible';
 import { TimelineView } from '@/components/TimelineView';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 
 export const metadata = {
   title: 'Tidslinje - Bibelen',
@@ -12,9 +12,12 @@ export default function TimelinePage() {
   const timeline = getFullTimeline();
 
   return (
-    <main className={styles.main}>
+    <div className={styles.main}>
       <div className="reading-container">
-        <Link href="/" className={styles.backLink}>← Tilbake til Bibelen</Link>
+        <Breadcrumbs items={[
+          { label: 'Hjem', href: '/' },
+          { label: 'Tidslinje' }
+        ]} />
 
         <h1>Bibelens tidslinje</h1>
         <p className={styles.intro}>
@@ -27,6 +30,6 @@ export default function TimelinePage() {
           events={timeline.events}
         />
       </div>
-    </main>
+    </div>
   );
 }

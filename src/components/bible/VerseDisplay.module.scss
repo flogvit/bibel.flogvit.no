@@ -21,6 +21,15 @@
   }
 }
 
+.verseNumberStatic {
+  display: inline-block;
+  font-weight: bold;
+  color: $color-verse-number;
+  margin-right: $spacing-sm;
+  user-select: none;
+  min-width: 1.5em;
+}
+
 .favoriteIndicator {
   color: $color-accent;
   font-size: 0.8em;
@@ -436,6 +445,12 @@
   cursor: pointer;
   line-height: 1;
   transition: color $transition-fast;
+  // WCAG 2.5.8: Minimum target size 24x24px
+  min-width: 24px;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 
   &:hover {
     color: $color-text;
@@ -507,24 +522,28 @@
 }
 
 .topicIndicator {
+  // WCAG: Bruker emoji-ikon istedenfor kun farget prikk
   display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: $color-primary;
+  font-size: 0.75em;
   margin-right: 2px;
   vertical-align: middle;
+
+  &::before {
+    content: '🏷';
+  }
 }
 
 // Notes tab
 .noteIndicator {
+  // WCAG: Bruker emoji-ikon istedenfor kun farget prikk
   display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: $color-accent;
+  font-size: 0.75em;
   margin-right: 2px;
   vertical-align: middle;
+
+  &::before {
+    content: '📝';
+  }
 }
 
 .notesContent {
@@ -582,6 +601,12 @@
   color: $color-text-muted;
   transition: color $transition-fast;
   line-height: 1;
+  // WCAG 2.5.8: Minimum target size 24x24px
+  min-width: 24px;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 
   &:hover {
     color: $color-text;
@@ -668,7 +693,8 @@
 
 // Dark mode
 :global(html.dark) {
-  .verseNumber {
+  .verseNumber,
+  .verseNumberStatic {
     color: $dark-color-verse-number;
   }
 
@@ -892,14 +918,8 @@
     }
   }
 
-  .topicIndicator {
-    background: $dark-color-primary;
-  }
-
-  // Notes dark mode
-  .noteIndicator {
-    background: $dark-color-accent;
-  }
+  // WCAG: topicIndicator og noteIndicator bruker nå ikoner, ikke farger
+  // .topicIndicator og .noteIndicator trenger ikke dark mode siden de bruker emoji
 
   .notesContent {
     border-left-color: $dark-color-accent;

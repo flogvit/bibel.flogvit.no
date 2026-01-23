@@ -1,16 +1,19 @@
 import styles from './page.module.scss';
-import Link from 'next/link';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 
 export const metadata = {
   title: 'Om siden - Bibelen',
-  description: 'Informasjon om bibel.flogvit.com og kildene som brukes',
+  description: 'Informasjon om bibel.flogvit.no og kildene som brukes',
 };
 
 export default function AboutPage() {
   return (
-    <main className={styles.main}>
+    <div className={styles.main}>
       <div className="reading-container">
-        <Link href="/" className={styles.backLink}>← Tilbake til Bibelen</Link>
+        <Breadcrumbs items={[
+          { label: 'Hjem', href: '/' },
+          { label: 'Om' }
+        ]} />
 
         <h1>Om denne siden</h1>
 
@@ -76,6 +79,42 @@ export default function AboutPage() {
           </ul>
         </section>
 
+        <section id="hjelp" className={styles.section}>
+          <h2>Hjelp og brukerveiledning</h2>
+          <p>
+            Her er noen tips for å få mest mulig ut av bibel.flogvit.no:
+          </p>
+
+          <h3>Navigasjon</h3>
+          <ul>
+            <li>Bruk <strong>søkefeltet</strong> øverst for å søke etter vers eller tekst</li>
+            <li>Skriv en referanse som <em>&quot;Joh 3:16&quot;</em> for å gå direkte til verset</li>
+            <li>Bruk <strong>piltastene</strong> (← →) for å bla mellom kapitler</li>
+          </ul>
+
+          <h3>Tastaturhurtigtaster</h3>
+          <p>Trykk <kbd>?</kbd> på en hvilken som helst side for å se alle tilgjengelige hurtigtaster.</p>
+          <ul>
+            <li><kbd>/</kbd> eller <kbd>Ctrl</kbd>+<kbd>K</kbd> - Fokuser søkefeltet</li>
+            <li><kbd>←</kbd> / <kbd>→</kbd> - Forrige/neste kapittel</li>
+            <li><kbd>1-9</kbd> - Hopp til vers 1-9</li>
+            <li><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>H</kbd> - Gå til forsiden</li>
+          </ul>
+
+          <h3>Versinteraksjon</h3>
+          <ul>
+            <li>Klikk på <strong>versnummeret</strong> for å se referanser, bønn og andakt</li>
+            <li>Klikk på et <strong>ord</strong> for å se originalordet og forklaring</li>
+            <li>Legg til vers i <strong>favoritter</strong> eller tag med <strong>emner</strong></li>
+          </ul>
+
+          <h3>Hjelpemidler-panelet</h3>
+          <p>
+            På mobil, trykk på tannhjulet (⚙) for å åpne hjelpemidler.
+            På desktop vises disse i et sidepanel.
+          </p>
+        </section>
+
         <section className={styles.section}>
           <h2>Kontakt</h2>
           <p>
@@ -95,6 +134,6 @@ export default function AboutPage() {
           </p>
         </section>
       </div>
-    </main>
+    </div>
   );
 }

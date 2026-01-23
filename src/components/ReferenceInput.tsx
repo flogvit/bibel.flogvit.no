@@ -264,6 +264,11 @@ export function ReferenceInput({
             className={styles.input}
             autoFocus={autoFocus}
             autoComplete="off"
+            role="combobox"
+            aria-label="Søk etter bibelreferanse eller tekst"
+            aria-autocomplete="list"
+            aria-expanded={showDropdown && suggestions.length > 0}
+            aria-controls="reference-suggestions"
           />
           {hint && (
             <span className={styles.hint}>{hint}</span>
@@ -278,18 +283,20 @@ export function ReferenceInput({
       </form>
 
       {showDropdown && suggestions.length > 0 && (
-        <div ref={dropdownRef} className={styles.dropdown}>
+        <div ref={dropdownRef} id="reference-suggestions" role="listbox" className={styles.dropdown}>
           {suggestions.map((suggestion, index) => (
             <button
               key={suggestion.book.id}
               type="button"
+              role="option"
+              aria-selected={index === selectedIndex}
               className={`${styles.suggestion} ${index === selectedIndex ? styles.selected : ''}`}
               onClick={() => handleSuggestionClick(suggestion)}
               onMouseEnter={() => setSelectedIndex(index)}
             >
               <span className={styles.bookName}>{suggestion.book.name_no}</span>
               <span className={styles.bookMeta}>
-                {suggestion.book.short_name} ({suggestion.book.chapters} kap.)
+                {suggestion.book.short_name} ({suggestion.book.chapters} <abbr title="kapitler">kap.</abbr>)
               </span>
             </button>
           ))}

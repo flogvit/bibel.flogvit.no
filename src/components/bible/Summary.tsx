@@ -25,7 +25,7 @@ export function Summary({ type, title, content }: SummaryProps) {
 
   return (
     <section className={styles.summary}>
-      <h3>{title}</h3>
+      <h2>{title}</h2>
       <Markdown>{content}</Markdown>
     </section>
   );

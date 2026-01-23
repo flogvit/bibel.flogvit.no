@@ -12,7 +12,7 @@ export interface BibleSettings {
   showChapterContext: boolean;
   showImportantWords: boolean;
   showWord4Word: boolean;
-  showReferences: boolean;
+  showVerseDetails: boolean;
   showOriginalText: boolean;
   showTimeline: boolean;
   fontSize: FontSize;
@@ -26,7 +26,7 @@ export const defaultSettings: BibleSettings = {
   showChapterContext: false,
   showImportantWords: false,
   showWord4Word: true,
-  showReferences: true,
+  showVerseDetails: true,
   showOriginalText: false,
   showTimeline: true,
   fontSize: 'medium',

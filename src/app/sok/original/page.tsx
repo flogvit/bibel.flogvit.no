@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { toUrlSlug } from '@/lib/url-utils';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import styles from './page.module.scss';
 
 interface SearchResult {
@@ -162,13 +163,18 @@ function SearchContent() {
   const languageLabel = language === 'hebrew' ? 'hebraisk' : 'gresk';
 
   return (
-    <main className={styles.main}>
+    <div className={styles.main}>
       <div className="container">
+        <Breadcrumbs items={[
+          { label: 'Hjem', href: '/' },
+          { label: 'Søk', href: '/sok' },
+          { label: 'Originalspråk' }
+        ]} />
         <h1>Forekomster av {languageLabel} ord</h1>
 
         {word && (
           <div className={styles.searchWord}>
-            <span className={language === 'hebrew' ? styles.hebrew : styles.greek} dir={language === 'hebrew' ? 'rtl' : 'ltr'}>
+            <span className={language === 'hebrew' ? styles.hebrew : styles.greek} dir={language === 'hebrew' ? 'rtl' : 'ltr'} lang={language === 'hebrew' ? 'he' : 'el'}>
               {word}
             </span>
           </div>
@@ -202,6 +208,7 @@ function SearchContent() {
                   <p
                     className={`${styles.originalText} ${language === 'hebrew' ? styles.hebrew : styles.greek}`}
                     dir={language === 'hebrew' ? 'rtl' : 'ltr'}
+                    lang={language === 'hebrew' ? 'he' : 'el'}
                   >
                     {highlightOriginalText(result.original_text, result.originalWordsInVerse, language === 'hebrew')}
                   </p>
@@ -222,22 +229,22 @@ function SearchContent() {
         )}
 
         <div className={styles.backLink}>
-          <Link href="/sok">Tilbake til vanlig sek</Link>
+          <Link href="/sok">Tilbake til vanlig søk</Link>
         </div>
       </div>
-    </main>
+    </div>
   );
 }
 
 export default function OriginalSearchPage() {
   return (
     <Suspense fallback={
-      <main className={styles.main}>
+      <div className={styles.main}>
         <div className="container">
           <h1>Forekomster av originalsprak ord</h1>
           <p className="text-muted">Laster...</p>
         </div>
-      </main>
+      </div>
     }>
       <SearchContent />
     </Suspense>

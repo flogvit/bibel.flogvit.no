@@ -7,6 +7,7 @@ import { getBookInfoById } from '@/lib/books-data';
 import { toUrlSlug } from '@/lib/url-utils';
 import { ReadingPlanSummary } from '@/lib/reading-plan';
 import styles from './page.module.scss';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 
 export function ReadingPlanClient() {
   const {
@@ -49,17 +50,21 @@ export function ReadingPlanClient() {
 
   if (loadingPlans) {
     return (
-      <main className={styles.main}>
+      <div className={styles.main}>
         <div className="container">
           <p className={styles.loading}>Laster leseplaner...</p>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className={styles.main}>
+    <div className={styles.main}>
       <div className="container">
+        <Breadcrumbs items={[
+          { label: 'Hjem', href: '/' },
+          { label: 'Leseplan' }
+        ]} />
         <header className={styles.header}>
           <h1>Leseplaner</h1>
           <p className="text-muted">Velg en leseplan og les Bibelen systematisk</p>
@@ -217,7 +222,7 @@ export function ReadingPlanClient() {
           </div>
         </section>
       </div>
-    </main>
+    </div>
   );
 }
 

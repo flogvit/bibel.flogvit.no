@@ -108,16 +108,17 @@ export function Header() {
           <LoadingIndicator />
         </Suspense>
 
-        <form onSubmit={handleSearch} className={styles.searchForm}>
+        <form onSubmit={handleSearch} className={styles.searchForm} role="search" aria-label="Søk i Bibelen">
           <input
             ref={searchInputRef}
-            type="text"
+            type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Søk... (/)"
             className={styles.searchInput}
+            aria-label="Søk etter bibelvers eller tekst"
           />
-          <button type="submit" className={styles.searchButton} aria-label="Søk">
+          <button type="submit" className={styles.searchButton} aria-label="Utfør søk">
             🔍
           </button>
         </form>
@@ -125,13 +126,14 @@ export function Header() {
         <button
           className={styles.menuButton}
           onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Meny"
+          aria-label={menuOpen ? 'Lukk meny' : 'Åpne meny'}
           aria-expanded={menuOpen}
+          aria-controls="main-nav"
         >
-          <span className={styles.hamburger}></span>
+          <span className={styles.hamburger} aria-hidden="true"></span>
         </button>
 
-        <nav className={`${styles.nav} ${menuOpen ? styles.open : ''}`}>
+        <nav id="main-nav" className={`${styles.nav} ${menuOpen ? styles.open : ''}`} aria-label="Hovednavigasjon">
           <Link href="/" className={styles.navLink} onClick={handleNavClick}>
             Bøker
           </Link>
@@ -145,36 +147,38 @@ export function Header() {
               className={`${styles.navLink} ${styles.dropdownTrigger}`}
               onClick={() => setDropdownOpen(!dropdownOpen)}
               aria-expanded={dropdownOpen}
+              aria-haspopup="true"
+              aria-controls="resources-menu"
             >
               Ressurser
-              <span className={`${styles.dropdownArrow} ${dropdownOpen ? styles.open : ''}`}>▾</span>
+              <span className={`${styles.dropdownArrow} ${dropdownOpen ? styles.open : ''}`} aria-hidden="true">▾</span>
             </button>
-            <div className={`${styles.dropdownMenu} ${dropdownOpen ? styles.open : ''}`}>
-              <Link href="/kjente-vers" className={styles.dropdownLink} onClick={handleNavClick}>
+            <div id="resources-menu" className={`${styles.dropdownMenu} ${dropdownOpen ? styles.open : ''}`} role="menu">
+              <Link href="/kjente-vers" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Kjente vers
               </Link>
-              <Link href="/favoritter" className={styles.dropdownLink} onClick={handleNavClick}>
+              <Link href="/favoritter" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Favoritter
               </Link>
-              <Link href="/emner" className={styles.dropdownLink} onClick={handleNavClick}>
+              <Link href="/emner" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Emner
               </Link>
-              <Link href="/notater" className={styles.dropdownLink} onClick={handleNavClick}>
+              <Link href="/notater" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Notater
               </Link>
-              <Link href="/leseplan" className={styles.dropdownLink} onClick={handleNavClick}>
+              <Link href="/leseplan" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Leseplan
               </Link>
-              <Link href="/temaer" className={styles.dropdownLink} onClick={handleNavClick}>
+              <Link href="/temaer" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Temaer
               </Link>
-              <Link href="/tidslinje" className={styles.dropdownLink} onClick={handleNavClick}>
+              <Link href="/tidslinje" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Tidslinje
               </Link>
-              <Link href="/profetier" className={styles.dropdownLink} onClick={handleNavClick}>
+              <Link href="/profetier" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Profetier
               </Link>
-              <Link href="/personer" className={styles.dropdownLink} onClick={handleNavClick}>
+              <Link href="/personer" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Personer
               </Link>
             </div>

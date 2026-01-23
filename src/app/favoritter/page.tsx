@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useFavorites } from '@/components/FavoritesContext';
 import { useEffect, useState } from 'react';
 import styles from './page.module.scss';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 
 interface VerseWithText {
   bookId: number;
@@ -45,10 +46,13 @@ export default function FavoritesPage() {
   }, [favorites]);
 
   return (
-    <main className={styles.main}>
+    <div className={styles.main}>
       <div className={styles.container}>
+        <Breadcrumbs items={[
+          { label: 'Hjem', href: '/' },
+          { label: 'Favoritter' }
+        ]} />
         <header className={styles.header}>
-          <Link href="/" className={styles.backLink}>← Tilbake</Link>
           <h1>Mine favoritter</h1>
           <p className={styles.intro}>
             Dine lagrede bibelvers. Klikk på stjernen ved et vers for å legge til eller fjerne favoritter.
@@ -87,6 +91,6 @@ export default function FavoritesPage() {
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 }
