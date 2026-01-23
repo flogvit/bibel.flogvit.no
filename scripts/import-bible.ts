@@ -156,6 +156,15 @@ db.exec(`
     UNIQUE (book_id, chapter)
   );
 
+  CREATE TABLE IF NOT EXISTS chapter_context (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    book_id INTEGER NOT NULL,
+    chapter INTEGER NOT NULL,
+    context TEXT NOT NULL,
+    FOREIGN KEY (book_id) REFERENCES books(id),
+    UNIQUE (book_id, chapter)
+  );
+
   CREATE TABLE IF NOT EXISTS important_words (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     book_id INTEGER NOT NULL,
@@ -196,6 +205,73 @@ db.exec(`
   );
 
   CREATE TABLE IF NOT EXISTS themes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    content TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS timeline_periods (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    color TEXT,
+    description TEXT,
+    sort_order INTEGER
+  );
+
+  CREATE TABLE IF NOT EXISTS timeline_events (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT,
+    year INTEGER,
+    year_display TEXT,
+    period_id TEXT,
+    importance TEXT DEFAULT 'minor',
+    sort_order INTEGER NOT NULL,
+    FOREIGN KEY (period_id) REFERENCES timeline_periods(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS timeline_references (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_id TEXT NOT NULL,
+    book_id INTEGER NOT NULL,
+    chapter INTEGER NOT NULL,
+    verse_start INTEGER NOT NULL,
+    verse_end INTEGER NOT NULL,
+    FOREIGN KEY (event_id) REFERENCES timeline_events(id),
+    FOREIGN KEY (book_id) REFERENCES books(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS prophecy_categories (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS prophecies (
+    id TEXT PRIMARY KEY,
+    category_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    explanation TEXT,
+    prophecy_book_id INTEGER NOT NULL,
+    prophecy_chapter INTEGER NOT NULL,
+    prophecy_verse_start INTEGER NOT NULL,
+    prophecy_verse_end INTEGER NOT NULL,
+    FOREIGN KEY (category_id) REFERENCES prophecy_categories(id),
+    FOREIGN KEY (prophecy_book_id) REFERENCES books(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS prophecy_fulfillments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    prophecy_id TEXT NOT NULL,
+    book_id INTEGER NOT NULL,
+    chapter INTEGER NOT NULL,
+    verse_start INTEGER NOT NULL,
+    verse_end INTEGER NOT NULL,
+    FOREIGN KEY (prophecy_id) REFERENCES prophecies(id),
+    FOREIGN KEY (book_id) REFERENCES books(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS persons (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
     content TEXT NOT NULL
@@ -354,12 +430,26 @@ if (fs.existsSync(refsPath)) {
 
         if (data.references) {
           for (const ref of data.references) {
-            insertReference.run(
-              bookId, chapterId, verseId,
-              ref.bookId, ref.chapterId,
-              ref.fromVerseId, ref.toVerseId || ref.fromVerseId,
-              ref.text || null
-            );
+            // Check for missing or wrong keys
+            const fromVerse = ref.fromVerseId;
+            const toVerse = ref.toVerseId ?? fromVerse;
+
+            if (fromVerse == null) {
+              console.error(`Missing fromVerseId in ${versePath}:`, JSON.stringify(ref));
+              process.exit(1);
+            }
+
+            try {
+              insertReference.run(
+                bookId, chapterId, verseId,
+                ref.bookId, ref.chapterId,
+                fromVerse, toVerse,
+                ref.text || null
+              );
+            } catch (e) {
+              console.error(`Error importing reference from ${versePath}:`, JSON.stringify(ref), e);
+              process.exit(1);
+            }
           }
         }
       }
@@ -403,6 +493,32 @@ if (fs.existsSync(chapterSummariesPath)) {
     const [, bookId, chapter] = match;
     const summary = fs.readFileSync(path.join(chapterSummariesPath, file), 'utf-8');
     insertChapterSummary.run(parseInt(bookId), parseInt(chapter), summary);
+  }
+}
+
+// Importer kapittelkontekst
+console.log('Importerer kapittelkontekst...');
+const insertChapterContext = db.prepare(`
+  INSERT OR REPLACE INTO chapter_context (book_id, chapter, context) VALUES (?, ?, ?)
+`);
+
+// Check both nb and osnb1 folders for chapter context
+const chapterContextPaths = [
+  path.join(GENERATE_PATH, 'chapter_context', 'nb'),
+  path.join(GENERATE_PATH, 'chapter_context', 'osnb1'),
+];
+for (const chapterContextPath of chapterContextPaths) {
+  if (fs.existsSync(chapterContextPath)) {
+    const files = fs.readdirSync(chapterContextPath).filter(f => f.endsWith('.md'));
+
+    for (const file of files) {
+      const match = file.match(/^(\d+)-(\d+)\.md$/);
+      if (!match) continue;
+
+      const [, bookId, chapter] = match;
+      const context = fs.readFileSync(path.join(chapterContextPath, file), 'utf-8');
+      insertChapterContext.run(parseInt(bookId), parseInt(chapter), context);
+    }
   }
 }
 
@@ -581,6 +697,150 @@ if (fs.existsSync(themesPath)) {
   }
 }
 
+// Importer tidslinje
+console.log('Importerer tidslinje...');
+const insertTimelinePeriod = db.prepare(`
+  INSERT OR REPLACE INTO timeline_periods (id, name, color, description, sort_order) VALUES (?, ?, ?, ?, ?)
+`);
+const insertTimelineEvent = db.prepare(`
+  INSERT OR REPLACE INTO timeline_events (id, title, description, year, year_display, period_id, importance, sort_order)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+`);
+const insertTimelineReference = db.prepare(`
+  INSERT INTO timeline_references (event_id, book_id, chapter, verse_start, verse_end) VALUES (?, ?, ?, ?, ?)
+`);
+
+const timelinePath = path.join(GENERATE_PATH, 'timeline', 'timeline.json');
+if (fs.existsSync(timelinePath)) {
+  const timelineData = JSON.parse(fs.readFileSync(timelinePath, 'utf-8'));
+
+  // Importer perioder
+  if (timelineData.periods) {
+    let periodOrder = 0;
+    for (const period of timelineData.periods) {
+      insertTimelinePeriod.run(
+        period.id,
+        period.name,
+        period.color || null,
+        period.description || null,
+        periodOrder++
+      );
+    }
+    console.log(`  Importerte ${timelineData.periods.length} perioder`);
+  }
+
+  // Importer hendelser
+  if (timelineData.events) {
+    for (const event of timelineData.events) {
+      insertTimelineEvent.run(
+        event.id,
+        event.title,
+        event.description || null,
+        event.year || null,
+        event.year_display || null,
+        event.period || null,
+        event.importance || 'minor',
+        event.sort_order
+      );
+
+      // Importer referanser for hendelsen
+      if (event.references && event.references.length > 0) {
+        for (const ref of event.references) {
+          // Støtter både gammelt format (verse) og nytt format (verseStart/verseEnd)
+          const verseStart = ref.verseStart ?? ref.verse ?? 1;
+          const verseEnd = ref.verseEnd ?? ref.verse ?? verseStart;
+          insertTimelineReference.run(event.id, ref.book, ref.chapter, verseStart, verseEnd);
+        }
+      }
+    }
+    console.log(`  Importerte ${timelineData.events.length} hendelser`);
+  }
+}
+
+// Importer profetier
+console.log('Importerer profetier...');
+const insertProphecyCategory = db.prepare(`
+  INSERT OR REPLACE INTO prophecy_categories (id, name, description) VALUES (?, ?, ?)
+`);
+const insertProphecy = db.prepare(`
+  INSERT OR REPLACE INTO prophecies (id, category_id, title, explanation, prophecy_book_id, prophecy_chapter, prophecy_verse_start, prophecy_verse_end)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+`);
+const insertProphecyFulfillment = db.prepare(`
+  INSERT INTO prophecy_fulfillments (prophecy_id, book_id, chapter, verse_start, verse_end) VALUES (?, ?, ?, ?, ?)
+`);
+
+const propheciesPath = path.join(GENERATE_PATH, 'prophecies', 'prophecies.json');
+if (fs.existsSync(propheciesPath)) {
+  const prophecyData = JSON.parse(fs.readFileSync(propheciesPath, 'utf-8'));
+
+  // Importer kategorier
+  if (prophecyData.categories) {
+    for (const category of prophecyData.categories) {
+      insertProphecyCategory.run(
+        category.id,
+        category.name,
+        category.description || null
+      );
+    }
+    console.log(`  Importerte ${prophecyData.categories.length} kategorier`);
+  }
+
+  // Importer profetier
+  if (prophecyData.prophecies) {
+    for (const prophecy of prophecyData.prophecies) {
+      insertProphecy.run(
+        prophecy.id,
+        prophecy.category,
+        prophecy.title,
+        prophecy.explanation || null,
+        prophecy.prophecy.bookId,
+        prophecy.prophecy.chapter,
+        prophecy.prophecy.verseStart,
+        prophecy.prophecy.verseEnd
+      );
+
+      // Importer oppfyllelser
+      if (prophecy.fulfillments && prophecy.fulfillments.length > 0) {
+        for (const fulfillment of prophecy.fulfillments) {
+          insertProphecyFulfillment.run(
+            prophecy.id,
+            fulfillment.bookId,
+            fulfillment.chapter,
+            fulfillment.verseStart,
+            fulfillment.verseEnd
+          );
+        }
+      }
+    }
+    console.log(`  Importerte ${prophecyData.prophecies.length} profetier`);
+  }
+}
+
+// Importer personer
+console.log('Importerer personer...');
+const insertPerson = db.prepare(`
+  INSERT OR REPLACE INTO persons (name, content) VALUES (?, ?)
+`);
+
+const personsPath = path.join(GENERATE_PATH, 'persons', 'nb');
+if (fs.existsSync(personsPath)) {
+  const files = fs.readdirSync(personsPath).filter(f => f.endsWith('.json'));
+
+  for (const file of files) {
+    const name = file.replace('.json', '');
+    const content = fs.readFileSync(path.join(personsPath, file), 'utf-8');
+    // Valider at det er gyldig JSON
+    try {
+      JSON.parse(content);
+      insertPerson.run(name, content);
+    } catch (e) {
+      console.error(`Ugyldig JSON i ${file}:`, e);
+    }
+  }
+  console.log(`  Importerte ${files.length} personer`);
+}
+
 // Opprett indekser
 console.log('Oppretter indekser...');
 db.exec(`
@@ -589,6 +849,12 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_word4word_verse ON word4word(book_id, chapter, verse, bible);
   CREATE INDEX IF NOT EXISTS idx_references_from ON references_(from_book_id, from_chapter, from_verse);
   CREATE INDEX IF NOT EXISTS idx_important_words_chapter ON important_words(book_id, chapter);
+  CREATE INDEX IF NOT EXISTS idx_timeline_events_period ON timeline_events(period_id);
+  CREATE INDEX IF NOT EXISTS idx_timeline_events_sort ON timeline_events(sort_order);
+  CREATE INDEX IF NOT EXISTS idx_timeline_references_event ON timeline_references(event_id);
+  CREATE INDEX IF NOT EXISTS idx_prophecies_category ON prophecies(category_id);
+  CREATE INDEX IF NOT EXISTS idx_prophecy_fulfillments_prophecy ON prophecy_fulfillments(prophecy_id);
+  CREATE INDEX IF NOT EXISTS idx_prophecy_fulfillments_book ON prophecy_fulfillments(book_id, chapter);
 `);
 
 db.close();
