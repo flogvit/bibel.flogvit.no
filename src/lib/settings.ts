@@ -10,6 +10,7 @@ export interface BibleSettings {
   showBookSummary: boolean;
   showChapterSummary: boolean;
   showChapterContext: boolean;
+  showChapterInsights: boolean;
   showImportantWords: boolean;
   showWord4Word: boolean;
   showVerseDetails: boolean;
@@ -24,6 +25,7 @@ export const defaultSettings: BibleSettings = {
   showBookSummary: true,
   showChapterSummary: true,
   showChapterContext: false,
+  showChapterInsights: true,
   showImportantWords: false,
   showWord4Word: true,
   showVerseDetails: true,

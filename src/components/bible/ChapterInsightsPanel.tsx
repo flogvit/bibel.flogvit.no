@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useSettings } from '@/components/SettingsContext';
 import {
   ChapterInsight,
   GenealogyInsight,
@@ -20,9 +21,10 @@ interface ChapterInsightsPanelProps {
 }
 
 export function ChapterInsightsPanel({ insight }: ChapterInsightsPanelProps) {
+  const { settings } = useSettings();
   const [isExpanded, setIsExpanded] = useState(false);
 
-  if (!insight) {
+  if (!settings.showChapterInsights || !insight) {
     return null;
   }
 

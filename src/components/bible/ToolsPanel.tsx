@@ -106,6 +106,7 @@ export function ToolsPanel({ onClose }: ToolsPanelProps) {
     { key: 'showBookSummary' as const, label: 'Boksammendrag' },
     { key: 'showChapterSummary' as const, label: 'Kapittelsammendrag' },
     { key: 'showChapterContext' as const, label: 'Historisk kontekst' },
+    { key: 'showChapterInsights' as const, label: 'Kapittelinnsikt' },
     { key: 'showImportantWords' as const, label: 'Viktige ord' },
     { key: 'showWord4Word' as const, label: 'Ordforklaring' },
     { key: 'showVerseDetails' as const, label: 'Versdetaljer' },
@@ -152,7 +153,7 @@ export function ToolsPanel({ onClose }: ToolsPanelProps) {
             <label key={tool.key} className={styles.tool}>
               <input
                 type="checkbox"
-                checked={settings[tool.key]}
+                checked={settings[tool.key] ?? false}
                 onChange={() => toggleSetting(tool.key)}
               />
               <span className={styles.checkmark}></span>
