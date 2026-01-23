@@ -253,8 +253,8 @@ Mål: Full WCAG 2.2 AA-støtte for alle brukere.
 
 ## Kapittel-innsikter (spesialvisninger)
 
-Filen `src/data/chapterInsights.ts` inneholder strukturerte visninger for spesielle kapitler.
-Nåværende: 53 kapitler. Ideer til flere:
+Data lagres i `../free-bible/generate/chapter_insights/nb/[bok]-[kapittel].json` og importeres til databasen.
+Nåværende: 96 kapitler. Ideer til flere:
 
 ### Johannes - Jesu tegn/mirakler
 - [x] Joh 2 - Vann til vin (tegn 1)
@@ -265,17 +265,17 @@ Nåværende: 53 kapitler. Ideer til flere:
 - [x] Joh 21 - Fiskefangsten (tegn 7)
 
 ### GT - Strukturer og lister
-- [ ] 2 Mos 25-27 - Tabernakelet (kan samles i kap 25)
-- [ ] 2 Mos 28 - Presteklærne
-- [ ] 3 Mos 1-7 - De 5 offertypene (kan samles i kap 1)
-- [ ] 3 Mos 11 - Rene og urene dyr
-- [ ] 4 Mos 33 - Israels 42 leirplasser
-- [ ] Neh 3 - Jerusalems 10 porter
+- [x] 2 Mos 25-27 - Tabernakelet (kan samles i kap 25)
+- [x] 2 Mos 28 - Presteklærne
+- [x] 3 Mos 1-7 - De 5 offertypene (kan samles i kap 1)
+- [x] 3 Mos 11 - Rene og urene dyr
+- [x] 4 Mos 33 - Israels 42 leirplasser
+- [x] Neh 3 - Jerusalems 10 porter
 
 ### GT - Profetier og syn
-- [ ] Esek 37 - De tørre bein
-- [ ] Esek 47 - Vannet fra tempelet
-- [ ] Sak 14 - Herrens dag
+- [x] Esek 37 - De tørre bein
+- [x] Esek 47 - Vannet fra tempelet
+- [x] Sak 14 - Herrens dag
 
 ### Salmer
 - [x] Sal 1 - De to veier
@@ -284,10 +284,10 @@ Nåværende: 53 kapitler. Ideer til flere:
 - [x] Sal 139 - Gud kjenner meg
 
 ### Evangeliene - Påskeuken
-- [ ] Matt 21/Mark 11/Luk 19 - Palmesøndag
-- [ ] Matt 26/Mark 14/Luk 22 - Skjærtorsdag
-- [ ] Matt 27/Mark 15/Luk 23 - Langfredag
-- [ ] Matt 28/Mark 16/Luk 24 - Påskedag
+- [x] Matt 21/Mark 11/Luk 19 - Palmesøndag
+- [x] Matt 26/Mark 14/Luk 22 - Skjærtorsdag
+- [x] Matt 27/Mark 15/Luk 23 - Langfredag
+- [x] Matt 28/Mark 16/Luk 24 - Påskedag
 
 ### NT - Brev
 - [x] Rom 12 - Lev som et offer
@@ -295,14 +295,77 @@ Nåværende: 53 kapitler. Ideer til flere:
 - [x] 1 Kor 15 - Oppstandelsen
 - [x] Fil 2 - Kristi ydmykhet (Kristus-hymnen)
 - [x] Kol 1 - Kristus-hymnen
-- [ ] 1 Tess 4 - Herrens gjenkomst
+- [x] 1 Tess 4 - Herrens gjenkomst
 - [x] Heb 1 - Jesus > englene
 - [x] Jak 3 - Tungen
 
 ### Øvrige
-- [ ] Dom 2 eller 3 - Dommersyklusen / oversikt over dommerne
-- [ ] 1 Kong 17-19 - Elia-syklusen (kan samles i kap 17)
-- [ ] 2 Kong 2, 4 - Elisas mirakler
+- [x] Dom 2 eller 3 - Dommersyklusen / oversikt over dommerne
+- [x] 1 Kong 17-19 - Elia-syklusen (kan samles i kap 17)
+- [x] 2 Kong 2, 4 - Elisas mirakler
+
+### GT - Nye
+- [x] 1 Mos 49 - Jakobs velsignelser over de 12 sønnene (fantes)
+- [x] 5 Mos 28 - Velsignelser og forbannelser (fantes)
+- [x] Jes 53 - Den lidende tjener (fantes)
+- [x] Dan 2 - Nebukadnesars drøm (fantes)
+- [x] Dan 7 - De fire dyrene (fantes)
+
+### Salmer - Nye
+- [x] Sal 22 - Korsfestelsessalmen
+- [x] Sal 119 - Den lengste salmen (fantes)
+
+### NT - Nye
+- [x] Matt 5 - Saligprisningene (fantes)
+- [x] Luk 2 - Juleevangeliet
+- [x] Joh 1 - Prologen
+- [x] Apg 2 - Pinsen (fantes)
+- [x] Rom 8 - Intet kan skille oss (fantes)
+- [x] Gal 5 - Åndens frukt vs kjødets gjerninger (fantes)
+- [x] Ef 6 - Guds fulle rustning (fantes)
+- [x] Hebr 11 - Troens helter (fantes)
+- [x] Åp 4-5 - Tronerommet (kan samles i kap 4)
+- [x] Åp 21 - Det nye Jerusalem
+
+### GT - Skapelse og patriarkene
+- [x] 1 Mos 1 - Skapelsens 7 dager (fantes)
+- [x] 1 Mos 3 - Syndefallet
+- [x] 1 Mos 12 - Abrahams kall og løftene
+- [x] 1 Mos 22 - Isak ofres (Akedah)
+- [x] 2 Mos 12 - Påsken innstiftes
+- [x] 2 Mos 14 - Sivsjø-underet
+
+### GT - Profetene
+- [x] Jes 6 - Jesajas kall
+- [x] Jes 9 - Fredsfyrsten
+- [x] Jes 40 - Trøst, trøst mitt folk
+- [x] Jer 31 - Den nye pakt
+- [x] Joel 2 - Åndens utøsning
+- [x] Jona 2 - Jonas bønn fra fisken
+
+### GT - Visdomslitteratur
+- [x] Job 38 - Guds tale til Job
+- [x] Ordsp 31 - Den gode hustru (fantes)
+
+### NT - Evangeliene (flere)
+- [x] Matt 6 - Fader vår (fantes)
+- [x] Matt 13 - Jesu lignelser (fantes)
+- [x] Matt 24 - Endetidstalen
+- [x] Luk 10 - Den barmhjertige samaritan
+- [x] Luk 15 - De tre lignelsene (fantes)
+- [x] Joh 3 - Nikodemus og ny fødsel
+- [x] Joh 10 - Den gode hyrde
+- [x] Joh 15 - Vintreet og grenene
+- [x] Joh 17 - Yppersteprestlig bønn
+
+### NT - Brev (flere)
+- [x] 1 Kor 13 - Kjærlighetens vei (fantes)
+- [x] Fil 4 - Gleden i Herren
+- [x] 1 Pet 2 - Levende steiner
+
+### Åpenbaringen (flere)
+- [x] Åp 2-3 - De syv menighetene (fantes)
+- [x] Åp 12 - Kvinnen og dragen
 
 ## Bugs/Forbedringer
 - (ingen kjente)
