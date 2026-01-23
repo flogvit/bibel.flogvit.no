@@ -73,7 +73,7 @@ Fullførte oppgaver flyttet fra TODO.md.
   - Import med valg: erstatt alt eller slå sammen med eksisterende
 
 ## Fase 10: Produksjon ✓
-- [x] Apache reverse proxy-konfigurasjon (deploy/bibel.flogvit.com.conf)
+- [x] Apache reverse proxy-konfigurasjon (deploy/bibel.flogvit.no.conf)
 - [x] PM2 deploy-skript (npm run deploy)
 - [x] Favicon og metadata
 - [x] Open Graph tags for deling

@@ -17,6 +17,33 @@ Se DONE.md for fullførte oppgaver.
 - [ ] Notater på vers
 - [ ] Emnetagging database-versjon (med innlogging, users.db)
 
+## Fase 10: Offline-støtte og IndexedDB (fremtidig)
+
+### IndexedDB for brukerdata
+- [ ] Migrere fra localStorage til IndexedDB (med Dexie.js)
+- [ ] Universell tagging - tagge alle typer innhold (vers, notater, profetier, tidslinje, leseplaner)
+- [ ] Eksport/import av all brukerdata fra IndexedDB
+
+### PWA og Service Worker
+- [ ] Sett opp next-pwa eller manuell service worker
+- [ ] Cache alle statiske assets (HTML, JS, CSS)
+- [ ] Manifest-fil for installerbar app
+
+### Bibeldata offline
+- [ ] Last ned all bibeldata til IndexedDB ved første besøk (~25-30 MB)
+  - Bibeltekst (OSNB1, SBLGNT, Tanach)
+  - Word4word data
+  - Referanser og sammendrag
+  - Profetier og tidslinje
+- [ ] Offline-first: les fra IndexedDB, fallback til API
+- [ ] Bakgrunnssynkronisering når online
+
+### Fordeler
+- Fungerer helt uten nett
+- Installerbar på mobil/desktop
+- Raskere etter første besøk
+- Push-varsler for leseplan-påminnelser (valgfritt)
+
 ## Studiebibel-funksjoner
 
 ### Ordstudier
@@ -141,6 +168,88 @@ Dekker kun: Bok 1 (1 Mosebok), 40 (Matteus), 41 (Markus), 42 (Lukas delvis)
 
 ## Data
 - [ ] Generere norsk word4word-data for alle bøker (mangler for de fleste GT-bøker)
+
+## WCAG 2.2 AA Tilgjengelighet
+
+Mål: Full WCAG 2.2 AA-støtte for alle brukere.
+
+### Oppfattbar (Perceivable)
+
+#### Tekstalternativer
+- [x] Alt-tekst på alle bilder og ikoner (ingen bilder i prosjektet, ikoner har aria-hidden)
+- [x] Beskrivende aria-labels på interaktive elementer
+
+#### Tilpasbarhet
+- [x] Semantisk HTML (header, nav, main, article, aside, footer)
+- [x] Korrekt overskriftshierarki (h1-h6)
+- [x] Landmark-regioner med aria-labels
+- [x] Skip-link til hovedinnhold
+
+#### Distinguerbart
+- [x] Kontrastsjekk alle fargekombinasjoner (minimum 4.5:1 for tekst, 3:1 for stor tekst) - versnummer #0066aa
+- [x] Tekst kan forstørres 200% uten tap av funksjonalitet (alle størrelser i rem)
+- [x] Støtte for brukerens foretrukne fargevalg (prefers-color-scheme, prefers-contrast)
+- [x] Støtte for prefers-reduced-motion
+- [x] Ingen informasjon kun formidlet via farge (ikoner/symboler i tillegg til farge)
+
+### Betjenbar (Operable)
+
+#### Tastaturnavigasjon
+- [x] Alle funksjoner tilgjengelig via tastatur
+- [x] Synlig fokusindikator på alle interaktive elementer
+- [x] Logisk tab-rekkefølge
+- [x] Ingen tastaturfeller
+- [x] Fokus ikke skjult bak sticky elementer (2.4.11 - nytt i 2.2)
+- [x] Hurtigtaster implementert (?, piltaster, Alt+Shift+bokstav)
+
+#### Navigasjon
+- [x] Konsistente navigasjonsmekanismer (breadcrumbs på alle sider)
+- [x] Flere måter å finne innhold (søk, meny, sitemap)
+- [x] Beskrivende lenketekster (aria-labels på MobileToolbar)
+- [x] Breadcrumbs for orientering (lagt til på alle sider)
+- [x] Fokus-håndtering ved sidenavigasjon (SPA) - NavigationAnnouncer
+
+#### Inndatametoder (nytt i 2.2)
+- [x] Target size minimum 24x24px for klikkbare elementer (2.5.8)
+- [x] Alternativ til dra-og-slipp operasjoner (2.5.7) (ingen dra-og-slipp i prosjektet)
+
+### Forståelig (Understandable)
+
+#### Lesbarhet
+- [x] Språk definert i HTML (lang="nb")
+- [x] Språkendringer markert (hebraisk/gresk tekst med lang-attributt)
+- [x] Forkortelser forklart (abbr-tag for "kap.")
+
+#### Forutsigbarhet
+- [x] Konsistent plassering av UI-elementer (Header, Footer, Breadcrumbs på alle sider)
+- [x] Ingen uventede kontekstendringer ved fokus/input (alle endringer er bruker-initierte)
+- [x] Konsistent hjelp tilgjengelig (3.2.6 - nytt i 2.2) (Hjelp-lenke i Footer → /om#hjelp)
+
+#### Inndatahjelp
+- [x] Tydelige feilmeldinger (norske beskrivende meldinger)
+- [x] Labels for alle skjemafelt (aria-label på alle input/textarea)
+- [x] Instruksjoner der nødvendig (placeholder-tekster, tom-tilstand-beskjeder)
+- [x] Redundant Entry - unngå å be om samme info flere ganger (3.3.7 - nytt i 2.2)
+
+### Robust
+
+#### Kompatibilitet
+- [x] Validert HTML (build uten feil)
+- [x] ARIA brukt korrekt (roller, tilstander, egenskaper)
+- [x] Statusmeldinger annonsert til skjermlesere (aria-live)
+- [ ] Testing med skjermleser (VoiceOver, NVDA)
+
+### Verktøy og testing
+- [x] Sett opp eslint-plugin-jsx-a11y (inkludert i eslint-config-next)
+- [x] Legg til axe-core for automatisk testing (AxeAccessibility-komponent)
+- [ ] Manuell testing med tastatur
+- [ ] Manuell testing med VoiceOver/NVDA
+- [ ] Lighthouse accessibility audit
+
+### Tilgjengelighetserklæring
+- [x] Opprett /tilgjengelighet-side med erklæring
+- [x] Oppdater erklæringen når WCAG-arbeidet er fullført
+- [x] Legg til lenke til erklæringen i footer
 
 ## Bugs/Forbedringer
 - (ingen kjente)

@@ -51,7 +51,7 @@ npx tsx scripts/import.ts
 
 ## Mappestruktur
 ```
-bibel.flogvit.com/
+bibel.flogvit.no/
 ├── src/
 │   ├── app/                      # Next.js App Router
 │   │   ├── page.tsx              # Forside med bokliste
@@ -130,7 +130,7 @@ bibel.flogvit.com/
 Kjør Next.js bak Apache som reverse proxy:
 ```apache
 <VirtualHost *:80>
-    ServerName bibel.flogvit.com
+    ServerName bibel.flogvit.no
     ProxyPass / http://localhost:3018/
     ProxyPassReverse / http://localhost:3018/
 </VirtualHost>
