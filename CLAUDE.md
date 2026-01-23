@@ -5,10 +5,9 @@ En norsk bibel-nettside med oppslagsverk og verktøy for bibellesning. Bygget me
 
 ## Teknologi
 - **Framework**: Next.js 15 med App Router
-- **Database**: SQLite (via better-sqlite3) - to databaser:
-  - `data/bible.db` - Bibeldata (read-only, kan oppdateres separat)
-  - `data/users.db` - Brukerdata (read-write)
+- **Database**: SQLite (via better-sqlite3) - `data/bible.db`
 - **Styling**: SASS Modules (*.module.scss)
+- **State**: localStorage for brukerinnstillinger og data
 - **Autentisering**: NextAuth.js (planlagt)
 - **Realtime**: Socket.io for sam-lesing (planlagt)
 
@@ -21,15 +20,15 @@ All bibeldata hentes fra `../free-bible/generate/`:
 - `bibles_raw/tanach/[bok]/[kapittel].json` - Hebraisk GT
 
 ### Tilleggsdata
-- `word4word/osnb1/[bok]/[kapittel]/[vers].json` - Ord-for-ord oversettelse med originalspråk og forklaringer
+- `word4word/osnb1/[bok]/[kapittel]/[vers].json` - Ord-for-ord oversettelse med originalspråk
 - `references/[bok]/[kapittel]/[vers].json` - Kryssreferanser mellom bibeltekster
 - `book_summaries/nb/[bok].txt` - Sammendrag av hver bok
 - `chapter_summaries/nb/[bok]-[kapittel].txt` - Sammendrag av hvert kapittel
-- `important_verses/verses.txt` - Liste over viktige/kjente bibelvers
-- `important_words/nb/[bok]-[kapittel].txt` - Viktige ord/begreper i kapittelet med forklaringer
-- `themes/nb/[tema].txt` - Tematiske oversikter (f.eks. evangeliene.txt)
-- `verse_prayer/nb/[bok]-[kapittel]-[vers].txt` - Bønn basert på verset
-- `verse_sermon/nb/[bok]-[kapittel]-[vers].txt` - Andakt/preken basert på verset
+- `important_words/nb/[bok]-[kapittel].txt` - Viktige ord/begreper i kapittelet
+- `themes/nb/[tema].json` - Tematiske oversikter med seksjoner og versreferanser
+- `prophecies/prophecies.json` - Profetier og oppfyllelser (47 profetier i 7 kategorier)
+- `timeline/timeline.json` - Bibelske hendelser (103 hendelser i 11 perioder)
+- `reading_plans/` - Leseplaner (årlig, kronologisk, NT, etc.)
 
 ### Bokstruktur
 - Bøker 1-39: Det gamle testamente (Tanach/hebraisk)
@@ -53,38 +52,79 @@ npx tsx scripts/import.ts
 ## Mappestruktur
 ```
 bibel.flogvit.com/
-├── app/                      # Next.js App Router
-│   ├── page.tsx              # Forside
-│   ├── [bok]/[kapittel]/     # Bibelvisning
-│   └── api/                  # API-ruter
-├── components/               # React-komponenter
-│   └── bible/                # Bibelspesifikke komponenter
-├── lib/
-│   ├── db.ts                 # SQLite database
-│   └── bible.ts              # Bibel-hjelpefunksjoner
+├── src/
+│   ├── app/                      # Next.js App Router
+│   │   ├── page.tsx              # Forside med bokliste
+│   │   ├── [book]/[chapter]/     # Bibelvisning
+│   │   ├── sok/                  # Søk i bibeltekst
+│   │   ├── sok/original/         # Søk i originalspråk
+│   │   ├── temaer/               # Tematiske oversikter
+│   │   ├── profetier/            # Profetier og oppfyllelser
+│   │   ├── tidslinje/            # Bibelsk tidslinje
+│   │   ├── leseplan/             # Leseplaner
+│   │   ├── emner/                # Brukerens emnetagging
+│   │   ├── favoritter/           # Favorittvers
+│   │   ├── kjente-vers/          # Kjente bibelvers
+│   │   ├── tekst/                # Vis flere passasjer
+│   │   ├── om/                   # Om-side
+│   │   └── api/                  # API-ruter
+│   ├── components/               # React-komponenter
+│   │   └── bible/                # Bibelspesifikke komponenter
+│   └── lib/
+│       ├── db.ts                 # SQLite database
+│       ├── bible.ts              # Bibel-hjelpefunksjoner
+│       └── settings.ts           # Brukerinnstillinger (localStorage)
 ├── scripts/
-│   └── import-bible.ts       # Importskript for database
+│   └── import-bible.ts           # Importskript for database
 └── data/
-    └── bible.db              # SQLite database
+    └── bible.db                  # SQLite database
 ```
 
+## API-endepunkter
+- `GET /api/verses?refs=1mo-1-1,joh-3-16` - Hent flere vers
+- `GET /api/books` - Bokliste
+- `GET /api/prophecies` - Profetier og oppfyllelser
+- `GET /api/timeline` - Tidslinjehendelser
+
 ## Database-skjema
+**Bibeldata:**
 - `books` - Bokliste med norske og engelske navn
 - `verses` - Alle vers med tekst og metadata
 - `word4word` - Ord-for-ord data
 - `references` - Kryssreferanser
 - `book_summaries` - Boksammendrag
 - `chapter_summaries` - Kapittelsammendrag
+- `important_words` - Viktige ord per kapittel
+- `themes` - Tematiske oversikter
 
-## Visningsfunksjoner
-Fra eksisterende klient (../free-bible/client):
-- Klikk på versnummer for å vise:
-  - Original tekst (hebraisk/gresk)
-  - Referanser til andre vers
-- Klikk på ord for å vise:
-  - Originalord (hebraisk/gresk)
-  - Uttale (for gresk)
-  - Forklaring
+**Studiebibel:**
+- `prophecy_categories` - Profetikategorier
+- `prophecies` - Profetier med GT-referanser
+- `prophecy_fulfillments` - NT-oppfyllelser
+- `timeline_periods` - Tidslinjeperioder
+- `timeline_events` - Tidslinjehendelser
+- `timeline_references` - Referanser til hendelser
+- `reading_plans` - Leseplaner
+
+## Funksjoner
+
+### Bibellesing
+- Klikk på versnummer → referanser, bønn, andakt
+- Klikk på ord → originalord, uttale, forklaring (word4word)
+- Grunntekst-visning (hebraisk/gresk) under vers
+- Vers-anker: `/[bok]/[kapittel]#v5`
+
+### Hjelpemidler (ToolsPanel)
+- Boksammendrag, kapittelsammendrag, viktige ord
+- Tidslinje-sidebar (viser relevante hendelser)
+- Skriftstørrelse (liten/medium/stor)
+- Mørk/lys modus
+
+### Brukerdata (localStorage)
+- Favorittvers
+- Emnetagging av vers
+- Leseplan-progresjon med streak-teller
+- Innstillinger (showSummary, showOriginal, theme, etc.)
 
 ## Apache-konfigurasjon
 Kjør Next.js bak Apache som reverse proxy:
@@ -131,5 +171,12 @@ $color-border: #e5e0d8;       // Varm grå - kantlinjer
 - Bruk alltid `tsx` for TypeScript, ikke `ts-node`
 - Aldri overskrive filer med cp/mv uten å spørre
 - Ikke lag forklarende markdown-filer
-- Oppdater TODO.md når oppgaver fullføres
+- Oppdater TODO.md når oppgaver fullføres (se også DONE.md)
 - Ingen hardkodede testverdier i koden
+
+## localStorage-nøkler
+- `favorites` - Favorittvers (array av refs)
+- `topics` - Emnetagging (objekt med topic → vers-array)
+- `activeReadingPlan` - Aktiv leseplan-ID
+- `readingPlanProgress` - Leseplan-progresjon
+- `settings` - Brukerinnstillinger (theme, fontSize, showSummary, etc.)
