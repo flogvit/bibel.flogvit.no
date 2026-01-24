@@ -1,8 +1,9 @@
 export type FontSize = 'small' | 'medium' | 'large';
-export type BibleVersion = 'osnb1' | 'osnn1';
+export type BibleVersion = 'osnb1' | 'osnb2' | 'osnn1';
 
 export const bibleVersions: { value: BibleVersion; label: string }[] = [
   { value: 'osnb1', label: 'Bokmål' },
+  { value: 'osnb2', label: 'Bokmål 2' },
   { value: 'osnn1', label: 'Nynorsk' },
 ];
 
@@ -14,8 +15,10 @@ export interface BibleSettings {
   showImportantWords: boolean;
   showWord4Word: boolean;
   showVerseDetails: boolean;
+  showVerseIndicators: boolean;
   showOriginalText: boolean;
   showTimeline: boolean;
+  readingMode: boolean;
   fontSize: FontSize;
   darkMode: boolean;
   bible: BibleVersion;
@@ -29,8 +32,10 @@ export const defaultSettings: BibleSettings = {
   showImportantWords: false,
   showWord4Word: true,
   showVerseDetails: true,
+  showVerseIndicators: false,
   showOriginalText: false,
   showTimeline: true,
+  readingMode: false,
   fontSize: 'medium',
   darkMode: false,
   bible: 'osnb1',

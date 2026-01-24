@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import styles from './VerseDisplay.module.scss';
-import type { Verse, Prophecy } from '@/lib/bible';
+import type { Verse, Prophecy, VerseVersion } from '@/lib/bible';
 import { toUrlSlug } from '@/lib/url-utils';
 import { useSettings } from '@/components/SettingsContext';
 import { useFavorites } from '@/components/FavoritesContext';
 import { useTopics, Topic } from '@/components/TopicsContext';
 import { useNotes, Note } from '@/components/NotesContext';
+import { useVerseVersions } from '@/components/VerseVersionsContext';
 
 interface VerseDisplayProps {
   verse: Verse;
@@ -39,7 +40,7 @@ interface VerseExtras {
   sermon: string | null;
 }
 
-type TabType = 'original' | 'references' | 'prophecies' | 'prayer' | 'sermon' | 'topics' | 'notes';
+type TabType = 'original' | 'references' | 'prophecies' | 'prayer' | 'sermon' | 'topics' | 'notes' | 'versions';
 
 export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: VerseDisplayProps) {
   const router = useRouter();
@@ -48,6 +49,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
   const { isFavorite, toggleFavorite } = useFavorites();
   const { topics, addTopic, addTopicToVerse, removeTopicFromVerse, getTopicsForVerse, searchTopics } = useTopics();
   const { addNote, updateNote, deleteNote, getNotesForVerse } = useNotes();
+  const { getSelectedVersion, setSelectedVersion, clearSelectedVersion } = useVerseVersions();
   const [expanded, setExpanded] = useState(false);
   const favorited = isFavorite(bookId, verse.chapter, verse.verse);
   const verseTopics = getTopicsForVerse(bookId, verse.chapter, verse.verse);
@@ -55,10 +57,15 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
   const hasTopics = verseTopics.length > 0;
   const hasNotes = verseNotes.length > 0;
 
-  // Check which bible version is being used
-  const currentBible = searchParams.get('bible') || 'osnb1';
-  // Word4word is only available for osnb1 currently
-  const hasWord4Word = currentBible === 'osnb1';
+  // Verse versions support
+  const hasVersions = verse.versions && verse.versions.length > 0;
+  const selectedVersionIndex = getSelectedVersion(bookId, verse.chapter, verse.verse);
+  const displayText = selectedVersionIndex !== undefined && verse.versions
+    ? verse.versions[selectedVersionIndex].text
+    : verse.text;
+
+  // Word4word on translations is disabled - only available in original language tab
+  const hasWord4Word = false;
   const [selectedWord, setSelectedWord] = useState<Word4WordData | null>(null);
   const [selectedOriginalWord, setSelectedOriginalWord] = useState<Word4WordData | null>(null);
   const [word4word, setWord4Word] = useState<Word4WordData[] | null>(null);
@@ -106,14 +113,14 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
     return () => window.removeEventListener('verse-opened', handleVerseOpen as EventListener);
   }, [verse.verse, expanded]);
 
-  const words = verse.text.split(/\s+/);
+  const words = displayText.split(/\s+/);
 
   async function loadData(): Promise<Word4WordData[]> {
     if (word4word !== null) return word4word;
 
     setLoading(true);
     try {
-      // Only fetch Norwegian word4word if we have data for this bible version
+      // Fetch word4word for original languages (Hebrew/Greek)
       const fetches: Promise<Response>[] = [
         fetch(`/api/word4word?bookId=${bookId}&chapter=${verse.chapter}&verse=${verse.verse}&bible=original`),
         fetch(`/api/references?bookId=${bookId}&chapter=${verse.chapter}&verse=${verse.verse}`),
@@ -246,14 +253,14 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
           aria-expanded={expanded}
           aria-label={`Vers ${verse.verse}. Klikk for å se original tekst og referanser`}
         >
-          {favorited && <span className={styles.favoriteIndicator} aria-label="Favoritt">★</span>}
-          {hasTopics && <span className={styles.topicIndicator} aria-label={`${verseTopics.length} emne${verseTopics.length > 1 ? 'r' : ''}`} />}
-          {hasNotes && <span className={styles.noteIndicator} aria-label={`${verseNotes.length} notat${verseNotes.length > 1 ? 'er' : ''}`} />}
+          {settings.showVerseIndicators && favorited && <span className={styles.favoriteIndicator} aria-label="Favoritt">★</span>}
+          {settings.showVerseIndicators && hasTopics && <span className={styles.topicIndicator} aria-label={`${verseTopics.length} emne${verseTopics.length > 1 ? 'r' : ''}`} />}
+          {settings.showVerseIndicators && hasNotes && <span className={styles.noteIndicator} aria-label={`${verseNotes.length} notat${verseNotes.length > 1 ? 'er' : ''}`} />}
           {verse.verse}
         </span>
       ) : (
         <span className={styles.verseNumberStatic}>
-          {favorited && <span className={styles.favoriteIndicator} aria-label="Favoritt">★</span>}
+          {settings.showVerseIndicators && favorited && <span className={styles.favoriteIndicator} aria-label="Favoritt">★</span>}
           {verse.verse}
         </span>
       )}
@@ -387,6 +394,14 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
                 >
                   Notater {verseNotes.length > 0 && `(${verseNotes.length})`}
                 </button>
+                {hasVersions && (
+                  <button
+                    className={`${styles.tab} ${activeTab === 'versions' ? styles.active : ''} ${selectedVersionIndex !== undefined ? styles.hasSelection : ''}`}
+                    onClick={() => setActiveTab('versions')}
+                  >
+                    Versjoner {selectedVersionIndex !== undefined && '●'}
+                  </button>
+                )}
               </div>
 
               <div className={styles.tabContent}>
@@ -405,7 +420,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
                     {/* Word-for-word from original text (Hebrew/Greek) */}
                     {originalWord4word && originalWord4word.length > 0 && (
                       <>
-                        <h5 className={styles.sectionTitle}>Ord for ord</h5>
+                        <h3 className={styles.sectionTitle}>Ord for ord</h3>
                         <div
                           className={`${styles.originalText} ${originalLanguage === 'hebrew' ? styles.hebrewWords : ''}`}
                           dir={originalLanguage === 'hebrew' ? 'rtl' : 'ltr'}
@@ -455,22 +470,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
                       </>
                     )}
 
-                    {/* Mapping from Norwegian to original (existing word4word) - only for osnb1 */}
-                    {hasWord4Word && word4word && word4word.filter(w => w.original).length > 0 && (
-                      <>
-                        <h5 className={styles.sectionTitle}>Norsk → Grunntekst</h5>
-                        <div className={styles.originalText}>
-                          {word4word.filter(w => w.original).map(w => (
-                            <span key={w.word_index} className={styles.originalWord}>
-                              <span className={styles.originalScript}>{w.original}</span>
-                              <span className={styles.translatedWord}>{w.word}</span>
-                            </span>
-                          ))}
-                        </div>
-                      </>
-                    )}
-
-                    {(!originalWord4word || originalWord4word.length === 0) && (!hasWord4Word || !word4word || word4word.filter(w => w.original).length === 0) && (
+                    {(!originalWord4word || originalWord4word.length === 0) && (
                       <p className="text-muted">Ingen orddata tilgjengelig</p>
                     )}
                   </div>
@@ -712,6 +712,49 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
                         Legg til notat
                       </button>
                     </div>
+                  </div>
+                )}
+
+                {activeTab === 'versions' && hasVersions && verse.versions && (
+                  <div className={styles.versionsContent}>
+                    <p className={styles.versionsIntro}>
+                      Velg hvilken oversettelse du vil bruke for dette verset:
+                    </p>
+
+                    <div className={styles.versionOption}>
+                      <label className={styles.versionLabel}>
+                        <input
+                          type="radio"
+                          name={`version-${verse.verse}`}
+                          checked={selectedVersionIndex === undefined}
+                          onChange={() => clearSelectedVersion(bookId, verse.chapter, verse.verse)}
+                        />
+                        <span className={styles.versionText}>
+                          <span className={styles.versionTitle}>Standard versjon</span>
+                          <span className={styles.versionPreview}>{verse.text}</span>
+                        </span>
+                      </label>
+                    </div>
+
+                    {verse.versions.map((version, index) => (
+                      <div key={index} className={styles.versionOption}>
+                        <label className={styles.versionLabel}>
+                          <input
+                            type="radio"
+                            name={`version-${verse.verse}`}
+                            checked={selectedVersionIndex === index}
+                            onChange={() => setSelectedVersion(bookId, verse.chapter, verse.verse, index)}
+                          />
+                          <span className={styles.versionText}>
+                            <span className={styles.versionTitle}>Alternativ {index + 1}</span>
+                            <span className={styles.versionPreview}>{version.text}</span>
+                            {version.explanation && (
+                              <span className={styles.versionExplanation}>{version.explanation}</span>
+                            )}
+                          </span>
+                        </label>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

@@ -13,6 +13,11 @@ export interface Book {
   chapters: number;
 }
 
+export interface VerseVersion {
+  text: string;
+  explanation: string;
+}
+
 export interface Verse {
   id: number;
   book_id: number;
@@ -20,6 +25,7 @@ export interface Verse {
   verse: number;
   text: string;
   bible: string;
+  versions?: VerseVersion[];
 }
 
 export interface Word4Word {
@@ -72,11 +78,26 @@ export function getAllBooks(): Book[] {
   return db.prepare('SELECT * FROM books ORDER BY id').all() as Book[];
 }
 
+interface VerseRow {
+  id: number;
+  book_id: number;
+  chapter: number;
+  verse: number;
+  text: string;
+  bible: string;
+  versions: string | null;
+}
+
 export function getVerses(bookId: number, chapter: number, bible = 'osnb1'): Verse[] {
   const db = getDb();
-  return db.prepare(
+  const rows = db.prepare(
     'SELECT * FROM verses WHERE book_id = ? AND chapter = ? AND bible = ? ORDER BY verse'
-  ).all(bookId, chapter, bible) as Verse[];
+  ).all(bookId, chapter, bible) as VerseRow[];
+
+  return rows.map(row => ({
+    ...row,
+    versions: row.versions ? JSON.parse(row.versions) : undefined
+  }));
 }
 
 export function getOriginalVerses(bookId: number, chapter: number): Verse[] {
@@ -108,9 +129,16 @@ export interface VerseWithOriginal {
 
 export function getVerse(bookId: number, chapter: number, verseNum: number, bible = 'osnb1'): Verse | undefined {
   const db = getDb();
-  return db.prepare(
+  const row = db.prepare(
     'SELECT * FROM verses WHERE book_id = ? AND chapter = ? AND verse = ? AND bible = ?'
-  ).get(bookId, chapter, verseNum, bible) as Verse | undefined;
+  ).get(bookId, chapter, verseNum, bible) as VerseRow | undefined;
+
+  if (!row) return undefined;
+
+  return {
+    ...row,
+    versions: row.versions ? JSON.parse(row.versions) : undefined
+  };
 }
 
 export function getOriginalVerse(bookId: number, chapter: number, verseNum: number): Verse | undefined {

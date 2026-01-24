@@ -26,6 +26,7 @@ import { TimelinePanel } from '@/components/bible/TimelinePanel';
 import { ChapterKeyboardShortcuts } from '@/components/bible/ChapterKeyboardShortcuts';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { ChapterInsightsPanel } from '@/components/bible/ChapterInsightsPanel';
+import { ReadingModeWrapper } from '@/components/bible/ReadingModeWrapper';
 
 interface PageProps {
   params: Promise<{
@@ -41,7 +42,8 @@ export default async function ChapterPage({ params, searchParams }: PageProps) {
   const { book: bookSlug, chapter: chapterStr } = await params;
   const { bible: bibleParam } = await searchParams;
   const chapter = parseInt(chapterStr);
-  const bible = bibleParam === 'osnn1' ? 'osnn1' : 'osnb1';
+  const validBibles = ['osnb1', 'osnb2', 'osnn1'];
+  const bible = bibleParam && validBibles.includes(bibleParam) ? bibleParam : 'osnb1';
 
   const book = getBookByShortName(bookSlug);
   if (!book || isNaN(chapter) || chapter < 1 || chapter > book.chapters) {
@@ -67,7 +69,7 @@ export default async function ChapterPage({ params, searchParams }: PageProps) {
   const originalVersesMap = new Map(originalVerses.map(v => [v.verse, v.text]));
 
   return (
-    <div className={styles.main}>
+    <ReadingModeWrapper className={styles.main}>
       <ScrollToVerse />
       <ChapterKeyboardShortcuts
         bookSlug={urlSlug}
@@ -198,7 +200,7 @@ export default async function ChapterPage({ params, searchParams }: PageProps) {
         bookId={book.id}
         timelineEvents={allTimelineEvents}
       />
-    </div>
+    </ReadingModeWrapper>
   );
 }
 

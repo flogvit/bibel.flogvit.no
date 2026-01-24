@@ -108,6 +108,7 @@ db.exec(`
     verse INTEGER NOT NULL,
     text TEXT NOT NULL,
     bible TEXT NOT NULL DEFAULT 'osnb1',
+    versions TEXT,
     FOREIGN KEY (book_id) REFERENCES books(id),
     UNIQUE (book_id, chapter, verse, bible)
   );
@@ -302,8 +303,8 @@ for (const book of books) {
 // Importer vers
 console.log('Importerer vers...');
 const insertVerse = db.prepare(`
-  INSERT OR REPLACE INTO verses (book_id, chapter, verse, text, bible)
-  VALUES (?, ?, ?, ?, ?)
+  INSERT OR REPLACE INTO verses (book_id, chapter, verse, text, bible, versions)
+  VALUES (?, ?, ?, ?, ?, ?)
 `);
 
 function importVerses(bible: string) {
@@ -327,7 +328,8 @@ function importVerses(bible: string) {
       const verses = JSON.parse(fs.readFileSync(chapterPath, 'utf-8'));
 
       for (const v of verses) {
-        insertVerse.run(v.bookId, v.chapterId, v.verseId, v.text, bible);
+        const versions = v.versions ? JSON.stringify(v.versions) : null;
+        insertVerse.run(v.bookId, v.chapterId, v.verseId, v.text, bible, versions);
       }
     }
   }
@@ -335,6 +337,8 @@ function importVerses(bible: string) {
 
 console.log('  Importerer osnb1...');
 importVerses('osnb1');
+console.log('  Importerer osnb2...');
+importVerses('osnb2');
 console.log('  Importerer osnn1...');
 importVerses('osnn1');
 console.log('  Importerer sblgnt...');
@@ -397,10 +401,7 @@ function importWord4Word(bible: string) {
   }
 }
 
-console.log('  Importerer word4word for osnb1...');
-importWord4Word('osnb1');
-console.log('  Importerer word4word for osnn1...');
-importWord4Word('osnn1');
+// Kun originalspråk (hebraisk/gresk) har word4word
 console.log('  Importerer word4word for sblgnt...');
 importWord4Word('sblgnt');
 console.log('  Importerer word4word for tanach...');

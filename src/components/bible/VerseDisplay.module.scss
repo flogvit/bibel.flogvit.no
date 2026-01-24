@@ -19,6 +19,11 @@
   &:hover {
     text-decoration: underline;
   }
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+  }
 }
 
 .verseNumberStatic {
@@ -691,6 +696,82 @@
   }
 }
 
+// Verse versions
+.versionsContent {
+  padding: $spacing-md;
+}
+
+.versionsIntro {
+  margin: 0 0 $spacing-md 0;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+.versionOption {
+  margin-bottom: $spacing-md;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  overflow: hidden;
+  transition: border-color $transition-fast;
+
+  &:hover {
+    border-color: $color-secondary;
+  }
+
+  &:has(input:checked) {
+    border-color: $color-secondary;
+    background: rgba($color-secondary, 0.05);
+  }
+}
+
+.versionLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  cursor: pointer;
+
+  input[type="radio"] {
+    margin-top: 4px;
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    accent-color: $color-secondary;
+    cursor: pointer;
+  }
+}
+
+.versionText {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.versionTitle {
+  font-weight: 600;
+  color: $color-primary;
+  font-size: $font-size-sm;
+}
+
+.versionPreview {
+  color: $color-text;
+  line-height: $line-height-base;
+}
+
+.versionExplanation {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+  font-style: italic;
+  line-height: $line-height-base;
+  margin-top: $spacing-xs;
+  padding-top: $spacing-xs;
+  border-top: 1px solid $color-border;
+}
+
+.tab.hasSelection {
+  color: $color-secondary;
+}
+
 // Dark mode
 :global(html.dark) {
   .verseNumber,
@@ -978,5 +1059,44 @@
     &:hover {
       background: lighten($dark-color-border, 5%);
     }
+  }
+
+  // Verse versions dark mode
+  .versionLabel input[type="radio"] {
+    accent-color: $dark-color-secondary;
+  }
+
+  .versionsIntro {
+    color: $dark-color-text-muted;
+  }
+
+  .versionOption {
+    border-color: $dark-color-border;
+
+    &:hover {
+      border-color: $dark-color-secondary;
+    }
+
+    &:has(input:checked) {
+      border-color: $dark-color-secondary;
+      background: rgba($dark-color-secondary, 0.1);
+    }
+  }
+
+  .versionTitle {
+    color: $dark-color-primary;
+  }
+
+  .versionPreview {
+    color: $dark-color-text;
+  }
+
+  .versionExplanation {
+    color: $dark-color-text-muted;
+    border-top-color: $dark-color-border;
+  }
+
+  .tab.hasSelection {
+    color: $dark-color-secondary;
   }
 }

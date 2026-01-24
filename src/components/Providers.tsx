@@ -6,6 +6,7 @@ import { FavoritesProvider } from './FavoritesContext';
 import { ReadingPlanProvider } from './ReadingPlanContext';
 import { TopicsProvider } from './TopicsContext';
 import { NotesProvider } from './NotesContext';
+import { VerseVersionsProvider } from './VerseVersionsContext';
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
@@ -13,9 +14,11 @@ export function Providers({ children }: { children: ReactNode }) {
       <FavoritesProvider>
         <TopicsProvider>
           <NotesProvider>
-            <ReadingPlanProvider>
-              {children}
-            </ReadingPlanProvider>
+            <VerseVersionsProvider>
+              <ReadingPlanProvider>
+                {children}
+              </ReadingPlanProvider>
+            </VerseVersionsProvider>
           </NotesProvider>
         </TopicsProvider>
       </FavoritesProvider>
