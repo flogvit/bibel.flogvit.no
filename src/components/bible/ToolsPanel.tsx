@@ -108,8 +108,8 @@ export function ToolsPanel({ onClose }: ToolsPanelProps) {
     { key: 'showChapterContext' as const, label: 'Historisk kontekst' },
     { key: 'showChapterInsights' as const, label: 'Kapittelinnsikt' },
     { key: 'showImportantWords' as const, label: 'Viktige ord' },
-    { key: 'showWord4Word' as const, label: 'Ordforklaring' },
     { key: 'showVerseDetails' as const, label: 'Versdetaljer' },
+    { key: 'showVerseIndicators' as const, label: 'Versindikatorer' },
     { key: 'showOriginalText' as const, label: 'Grunntekst' },
     { key: 'showTimeline' as const, label: 'Tidslinje' },
   ];
