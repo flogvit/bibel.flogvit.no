@@ -25,6 +25,11 @@ export function MobileToolbar({ bookName, chapter, maxChapter, bookSlug, bookId,
   const bible = searchParams.get('bible');
   const bibleQuery = bible ? `?bible=${bible}` : '';
 
+  // Hide in reading mode
+  if (settings.readingMode) {
+    return null;
+  }
+
   return (
     <>
       <div className={styles.toolbar}>

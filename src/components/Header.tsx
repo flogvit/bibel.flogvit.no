@@ -5,6 +5,7 @@ import { Suspense, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './Header.module.scss';
 import { LoadingIndicator } from './LoadingIndicator';
+import { useSettings } from './SettingsContext';
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -13,6 +14,7 @@ export function Header() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { settings, toggleSetting } = useSettings();
 
   // Keyboard shortcut: "/" or Ctrl+K / Cmd+K to focus search
   useEffect(() => {
@@ -122,6 +124,16 @@ export function Header() {
             🔍
           </button>
         </form>
+
+        <button
+          className={`${styles.readingModeButton} ${settings.readingMode ? styles.active : ''}`}
+          onClick={() => toggleSetting('readingMode')}
+          aria-label={settings.readingMode ? 'Slå av lesemodus' : 'Slå på lesemodus'}
+          aria-pressed={settings.readingMode}
+          title={`Lesemodus ${settings.readingMode ? 'på' : 'av'} (R)`}
+        >
+          <span className={styles.readingModeIcon} aria-hidden="true">📖</span>
+        </button>
 
         <button
           className={styles.menuButton}

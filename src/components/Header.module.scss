@@ -200,6 +200,42 @@
   }
 }
 
+.readingModeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  padding: $spacing-xs $spacing-sm;
+  cursor: pointer;
+  transition: all $transition-fast;
+  margin-right: $spacing-sm;
+
+  &:hover {
+    background: $color-background;
+    border-color: $color-secondary;
+  }
+
+  &.active {
+    background: $color-secondary;
+    border-color: $color-secondary;
+
+    .readingModeIcon {
+      filter: brightness(1.2);
+    }
+  }
+
+  @include mobile {
+    margin-right: 0;
+  }
+}
+
+.readingModeIcon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
 .menuButton {
   display: none;
   background: none;
@@ -309,6 +345,20 @@
 
     &:hover {
       background: $dark-color-border;
+    }
+  }
+
+  .readingModeButton {
+    border-color: $dark-color-border;
+
+    &:hover {
+      background: $dark-color-background;
+      border-color: $dark-color-secondary;
+    }
+
+    &.active {
+      background: $dark-color-secondary;
+      border-color: $dark-color-secondary;
     }
   }
 }

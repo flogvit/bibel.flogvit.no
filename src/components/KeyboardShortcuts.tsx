@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import styles from './KeyboardShortcuts.module.scss';
+import { useSettings } from './SettingsContext';
 
 interface KeyboardShortcutsProps {
   // For chapter navigation - only provided on chapter pages
@@ -24,6 +25,7 @@ export function KeyboardShortcuts({
   const [isMac, setIsMac] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const { toggleSetting } = useSettings();
 
   // Detect Mac on client side
   useEffect(() => {
@@ -61,6 +63,15 @@ export function KeyboardShortcuts({
         e.preventDefault();
         setShowHelp(false);
         return;
+      }
+
+      // R to toggle reading mode
+      if (e.key === 'r' || e.key === 'R') {
+        if (!e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey) {
+          e.preventDefault();
+          toggleSetting('readingMode');
+          return;
+        }
       }
 
       // Arrow key navigation for chapters (only on chapter pages)
@@ -145,7 +156,7 @@ export function KeyboardShortcuts({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isInputFocused, showHelp, bookSlug, currentChapter, maxChapter, nextBookSlug, bibleQuery, router]);
+  }, [isInputFocused, showHelp, bookSlug, currentChapter, maxChapter, nextBookSlug, bibleQuery, router, toggleSetting]);
 
   // Close help on navigation
   useEffect(() => {
@@ -185,6 +196,10 @@ export function KeyboardShortcuts({
               <div className={styles.shortcut}>
                 <dt><kbd>/</kbd></dt>
                 <dd>Gå til søkefeltet</dd>
+              </div>
+              <div className={styles.shortcut}>
+                <dt><kbd>R</kbd></dt>
+                <dd>Lesemodus på/av</dd>
               </div>
               <div className={styles.shortcut}>
                 <dt><kbd>Esc</kbd></dt>

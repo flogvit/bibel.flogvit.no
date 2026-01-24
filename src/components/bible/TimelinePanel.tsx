@@ -202,7 +202,8 @@ export function TimelinePanel({ events, currentBookId, currentChapter }: Timelin
     }, 50);
   }, [currentBookId, currentChapter, events, settings.showTimeline]);
 
-  if (!settings.showTimeline) {
+  // Hide in reading mode
+  if (settings.readingMode || !settings.showTimeline) {
     return null;
   }
 

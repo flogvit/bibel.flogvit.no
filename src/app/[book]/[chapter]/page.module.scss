@@ -3,6 +3,23 @@
 
 .main {
   min-height: 100vh;
+
+  // Reading mode - hide sidebars and show only text
+  &:global(.reading-mode) {
+    .layout {
+      grid-template-columns: 1fr;
+    }
+
+    .sidebar,
+    .rightSidebar {
+      display: none;
+    }
+
+    .content {
+      max-width: $max-width-reading;
+      margin: 0 auto;
+    }
+  }
 }
 
 .layout {

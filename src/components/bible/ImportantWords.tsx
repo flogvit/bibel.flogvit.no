@@ -36,7 +36,8 @@ export function ImportantWords({ bookId, chapter }: ImportantWordsProps) {
     }
   }, [settings.showImportantWords, bookId, chapter, words, loading]);
 
-  if (!settings.showImportantWords) {
+  // Hide in reading mode
+  if (settings.readingMode || !settings.showImportantWords) {
     return null;
   }
 

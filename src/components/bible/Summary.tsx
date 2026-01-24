@@ -13,6 +13,11 @@ interface SummaryProps {
 export function Summary({ type, title, content }: SummaryProps) {
   const { settings } = useSettings();
 
+  // Hide in reading mode
+  if (settings.readingMode) {
+    return null;
+  }
+
   const isVisible = type === 'book'
     ? settings.showBookSummary
     : type === 'context'

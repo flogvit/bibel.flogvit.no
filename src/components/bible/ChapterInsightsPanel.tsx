@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useSettings } from '@/components/SettingsContext';
+import { VerseTemplateText } from './VerseTemplateText';
 import {
   ChapterInsight,
   GenealogyInsight,
@@ -24,7 +25,8 @@ export function ChapterInsightsPanel({ insight }: ChapterInsightsPanelProps) {
   const { settings } = useSettings();
   const [isExpanded, setIsExpanded] = useState(false);
 
-  if (!settings.showChapterInsights || !insight) {
+  // Hide in reading mode
+  if (settings.readingMode || !settings.showChapterInsights || !insight) {
     return null;
   }
 
@@ -44,7 +46,9 @@ export function ChapterInsightsPanel({ insight }: ChapterInsightsPanelProps) {
 
       {isExpanded && (
         <div className={styles.content}>
-          <p className={styles.intro}>{insight.intro}</p>
+          <p className={styles.intro}>
+            <VerseTemplateText text={insight.intro} />
+          </p>
           <InsightContent insight={insight} />
         </div>
       )}
@@ -115,7 +119,7 @@ function GenealogyContent({ insight }: { insight: GenealogyInsight }) {
         <div className={styles.footer}>
           <h4>{insight.footer.title}</h4>
           <p>
-            {insight.footer.content}
+            <VerseTemplateText text={insight.footer.content} />
             {insight.footer.links && (
               <>
                 {' '}
@@ -144,7 +148,9 @@ function ListContent({ insight }: { insight: ListInsight }) {
           {item.number && <span className={styles.listNumber}>{item.number}</span>}
           <div className={styles.listContent}>
             <h4 className={styles.listTitle}>{item.title}</h4>
-            <p className={styles.listText}>{item.text}</p>
+            <p className={styles.listText}>
+              <VerseTemplateText text={item.text} />
+            </p>
             <span className={styles.listVerses}>v.{item.verses.join(', ')}</span>
           </div>
         </div>
@@ -162,7 +168,9 @@ function TwoColumnContent({ insight }: { insight: TwoColumnInsight }) {
           <span className={styles.columnVerses}>v.{insight.verses.left.join('-')}</span>
           <ul className={styles.columnList}>
             {insight.leftItems.map((item, index) => (
-              <li key={index} className={styles.columnItem}>{item.text}</li>
+              <li key={index} className={styles.columnItem}>
+                <VerseTemplateText text={item.text} />
+              </li>
             ))}
           </ul>
         </div>
@@ -172,14 +180,16 @@ function TwoColumnContent({ insight }: { insight: TwoColumnInsight }) {
           <span className={styles.columnVerses}>v.{insight.verses.right.join('-')}</span>
           <ul className={styles.columnList}>
             {insight.rightItems.map((item, index) => (
-              <li key={index} className={styles.columnItem}>{item.text}</li>
+              <li key={index} className={styles.columnItem}>
+                <VerseTemplateText text={item.text} />
+              </li>
             ))}
           </ul>
         </div>
       </div>
       {insight.footer && (
         <div className={styles.footer}>
-          <p>{insight.footer}</p>
+          <p><VerseTemplateText text={insight.footer} /></p>
         </div>
       )}
     </>
@@ -200,7 +210,9 @@ function PersonListContent({ insight }: { insight: PersonListInsight }) {
             ) : (
               <span className={styles.personCardName}>{person.name}</span>
             )}
-            <p className={styles.personDescription}>{person.description}</p>
+            <p className={styles.personDescription}>
+              <VerseTemplateText text={person.description} />
+            </p>
             {person.note && <span className={styles.personCardNote}>{person.note}</span>}
           </div>
         </div>
@@ -253,7 +265,9 @@ function FaithHeroesContent({ insight }: { insight: FaithHeroesInsight }) {
           ) : (
             <span className={styles.heroName}>{hero.name}</span>
           )}
-          <p className={styles.heroDeed}>{hero.deed}</p>
+          <p className={styles.heroDeed}>
+            <VerseTemplateText text={hero.deed} />
+          </p>
           <span className={styles.heroVerses}>v.{hero.verses.join(', ')}</span>
         </div>
       ))}
