@@ -57,6 +57,16 @@ Se DONE.md for fullførte oppgaver.
 |----------|--------|--------|-------|
 | Doktrinær oversikt per tema | `.md` | (inkl. i themes.mjs) | `themes/nb/` |
 | Typologi (GT→NT) | `.json` | `typology.mjs` | `typology/` |
+| Guds attributter vs. menneskers | `.json` | `divine_attributes.mjs` | `divine_attributes/nb/` |
+
+**Guds attributter vs. menneskers attributter:**
+Ordliste som kategoriserer beskrivelser/titler etter hvem de brukes om:
+- **Eksklusivt Gud**: allmektig, evig, hellig, Skaper, allvitende
+- **Eksklusivt mennesker**: synder, dødelig, svak, uren
+- **Delt** (brukes om begge): kjærlig, rettferdig, barmhjertig, herre
+
+Format: JSON med originalspråkord (hebraisk/gresk), versreferanser, og kontekstforklaring.
+Krever AI-analyse av kontekst for å avgjøre hvem beskrivelsene refererer til.
 
 ### Personlig bibelstudium
 | Funksjon | Format | Skript | Mappe |
