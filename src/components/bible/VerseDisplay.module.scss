@@ -1,3 +1,4 @@
+@use "sass:color";
 @use '@/styles/variables' as *;
 @use '@/styles/mixins' as *;
 
@@ -692,7 +693,7 @@
   transition: all $transition-fast;
 
   &:hover {
-    background: darken($color-border, 5%);
+    background: color.adjust($color-border, $lightness: -5%);
   }
 }
 
@@ -766,6 +767,59 @@
   margin-top: $spacing-xs;
   padding-top: $spacing-xs;
   border-top: 1px solid $color-border;
+}
+
+.versionHeader {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+}
+
+.versionBadge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: $radius-sm;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.badgeSuggestion {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.badgeTheological {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.badgeGrammar {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.versionSeverity {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: $radius-sm;
+  font-weight: 500;
+}
+
+.severityCritical {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.severityMajor {
+  background: #fff8e1;
+  color: #f57f17;
+}
+
+.severityMinor {
+  background: #e8f5e9;
+  color: #2e7d32;
 }
 
 .tab.hasSelection {
@@ -1057,7 +1111,7 @@
     color: $dark-color-text;
 
     &:hover {
-      background: lighten($dark-color-border, 5%);
+      background: color.adjust($dark-color-border, $lightness: 5%);
     }
   }
 
@@ -1094,6 +1148,36 @@
   .versionExplanation {
     color: $dark-color-text-muted;
     border-top-color: $dark-color-border;
+  }
+
+  .badgeSuggestion {
+    background: rgba(#1565c0, 0.2);
+    color: #90caf9;
+  }
+
+  .badgeTheological {
+    background: rgba(#7b1fa2, 0.2);
+    color: #ce93d8;
+  }
+
+  .badgeGrammar {
+    background: rgba(#e65100, 0.2);
+    color: #ffb74d;
+  }
+
+  .severityCritical {
+    background: rgba(#c62828, 0.2);
+    color: #ef9a9a;
+  }
+
+  .severityMajor {
+    background: rgba(#f57f17, 0.2);
+    color: #fff59d;
+  }
+
+  .severityMinor {
+    background: rgba(#2e7d32, 0.2);
+    color: #a5d6a7;
   }
 
   .tab.hasSelection {

@@ -57,11 +57,12 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
   const hasTopics = verseTopics.length > 0;
   const hasNotes = verseNotes.length > 0;
 
-  // Verse versions support
-  const hasVersions = verse.versions && verse.versions.length > 0;
+  // Verse versions support - filter out error versions for selection
+  const selectableVersions = verse.versions?.filter(v => v.type !== 'error') || [];
+  const hasVersions = selectableVersions.length > 0;
   const selectedVersionIndex = getSelectedVersion(bookId, verse.chapter, verse.verse);
-  const displayText = selectedVersionIndex !== undefined && verse.versions
-    ? verse.versions[selectedVersionIndex].text
+  const displayText = selectedVersionIndex !== undefined && selectableVersions[selectedVersionIndex]
+    ? selectableVersions[selectedVersionIndex].text
     : verse.text;
 
   // Word4word on translations is disabled - only available in original language tab
@@ -120,9 +121,13 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
 
     setLoading(true);
     try {
+      // Determine language from current bible (osnb2 → nb, osnn1 → nn)
+      const currentBible = searchParams.get('bible') || 'osnb2';
+      const lang = currentBible.includes('nn') ? 'nn' : 'nb';
+
       // Fetch word4word for original languages (Hebrew/Greek)
       const fetches: Promise<Response>[] = [
-        fetch(`/api/word4word?bookId=${bookId}&chapter=${verse.chapter}&verse=${verse.verse}&bible=original`),
+        fetch(`/api/word4word?bookId=${bookId}&chapter=${verse.chapter}&verse=${verse.verse}&bible=original&lang=${lang}`),
         fetch(`/api/references?bookId=${bookId}&chapter=${verse.chapter}&verse=${verse.verse}`),
         fetch(`/api/prophecies?book=${bookId}&chapter=${verse.chapter}&verse=${verse.verse}`),
         fetch(`/api/verse-extras?bookId=${bookId}&chapter=${verse.chapter}&verse=${verse.verse}`)
@@ -715,7 +720,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
                   </div>
                 )}
 
-                {activeTab === 'versions' && hasVersions && verse.versions && (
+                {activeTab === 'versions' && hasVersions && (
                   <div className={styles.versionsContent}>
                     <p className={styles.versionsIntro}>
                       Velg hvilken oversettelse du vil bruke for dette verset:
@@ -736,7 +741,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
                       </label>
                     </div>
 
-                    {verse.versions.map((version, index) => (
+                    {selectableVersions.map((version, index) => (
                       <div key={index} className={styles.versionOption}>
                         <label className={styles.versionLabel}>
                           <input
@@ -746,7 +751,23 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
                             onChange={() => setSelectedVersion(bookId, verse.chapter, verse.verse, index)}
                           />
                           <span className={styles.versionText}>
-                            <span className={styles.versionTitle}>Alternativ {index + 1}</span>
+                            <span className={styles.versionHeader}>
+                              <span className={styles.versionTitle}>Alternativ {index + 1}</span>
+                              {version.type && (
+                                <span className={`${styles.versionBadge} ${styles[`badge${version.type.charAt(0).toUpperCase() + version.type.slice(1)}`]}`}>
+                                  {version.type === 'suggestion' && 'Forslag'}
+                                  {version.type === 'theological' && 'Teologisk'}
+                                  {version.type === 'grammar' && 'Grammatikk'}
+                                </span>
+                              )}
+                              {version.severity && (
+                                <span className={`${styles.versionSeverity} ${styles[`severity${version.severity.charAt(0).toUpperCase() + version.severity.slice(1)}`]}`}>
+                                  {version.severity === 'critical' && 'Kritisk'}
+                                  {version.severity === 'major' && 'Viktig'}
+                                  {version.severity === 'minor' && 'Liten'}
+                                </span>
+                              )}
+                            </span>
                             <span className={styles.versionPreview}>{version.text}</span>
                             {version.explanation && (
                               <span className={styles.versionExplanation}>{version.explanation}</span>
