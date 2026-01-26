@@ -1,7 +1,5 @@
-'use client';
-
 import { useState } from 'react';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import { useSettings } from '@/components/SettingsContext';
 import { VerseTemplateText } from './VerseTemplateText';
 import {
@@ -126,7 +124,7 @@ function GenealogyContent({ insight }: { insight: GenealogyInsight }) {
                 {insight.footer.links.map((link, i) => (
                   <span key={link.personId}>
                     {i > 0 && ', '}
-                    <Link href={`/personer/${link.personId}`} className={styles.footerLink}>
+                    <Link to={`/personer/${link.personId}`} className={styles.footerLink}>
                       {link.text}
                     </Link>
                   </span>
@@ -204,7 +202,7 @@ function PersonListContent({ insight }: { insight: PersonListInsight }) {
           <span className={styles.personNumber}>{index + 1}</span>
           <div className={styles.personInfo}>
             {person.personId ? (
-              <Link href={`/personer/${person.personId}`} className={styles.personCardName}>
+              <Link to={`/personer/${person.personId}`} className={styles.personCardName}>
                 {person.name}
               </Link>
             ) : (
@@ -259,7 +257,7 @@ function FaithHeroesContent({ insight }: { insight: FaithHeroesInsight }) {
       {insight.heroes.map((hero, index) => (
         <div key={index} className={styles.heroCard}>
           {hero.personId ? (
-            <Link href={`/personer/${hero.personId}`} className={styles.heroName}>
+            <Link to={`/personer/${hero.personId}`} className={styles.heroName}>
               {hero.name}
             </Link>
           ) : (

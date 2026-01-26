@@ -1,7 +1,17 @@
-'use client';
+
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { BibleSettings, defaultSettings, loadSettings, saveSettings } from '@/lib/settings';
+import {
+  getSettings,
+  saveSettings,
+  BibleSettings,
+  defaultSettings,
+  migrateToIndexedDB,
+} from '@/lib/offline/userData';
+
+// Re-export types for convenience
+export type { BibleSettings };
+export { defaultSettings };
 
 interface SettingsContextType {
   settings: BibleSettings;
@@ -15,11 +25,18 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<BibleSettings>(defaultSettings);
   const [loaded, setLoaded] = useState(false);
 
+  // Load settings on mount
   useEffect(() => {
-    setSettings(loadSettings());
-    setLoaded(true);
+    async function loadData() {
+      await migrateToIndexedDB();
+      const data = await getSettings();
+      setSettings(data);
+      setLoaded(true);
+    }
+    loadData();
   }, []);
 
+  // Save settings when they change
   useEffect(() => {
     if (loaded) {
       saveSettings(settings);

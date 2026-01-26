@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import styles from './Breadcrumbs.module.scss';
 
 export interface BreadcrumbItem {
@@ -22,7 +22,7 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
           return (
             <li key={index} className={styles.item}>
               {item.href && !isLast ? (
-                <Link href={item.href} className={styles.link}>
+                <Link to={item.href} className={styles.link}>
                   {item.label}
                 </Link>
               ) : (

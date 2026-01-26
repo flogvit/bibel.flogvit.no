@@ -1,14 +1,14 @@
-'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-const STORAGE_KEY = 'bible-favorites';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import {
+  getFavorites,
+  saveFavorites,
+  FavoriteVerse,
+  migrateToIndexedDB,
+} from '@/lib/offline/userData';
 
-export interface FavoriteVerse {
-  bookId: number;
-  chapter: number;
-  verse: number;
-}
+export type { FavoriteVerse };
 
 interface FavoritesContextType {
   favorites: FavoriteVerse[];
@@ -20,39 +20,32 @@ interface FavoritesContextType {
 
 const FavoritesContext = createContext<FavoritesContextType | null>(null);
 
-function loadFavorites(): FavoriteVerse[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveFavorites(favorites: FavoriteVerse[]): void {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
-  } catch {
-    // Ignore storage errors
-  }
-}
-
 export function FavoritesProvider({ children }: { children: ReactNode }) {
   const [favorites, setFavorites] = useState<FavoriteVerse[]>([]);
   const [loaded, setLoaded] = useState(false);
 
+  // Load favorites on mount
   useEffect(() => {
-    setFavorites(loadFavorites());
-    setLoaded(true);
+    async function loadData() {
+      // Run migration first (will be skipped if already done)
+      await migrateToIndexedDB();
+      const data = await getFavorites();
+      setFavorites(data);
+      setLoaded(true);
+    }
+    loadData();
   }, []);
 
+  // Save favorites when they change
   useEffect(() => {
     if (loaded) {
       saveFavorites(favorites);
     }
   }, [favorites, loaded]);
+
+  const isFavorite = useCallback((bookId: number, chapter: number, verse: number): boolean => {
+    return favorites.some(f => f.bookId === bookId && f.chapter === chapter && f.verse === verse);
+  }, [favorites]);
 
   function addFavorite(verse: FavoriteVerse) {
     setFavorites(prev => {
@@ -67,10 +60,6 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     setFavorites(prev =>
       prev.filter(f => !(f.bookId === verse.bookId && f.chapter === verse.chapter && f.verse === verse.verse))
     );
-  }
-
-  function isFavorite(bookId: number, chapter: number, verse: number): boolean {
-    return favorites.some(f => f.bookId === bookId && f.chapter === chapter && f.verse === verse);
   }
 
   function toggleFavorite(verse: FavoriteVerse) {

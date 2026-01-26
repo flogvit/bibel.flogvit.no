@@ -1,4 +1,20 @@
-// Reading plan types and localStorage handling
+/**
+ * Reading plan types and storage handling
+ *
+ * Uses IndexedDB via userData for persistence with localStorage fallback.
+ */
+
+import {
+  getActivePlanId as getActivePlanIdFromStorage,
+  setActivePlanId as setActivePlanIdInStorage,
+  getAllPlanProgress,
+  saveSinglePlanProgress,
+  savePlanProgress,
+  ReadingPlanProgress,
+} from './offline/userData';
+
+// Re-export types
+export type { ReadingPlanProgress };
 
 export interface ReadingChapter {
   bookId: number;
@@ -22,17 +38,92 @@ export interface ReadingPlan extends ReadingPlanSummary {
   readings: DayReading[];
 }
 
-export interface ReadingPlanProgress {
-  planId: string;
-  startDate: string; // ISO date string
-  completedDays: number[]; // Array of completed day numbers
-  lastReadDate: string | null; // ISO date string of last reading
+// ============================================
+// Async API (uses IndexedDB)
+// ============================================
+
+// Get the active reading plan ID
+export async function getActivePlanIdAsync(): Promise<string | null> {
+  return getActivePlanIdFromStorage();
 }
+
+// Set the active reading plan
+export async function setActivePlanIdAsync(planId: string | null): Promise<void> {
+  return setActivePlanIdInStorage(planId);
+}
+
+// Get progress for all plans
+export async function getAllProgressAsync(): Promise<Record<string, ReadingPlanProgress>> {
+  return getAllPlanProgress();
+}
+
+// Get progress for a specific plan
+export async function getPlanProgressAsync(planId: string): Promise<ReadingPlanProgress | null> {
+  const allProgress = await getAllPlanProgress();
+  return allProgress[planId] || null;
+}
+
+// Start a new reading plan
+export async function startReadingPlanAsync(planId: string): Promise<ReadingPlanProgress> {
+  const progress: ReadingPlanProgress = {
+    planId,
+    startDate: new Date().toISOString().split('T')[0],
+    completedDays: [],
+    lastReadDate: null,
+  };
+
+  await saveSinglePlanProgress(planId, progress);
+  await setActivePlanIdInStorage(planId);
+  return progress;
+}
+
+// Mark a day as completed
+export async function markDayCompletedAsync(planId: string, dayNumber: number): Promise<ReadingPlanProgress | null> {
+  const progress = await getPlanProgressAsync(planId);
+  if (!progress) return null;
+
+  if (!progress.completedDays.includes(dayNumber)) {
+    progress.completedDays.push(dayNumber);
+    progress.completedDays.sort((a, b) => a - b);
+  }
+  progress.lastReadDate = new Date().toISOString().split('T')[0];
+
+  await saveSinglePlanProgress(planId, progress);
+  return progress;
+}
+
+// Mark a day as not completed
+export async function markDayNotCompletedAsync(planId: string, dayNumber: number): Promise<ReadingPlanProgress | null> {
+  const progress = await getPlanProgressAsync(planId);
+  if (!progress) return null;
+
+  progress.completedDays = progress.completedDays.filter(d => d !== dayNumber);
+  await saveSinglePlanProgress(planId, progress);
+  return progress;
+}
+
+// Reset progress for a plan
+export async function resetProgressAsync(planId: string): Promise<void> {
+  const allProgress = await getAllPlanProgress();
+  delete allProgress[planId];
+  await savePlanProgress(allProgress);
+
+  // If this was the active plan, clear it
+  const activePlan = await getActivePlanIdFromStorage();
+  if (activePlan === planId) {
+    await setActivePlanIdInStorage(null);
+  }
+}
+
+// ============================================
+// Sync API (uses localStorage directly)
+// For backwards compatibility and initial render
+// ============================================
 
 const ACTIVE_PLAN_KEY = 'activeReadingPlan';
 const PROGRESS_KEY = 'readingPlanProgress';
 
-// Get the active reading plan ID
+// Get the active reading plan ID (sync)
 export function getActivePlanId(): string | null {
   if (typeof window === 'undefined') return null;
 
@@ -43,7 +134,7 @@ export function getActivePlanId(): string | null {
   }
 }
 
-// Set the active reading plan
+// Set the active reading plan (sync)
 export function setActivePlanId(planId: string | null): void {
   if (typeof window === 'undefined') return;
 
@@ -53,12 +144,14 @@ export function setActivePlanId(planId: string | null): void {
     } else {
       localStorage.removeItem(ACTIVE_PLAN_KEY);
     }
+    // Also update IndexedDB in background
+    setActivePlanIdInStorage(planId);
   } catch (e) {
     console.error('Failed to save active plan:', e);
   }
 }
 
-// Get progress for all plans
+// Get progress for all plans (sync)
 export function getAllProgress(): Record<string, ReadingPlanProgress> {
   if (typeof window === 'undefined') return {};
 
@@ -73,13 +166,13 @@ export function getAllProgress(): Record<string, ReadingPlanProgress> {
   return {};
 }
 
-// Get progress for a specific plan
+// Get progress for a specific plan (sync)
 export function getPlanProgress(planId: string): ReadingPlanProgress | null {
   const allProgress = getAllProgress();
   return allProgress[planId] || null;
 }
 
-// Start a new reading plan
+// Start a new reading plan (sync)
 export function startReadingPlan(planId: string): ReadingPlanProgress {
   const progress: ReadingPlanProgress = {
     planId,
@@ -93,7 +186,7 @@ export function startReadingPlan(planId: string): ReadingPlanProgress {
   return progress;
 }
 
-// Save progress for a plan
+// Save progress for a plan (sync)
 export function saveProgress(planId: string, progress: ReadingPlanProgress): void {
   if (typeof window === 'undefined') return;
 
@@ -101,12 +194,14 @@ export function saveProgress(planId: string, progress: ReadingPlanProgress): voi
     const allProgress = getAllProgress();
     allProgress[planId] = progress;
     localStorage.setItem(PROGRESS_KEY, JSON.stringify(allProgress));
+    // Also update IndexedDB in background
+    savePlanProgress(allProgress);
   } catch (e) {
     console.error('Failed to save progress:', e);
   }
 }
 
-// Mark a day as completed
+// Mark a day as completed (sync)
 export function markDayCompleted(planId: string, dayNumber: number): ReadingPlanProgress | null {
   const progress = getPlanProgress(planId);
   if (!progress) return null;
@@ -121,7 +216,7 @@ export function markDayCompleted(planId: string, dayNumber: number): ReadingPlan
   return progress;
 }
 
-// Mark a day as not completed
+// Mark a day as not completed (sync)
 export function markDayNotCompleted(planId: string, dayNumber: number): ReadingPlanProgress | null {
   const progress = getPlanProgress(planId);
   if (!progress) return null;
@@ -130,6 +225,31 @@ export function markDayNotCompleted(planId: string, dayNumber: number): ReadingP
   saveProgress(planId, progress);
   return progress;
 }
+
+// Reset progress for a plan (sync)
+export function resetProgress(planId: string): void {
+  if (typeof window === 'undefined') return;
+
+  try {
+    const allProgress = getAllProgress();
+    delete allProgress[planId];
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(allProgress));
+
+    // If this was the active plan, clear it
+    if (getActivePlanId() === planId) {
+      setActivePlanId(null);
+    }
+
+    // Also update IndexedDB in background
+    savePlanProgress(allProgress);
+  } catch (e) {
+    console.error('Failed to reset progress:', e);
+  }
+}
+
+// ============================================
+// Pure calculation functions (no storage)
+// ============================================
 
 // Calculate which day we should be on based on start date
 export function calculateCurrentDay(startDate: string): number {
@@ -204,22 +324,4 @@ export function calculateStreak(progress: ReadingPlanProgress): number {
 export function calculateCompletionPercentage(progress: ReadingPlanProgress, totalDays: number): number {
   if (totalDays === 0) return 0;
   return Math.round((progress.completedDays.length / totalDays) * 100);
-}
-
-// Reset progress for a plan
-export function resetProgress(planId: string): void {
-  if (typeof window === 'undefined') return;
-
-  try {
-    const allProgress = getAllProgress();
-    delete allProgress[planId];
-    localStorage.setItem(PROGRESS_KEY, JSON.stringify(allProgress));
-
-    // If this was the active plan, clear it
-    if (getActivePlanId() === planId) {
-      setActivePlanId(null);
-    }
-  } catch (e) {
-    console.error('Failed to reset progress:', e);
-  }
 }

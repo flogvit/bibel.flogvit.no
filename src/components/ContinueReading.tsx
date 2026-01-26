@@ -1,6 +1,4 @@
-'use client';
-
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import { useReadingPosition } from './ReadingPositionContext';
 import styles from './ContinueReading.module.scss';
 
@@ -17,7 +15,7 @@ export function ContinueReading() {
     <div className={styles.container}>
       <div className={styles.content}>
         <span className={styles.label}>Fortsett lesing</span>
-        <Link href={href} className={styles.link}>
+        <Link to={href} className={styles.link}>
           {position.bookName} {position.chapter}:{position.verse}
         </Link>
       </div>

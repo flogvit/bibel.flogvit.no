@@ -1,7 +1,5 @@
-'use client';
-
 import { useState, useEffect, useRef, useMemo } from 'react';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import { useSettings } from '@/components/SettingsContext';
 import styles from './TimelinePanel.module.scss';
 import type { TimelineEvent, TimelineReference } from '@/lib/bible';
@@ -227,7 +225,7 @@ export function TimelinePanel({ events, currentBookId, currentChapter }: Timelin
     <div className={styles.panel} ref={setContainerRef}>
       <div className={styles.header}>
         <h2 className={styles.title}>Tidslinje</h2>
-        <Link href="/tidslinje" className={styles.viewAllLink}>
+        <Link to="/tidslinje" className={styles.viewAllLink}>
           Se alt →
         </Link>
       </div>
@@ -277,7 +275,7 @@ export function TimelinePanel({ events, currentBookId, currentChapter }: Timelin
                             return (
                               <Link
                                 key={i}
-                                href={getReferenceUrl(ref)}
+                                to={getReferenceUrl(ref)}
                                 className={`${styles.referenceLink} ${isCurrent ? styles.currentRef : ''}`}
                                 onClick={(e) => e.stopPropagation()}
                               >

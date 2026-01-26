@@ -1,7 +1,5 @@
-'use client';
-
 import { useState } from 'react';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import { useSettings } from '@/components/SettingsContext';
 import styles from './TimelineSidebar.module.scss';
 import type { TimelineEvent, TimelineReference } from '@/lib/bible';
@@ -39,7 +37,7 @@ export function TimelineSidebar({ events, currentBookId, currentChapter }: Timel
         <p className={styles.empty}>
           Ingen hendelser i tidslinjen for dette kapitlet.
         </p>
-        <Link href="/tidslinje" className={styles.viewAllLink}>
+        <Link to="/tidslinje" className={styles.viewAllLink}>
           Se hele tidslinjen →
         </Link>
       </div>
@@ -50,7 +48,7 @@ export function TimelineSidebar({ events, currentBookId, currentChapter }: Timel
     <div className={styles.sidebar}>
       <div className={styles.header}>
         <h3 className={styles.title}>Tidslinje</h3>
-        <Link href="/tidslinje" className={styles.viewAllLink}>
+        <Link to="/tidslinje" className={styles.viewAllLink}>
           Se alt →
         </Link>
       </div>

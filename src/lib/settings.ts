@@ -1,52 +1,35 @@
-export type FontSize = 'small' | 'medium' | 'large';
-export type BibleVersion = 'osnb2' | 'osnn1';
+/**
+ * Settings module
+ *
+ * This file re-exports settings types and functions from the offline userData module
+ * for backwards compatibility. New code should import directly from '@/lib/offline/userData'.
+ */
 
-export const bibleVersions: { value: BibleVersion; label: string }[] = [
+// Re-export types and functions from userData
+export {
+  type FontSize,
+  type BibleVersion,
+  type BibleSettings,
+  defaultSettings,
+  getSettings as loadSettings,
+  saveSettings,
+} from './offline/userData';
+
+// Bible version options
+export const bibleVersions: { value: 'osnb2' | 'osnn1'; label: string }[] = [
   { value: 'osnb2', label: 'Bokmål' },
   { value: 'osnn1', label: 'Nynorsk' },
 ];
 
-export interface BibleSettings {
-  showBookSummary: boolean;
-  showChapterSummary: boolean;
-  showChapterContext: boolean;
-  showChapterInsights: boolean;
-  showImportantWords: boolean;
-  showWord4Word: boolean;
-  showVerseDetails: boolean;
-  showVerseIndicators: boolean;
-  showOriginalText: boolean;
-  showTimeline: boolean;
-  readingMode: boolean;
-  fontSize: FontSize;
-  darkMode: boolean;
-  bible: BibleVersion;
-}
+// Synchronous versions for server-side usage or initial render
+// These use localStorage directly for immediate access
+export function loadSettingsSync(): import('./offline/userData').BibleSettings {
+  const { defaultSettings } = require('./offline/userData');
 
-export const defaultSettings: BibleSettings = {
-  showBookSummary: true,
-  showChapterSummary: true,
-  showChapterContext: false,
-  showChapterInsights: true,
-  showImportantWords: false,
-  showWord4Word: true,
-  showVerseDetails: true,
-  showVerseIndicators: false,
-  showOriginalText: false,
-  showTimeline: true,
-  readingMode: false,
-  fontSize: 'medium',
-  darkMode: false,
-  bible: 'osnb2',
-};
-
-const STORAGE_KEY = 'bible-settings';
-
-export function loadSettings(): BibleSettings {
   if (typeof window === 'undefined') return defaultSettings;
 
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem('bible-settings');
     if (stored) {
       return { ...defaultSettings, ...JSON.parse(stored) };
     }
@@ -56,11 +39,11 @@ export function loadSettings(): BibleSettings {
   return defaultSettings;
 }
 
-export function saveSettings(settings: BibleSettings): void {
+export function saveSettingsSync(settings: import('./offline/userData').BibleSettings): void {
   if (typeof window === 'undefined') return;
 
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    localStorage.setItem('bible-settings', JSON.stringify(settings));
   } catch (e) {
     console.error('Failed to save settings:', e);
   }

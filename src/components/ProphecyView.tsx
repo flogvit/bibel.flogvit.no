@@ -1,7 +1,5 @@
-'use client';
-
 import { useState } from 'react';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import styles from './ProphecyView.module.scss';
 import type { ProphecyCategory, Prophecy, ProphecyReference, VerseWithOriginal, VerseRef } from '@/lib/bible';
 import { toUrlSlug } from '@/lib/url-utils';
@@ -145,7 +143,7 @@ export function ProphecyView({ categories, prophecies }: ProphecyViewProps) {
                     <span className={styles.prophecyRef}>
                       <span className={styles.refLabel}>Profeti:</span>
                       <Link
-                        href={getReferenceUrl(prophecy.prophecy)}
+                        to={getReferenceUrl(prophecy.prophecy)}
                         className={styles.refLink}
                         onClick={(e) => e.stopPropagation()}
                       >
@@ -161,7 +159,7 @@ export function ProphecyView({ categories, prophecies }: ProphecyViewProps) {
                         <span key={i}>
                           {i > 0 && ', '}
                           <Link
-                            href={getReferenceUrl(f)}
+                            to={getReferenceUrl(f)}
                             className={styles.refLink}
                             onClick={(e) => e.stopPropagation()}
                           >
@@ -202,7 +200,7 @@ export function ProphecyView({ categories, prophecies }: ProphecyViewProps) {
                               <div key={verseIndex} className={styles.verseGroup}>
                                 <div className={styles.verseHeader}>
                                   <Link
-                                    href={`/${toUrlSlug(verseData.bookShortName)}/${verseData.verse.chapter}#v${verseData.verse.verse}`}
+                                    to={`/${toUrlSlug(verseData.bookShortName)}/${verseData.verse.chapter}#v${verseData.verse.verse}`}
                                     className={styles.verseRef}
                                   >
                                     {verseData.bookShortName} {verseData.verse.chapter}:{verseData.verse.verse}
@@ -228,7 +226,7 @@ export function ProphecyView({ categories, prophecies }: ProphecyViewProps) {
                                 <div key={verseIndex} className={styles.verseGroup}>
                                   <div className={styles.verseHeader}>
                                     <Link
-                                      href={`/${toUrlSlug(verseData.bookShortName)}/${verseData.verse.chapter}#v${verseData.verse.verse}`}
+                                      to={`/${toUrlSlug(verseData.bookShortName)}/${verseData.verse.chapter}#v${verseData.verse.verse}`}
                                       className={styles.verseRef}
                                     >
                                       {verseData.bookShortName} {verseData.verse.chapter}:{verseData.verse.verse}

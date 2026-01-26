@@ -1,8 +1,6 @@
-'use client';
-
 import { useState, useMemo } from 'react';
-import Link from 'next/link';
-import styles from '@/app/personer/page.module.scss';
+import { Link } from 'react-router-dom';
+import styles from '@/styles/pages/persons.module.scss';
 
 interface PersonListItem {
   id: string;
@@ -174,7 +172,7 @@ export function PersonList({ persons, eras, roles }: PersonListProps) {
           {filteredPersons.map((person) => (
             <Link
               key={person.id}
-              href={`/personer/${person.id}`}
+              to={`/personer/${person.id}`}
               className={styles.personCard}
             >
               <div className={styles.personHeader}>

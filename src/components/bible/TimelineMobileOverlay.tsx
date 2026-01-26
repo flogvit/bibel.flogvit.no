@@ -1,7 +1,5 @@
-'use client';
-
 import { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import styles from './TimelineMobileOverlay.module.scss';
 import type { TimelineEvent, TimelineReference } from '@/lib/bible';
 import { toUrlSlug } from '@/lib/url-utils';
@@ -190,7 +188,7 @@ export function TimelineMobileOverlay({ events, currentBookId, currentChapter, o
         </div>
 
         <div className={styles.footer}>
-          <Link href="/tidslinje" className={styles.viewAllLink} onClick={onClose}>
+          <Link to="/tidslinje" className={styles.viewAllLink} onClick={onClose}>
             Se fullstendig tidslinje →
           </Link>
         </div>

@@ -1,7 +1,5 @@
-'use client';
-
 import { useEffect, useState, useCallback } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useNavigate, useLocation } from 'react-router-dom';
 import styles from './KeyboardShortcuts.module.scss';
 import { useSettings } from './SettingsContext';
 
@@ -23,8 +21,9 @@ export function KeyboardShortcuts({
 }: KeyboardShortcutsProps) {
   const [showHelp, setShowHelp] = useState(false);
   const [isMac, setIsMac] = useState(false);
-  const router = useRouter();
-  const pathname = usePathname();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const pathname = location.pathname;
   const { toggleSetting } = useSettings();
 
   // Detect Mac on client side
@@ -79,7 +78,7 @@ export function KeyboardShortcuts({
         if (e.key === 'ArrowLeft' && !e.metaKey && !e.ctrlKey && !e.altKey) {
           e.preventDefault();
           if (currentChapter > 1) {
-            router.push(`/${bookSlug}/${currentChapter - 1}${bibleQuery}`);
+            navigate(`/${bookSlug}/${currentChapter - 1}${bibleQuery}`);
           }
           return;
         }
@@ -87,9 +86,9 @@ export function KeyboardShortcuts({
         if (e.key === 'ArrowRight' && !e.metaKey && !e.ctrlKey && !e.altKey) {
           e.preventDefault();
           if (currentChapter < maxChapter) {
-            router.push(`/${bookSlug}/${currentChapter + 1}${bibleQuery}`);
+            navigate(`/${bookSlug}/${currentChapter + 1}${bibleQuery}`);
           } else if (nextBookSlug) {
-            router.push(`/${nextBookSlug}/1${bibleQuery}`);
+            navigate(`/${nextBookSlug}/1${bibleQuery}`);
           }
           return;
         }
@@ -112,43 +111,43 @@ export function KeyboardShortcuts({
         switch (e.code) {
           case 'KeyH':
             e.preventDefault();
-            router.push('/');
+            navigate('/');
             break;
           case 'KeyS':
             e.preventDefault();
-            router.push('/sok');
+            navigate('/sok');
             break;
           case 'KeyL':
             e.preventDefault();
-            router.push('/leseplan');
+            navigate('/leseplan');
             break;
           case 'KeyT':
             e.preventDefault();
-            router.push('/tidslinje');
+            navigate('/tidslinje');
             break;
           case 'KeyP':
             e.preventDefault();
-            router.push('/profetier');
+            navigate('/profetier');
             break;
           case 'KeyF':
             e.preventDefault();
-            router.push('/favoritter');
+            navigate('/favoritter');
             break;
           case 'KeyE':
             e.preventDefault();
-            router.push('/emner');
+            navigate('/emner');
             break;
           case 'KeyN':
             e.preventDefault();
-            router.push('/notater');
+            navigate('/notater');
             break;
           case 'KeyK':
             e.preventDefault();
-            router.push('/kjente-vers');
+            navigate('/kjente-vers');
             break;
           case 'KeyO':
             e.preventDefault();
-            router.push('/personer');
+            navigate('/personer');
             break;
         }
       }
@@ -156,7 +155,7 @@ export function KeyboardShortcuts({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isInputFocused, showHelp, bookSlug, currentChapter, maxChapter, nextBookSlug, bibleQuery, router, toggleSetting]);
+  }, [isInputFocused, showHelp, bookSlug, currentChapter, maxChapter, nextBookSlug, bibleQuery, navigate, toggleSetting]);
 
   // Close help on navigation
   useEffect(() => {

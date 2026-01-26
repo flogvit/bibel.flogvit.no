@@ -1,7 +1,5 @@
-'use client';
-
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import { parseVerseTemplate, type VerseTemplate } from '@/lib/verse-template';
 import styles from './VerseTemplateText.module.scss';
 
@@ -76,7 +74,7 @@ export function VerseTemplateText({ text, className }: VerseTemplateTextProps) {
           return (
             <Link
               key={index}
-              href={verseData.url}
+              to={verseData.url}
               className={styles.verseLink}
               title={verseData.formattedRef}
             >

@@ -1,7 +1,5 @@
-'use client';
-
 import { useState } from 'react';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import styles from './TimelineView.module.scss';
 import type { TimelinePeriod, TimelineEvent, TimelineReference, VerseWithOriginal, VerseRef } from '@/lib/bible';
 import { toUrlSlug } from '@/lib/url-utils';
@@ -184,7 +182,7 @@ export function TimelineView({ periods, events }: TimelineViewProps) {
                         {event.references.map((ref, i) => (
                           <Link
                             key={i}
-                            href={getReferenceUrl(ref)}
+                            to={getReferenceUrl(ref)}
                             className={styles.referenceLink}
                             onClick={(e) => e.stopPropagation()}
                           >
@@ -203,7 +201,7 @@ export function TimelineView({ periods, events }: TimelineViewProps) {
                             <div key={verseIndex} className={styles.verseGroup}>
                               <div className={styles.verseHeader}>
                                 <Link
-                                  href={`/${toUrlSlug(verseData.bookShortName)}/${verseData.verse.chapter}#v${verseData.verse.verse}`}
+                                  to={`/${toUrlSlug(verseData.bookShortName)}/${verseData.verse.chapter}#v${verseData.verse.verse}`}
                                   className={styles.verseRef}
                                   onClick={(e) => e.stopPropagation()}
                                 >

@@ -86,11 +86,21 @@ export const booksData: BookInfo[] = [
 // Create a map for fast lookup by ID
 const booksById = new Map(booksData.map(book => [book.id, book]));
 
+// Create a map for fast lookup by slug (short_name lowercased)
+const booksBySlug = new Map(booksData.map(book => [book.short_name.toLowerCase(), book]));
+
 /**
  * Get book info by ID (client-safe)
  */
 export function getBookInfoById(id: number): BookInfo | undefined {
   return booksById.get(id);
+}
+
+/**
+ * Get book info by URL slug (client-safe)
+ */
+export function getBookInfoBySlug(slug: string): BookInfo | undefined {
+  return booksBySlug.get(slug.toLowerCase());
 }
 
 /**

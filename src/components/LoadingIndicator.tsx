@@ -1,21 +1,17 @@
-'use client';
-
-import { useEffect, useState, useTransition } from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import styles from './LoadingIndicator.module.scss';
 
 export function LoadingIndicator() {
   const [isLoading, setIsLoading] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [isPending] = useTransition();
+  const location = useLocation();
 
   // Track navigation changes
   useEffect(() => {
     setIsLoading(false);
     setShowLoader(false);
-  }, [pathname, searchParams]);
+  }, [location.pathname, location.search]);
 
   // Show loader only after a delay (200ms) to avoid flashing for fast loads
   useEffect(() => {
@@ -41,7 +37,7 @@ export function LoadingIndicator() {
       if (link && link.href && !link.target && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
         const url = new URL(link.href);
         // Only show loader for internal navigation
-        if (url.origin === window.location.origin && url.pathname !== pathname) {
+        if (url.origin === window.location.origin && url.pathname !== location.pathname) {
           setIsLoading(true);
         }
       }
@@ -49,14 +45,7 @@ export function LoadingIndicator() {
 
     document.addEventListener('click', handleClick);
     return () => document.removeEventListener('click', handleClick);
-  }, [pathname]);
-
-  // Also track pending transitions (for form submissions, etc.)
-  useEffect(() => {
-    if (isPending) {
-      setIsLoading(true);
-    }
-  }, [isPending]);
+  }, [location.pathname]);
 
   if (!showLoader) return null;
 

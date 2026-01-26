@@ -1,18 +1,9 @@
-'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-const STORAGE_KEY = 'bible-notes';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { getNotes, saveNotes, Note, migrateToIndexedDB } from '@/lib/offline/userData';
 
-export interface Note {
-  id: string;
-  bookId: number;
-  chapter: number;
-  verse: number;
-  content: string;
-  createdAt: number;
-  updatedAt: number;
-}
+export type { Note };
 
 interface NotesContextType {
   notes: Note[];
@@ -29,38 +20,22 @@ function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).substring(2);
 }
 
-function loadNotes(): Note[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      return JSON.parse(stored);
-    }
-    return [];
-  } catch {
-    return [];
-  }
-}
-
-function saveNotes(notes: Note[]): void {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
-  } catch {
-    // Ignore storage errors
-  }
-}
-
 export function NotesProvider({ children }: { children: ReactNode }) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loaded, setLoaded] = useState(false);
 
+  // Load notes on mount
   useEffect(() => {
-    const data = loadNotes();
-    setNotes(data);
-    setLoaded(true);
+    async function loadData() {
+      await migrateToIndexedDB();
+      const data = await getNotes();
+      setNotes(data);
+      setLoaded(true);
+    }
+    loadData();
   }, []);
 
+  // Save notes when they change
   useEffect(() => {
     if (loaded) {
       saveNotes(notes);
@@ -102,15 +77,15 @@ export function NotesProvider({ children }: { children: ReactNode }) {
     setNotes(prev => prev.filter(note => note.id !== id));
   }
 
-  function getNotesForVerse(bookId: number, chapter: number, verse: number): Note[] {
+  const getNotesForVerse = useCallback((bookId: number, chapter: number, verse: number): Note[] => {
     return notes.filter(
       note => note.bookId === bookId && note.chapter === chapter && note.verse === verse
     ).sort((a, b) => b.createdAt - a.createdAt); // Newest first
-  }
+  }, [notes]);
 
-  function getNoteCount(): number {
+  const getNoteCount = useCallback((): number => {
     return notes.length;
-  }
+  }, [notes]);
 
   return (
     <NotesContext.Provider value={{

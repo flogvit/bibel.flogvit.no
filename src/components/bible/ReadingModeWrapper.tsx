@@ -1,4 +1,4 @@
-'use client';
+
 
 import { useSettings } from '@/components/SettingsContext';
 import { ReactNode } from 'react';

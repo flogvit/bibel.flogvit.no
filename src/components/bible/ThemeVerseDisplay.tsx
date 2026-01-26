@@ -1,12 +1,10 @@
-'use client';
-
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import { VerseDisplay } from './VerseDisplay';
 import type { ThemeData, ThemeSection, ThemeVerseRef } from '@/lib/bible';
 import type { VerseWithOriginal } from '@/lib/bible';
 import { toUrlSlug } from '@/lib/url-utils';
-import styles from '@/app/temaer/[tema]/page.module.scss';
+import styles from '@/styles/pages/theme.module.scss';
 
 interface ThemeVerseDisplayProps {
   themeData: ThemeData;
@@ -93,13 +91,13 @@ export function ThemeVerseDisplay({ themeData }: ThemeVerseDisplayProps) {
               <div key={verseIndex} className={styles.verseGroup}>
                 <div className={styles.verseHeader}>
                   <Link
-                    href={`/${toUrlSlug(verseData.bookShortName)}/${verseData.verse.chapter}#v${verseData.verse.verse}`}
+                    to={`/${toUrlSlug(verseData.bookShortName)}/${verseData.verse.chapter}#v${verseData.verse.verse}`}
                     className={styles.verseRef}
                   >
                     {verseData.bookShortName} {verseData.verse.chapter}:{verseData.verse.verse}
                   </Link>
                   <Link
-                    href={`/${toUrlSlug(verseData.bookShortName)}/${verseData.verse.chapter}#v${verseData.verse.verse}`}
+                    to={`/${toUrlSlug(verseData.bookShortName)}/${verseData.verse.chapter}#v${verseData.verse.verse}`}
                     className={styles.openContext}
                   >
                     Vis i kontekst →

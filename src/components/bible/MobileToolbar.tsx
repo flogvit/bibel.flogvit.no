@@ -1,7 +1,5 @@
-'use client';
-
 import { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'react-router-dom';
 import { ToolsPanel } from './ToolsPanel';
 import { TimelineMobileOverlay } from './TimelineMobileOverlay';
 import { useSettings } from '@/components/SettingsContext';
@@ -21,7 +19,7 @@ export function MobileToolbar({ bookName, chapter, maxChapter, bookSlug, bookId,
   const [showTools, setShowTools] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
   const { settings } = useSettings();
-  const searchParams = useSearchParams();
+  const [searchParams] = useSearchParams();
   const bible = searchParams.get('bible');
   const bibleQuery = bible ? `?bible=${bible}` : '';
 

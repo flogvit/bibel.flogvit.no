@@ -1,14 +1,13 @@
-'use client';
-
 import { useEffect, useRef } from 'react';
-import { usePathname } from 'next/navigation';
+import { useLocation } from 'react-router-dom';
 
 /**
  * Announces page navigation to screen readers and manages focus for SPA navigation.
  * WCAG 2.4.3: Focus Order - Ensure focus moves logically after navigation
  */
 export function NavigationAnnouncer() {
-  const pathname = usePathname();
+  const location = useLocation();
+  const pathname = location.pathname;
   const previousPathname = useRef(pathname);
   const announcerRef = useRef<HTMLDivElement>(null);
 

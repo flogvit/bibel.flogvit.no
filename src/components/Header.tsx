@@ -1,10 +1,8 @@
-'use client';
-
-import Link from 'next/link';
+import { Link, useNavigate } from 'react-router-dom';
 import { Suspense, useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import styles from './Header.module.scss';
 import { LoadingIndicator } from './LoadingIndicator';
+import { OfflineIndicator } from './OfflineIndicator';
 import { useSettings } from './SettingsContext';
 
 export function Header() {
@@ -13,7 +11,7 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
+  const navigate = useNavigate();
   const { settings, toggleSetting } = useSettings();
 
   // Keyboard shortcut: "/" or Ctrl+K / Cmd+K to focus search
@@ -80,7 +78,7 @@ export function Header() {
       const data = await response.json();
 
       if (data.success && data.reference?.url) {
-        router.push(data.reference.url);
+        navigate(data.reference.url);
         setSearchQuery('');
         setMenuOpen(false);
         return;
@@ -90,7 +88,7 @@ export function Header() {
     }
 
     // Not a reference, go to search page
-    router.push(`/sok?q=${encodeURIComponent(query)}`);
+    navigate(`/sok?q=${encodeURIComponent(query)}`);
     setSearchQuery('');
     setMenuOpen(false);
   }
@@ -103,9 +101,10 @@ export function Header() {
   return (
     <header className={styles.header}>
       <div className={styles.container}>
-        <Link href="/" className={styles.logo}>
+        <Link to="/" className={styles.logo}>
           FLOGVIT.bibel
         </Link>
+        <OfflineIndicator />
         <Suspense fallback={null}>
           <LoadingIndicator />
         </Suspense>
@@ -146,10 +145,10 @@ export function Header() {
         </button>
 
         <nav id="main-nav" className={`${styles.nav} ${menuOpen ? styles.open : ''}`} aria-label="Hovednavigasjon">
-          <Link href="/" className={styles.navLink} onClick={handleNavClick}>
+          <Link to="/" className={styles.navLink} onClick={handleNavClick}>
             Bøker
           </Link>
-          <Link href="/sok" className={styles.navLink} onClick={handleNavClick}>
+          <Link to="/sok" className={styles.navLink} onClick={handleNavClick}>
             Søk
           </Link>
 
@@ -166,31 +165,31 @@ export function Header() {
               <span className={`${styles.dropdownArrow} ${dropdownOpen ? styles.open : ''}`} aria-hidden="true">▾</span>
             </button>
             <div id="resources-menu" className={`${styles.dropdownMenu} ${dropdownOpen ? styles.open : ''}`} role="menu">
-              <Link href="/kjente-vers" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
+              <Link to="/kjente-vers" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Kjente vers
               </Link>
-              <Link href="/favoritter" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
+              <Link to="/favoritter" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Favoritter
               </Link>
-              <Link href="/emner" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
+              <Link to="/emner" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Emner
               </Link>
-              <Link href="/notater" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
+              <Link to="/notater" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Notater
               </Link>
-              <Link href="/leseplan" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
+              <Link to="/leseplan" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Leseplan
               </Link>
-              <Link href="/temaer" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
+              <Link to="/temaer" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Temaer
               </Link>
-              <Link href="/tidslinje" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
+              <Link to="/tidslinje" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Tidslinje
               </Link>
-              <Link href="/profetier" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
+              <Link to="/profetier" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Profetier
               </Link>
-              <Link href="/personer" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
+              <Link to="/personer" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Personer
               </Link>
             </div>
@@ -198,36 +197,36 @@ export function Header() {
 
           {/* Mobile: show dropdown items inline */}
           <div className={styles.mobileDropdownItems}>
-            <Link href="/kjente-vers" className={styles.navLink} onClick={handleNavClick}>
+            <Link to="/kjente-vers" className={styles.navLink} onClick={handleNavClick}>
               Kjente vers
             </Link>
-            <Link href="/favoritter" className={styles.navLink} onClick={handleNavClick}>
+            <Link to="/favoritter" className={styles.navLink} onClick={handleNavClick}>
               Favoritter
             </Link>
-            <Link href="/emner" className={styles.navLink} onClick={handleNavClick}>
+            <Link to="/emner" className={styles.navLink} onClick={handleNavClick}>
               Emner
             </Link>
-            <Link href="/notater" className={styles.navLink} onClick={handleNavClick}>
+            <Link to="/notater" className={styles.navLink} onClick={handleNavClick}>
               Notater
             </Link>
-            <Link href="/leseplan" className={styles.navLink} onClick={handleNavClick}>
+            <Link to="/leseplan" className={styles.navLink} onClick={handleNavClick}>
               Leseplan
             </Link>
-            <Link href="/temaer" className={styles.navLink} onClick={handleNavClick}>
+            <Link to="/temaer" className={styles.navLink} onClick={handleNavClick}>
               Temaer
             </Link>
-            <Link href="/tidslinje" className={styles.navLink} onClick={handleNavClick}>
+            <Link to="/tidslinje" className={styles.navLink} onClick={handleNavClick}>
               Tidslinje
             </Link>
-            <Link href="/profetier" className={styles.navLink} onClick={handleNavClick}>
+            <Link to="/profetier" className={styles.navLink} onClick={handleNavClick}>
               Profetier
             </Link>
-            <Link href="/personer" className={styles.navLink} onClick={handleNavClick}>
+            <Link to="/personer" className={styles.navLink} onClick={handleNavClick}>
               Personer
             </Link>
           </div>
 
-          <Link href="/om" className={styles.navLink} onClick={handleNavClick}>
+          <Link to="/om" className={styles.navLink} onClick={handleNavClick}>
             Om
           </Link>
         </nav>

@@ -1,8 +1,6 @@
-'use client';
-
 import { useState, useRef } from 'react';
 import { useSettings } from '@/components/SettingsContext';
-import { useSearchParams, usePathname, useRouter } from 'next/navigation';
+import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import type { FontSize, BibleVersion } from '@/lib/settings';
 import { bibleVersions } from '@/lib/settings';
 import {
@@ -20,10 +18,11 @@ interface ToolsPanelProps {
 
 export function ToolsPanel({ onClose }: ToolsPanelProps) {
   const { settings, toggleSetting, updateSetting } = useSettings();
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
-  const router = useRouter();
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pathname = location.pathname;
 
   const [importData, setImportData] = useState<UserDataExport | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
@@ -43,7 +42,7 @@ export function ToolsPanel({ onClose }: ToolsPanelProps) {
     // Preserve the current hash (e.g., #v5) when changing bible
     const hash = typeof window !== 'undefined' ? window.location.hash : '';
     const newUrl = queryString ? `${pathname}?${queryString}${hash}` : `${pathname}${hash}`;
-    router.push(newUrl);
+    navigate(newUrl);
   }
 
   function handleExport() {

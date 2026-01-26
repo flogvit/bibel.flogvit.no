@@ -1,4 +1,4 @@
-'use client';
+
 
 import { ReactNode } from 'react';
 import { SettingsProvider } from './SettingsContext';
@@ -8,6 +8,9 @@ import { TopicsProvider } from './TopicsContext';
 import { NotesProvider } from './NotesContext';
 import { VerseVersionsProvider } from './VerseVersionsContext';
 import { ReadingPositionProvider } from './ReadingPositionContext';
+import { ServiceWorkerProvider } from './ServiceWorkerProvider';
+import { OfflineIndicator } from './OfflineIndicator';
+import { UpdateNotification } from './UpdateNotification';
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
@@ -19,6 +22,9 @@ export function Providers({ children }: { children: ReactNode }) {
               <ReadingPositionProvider>
                 <ReadingPlanProvider>
                   {children}
+                  <ServiceWorkerProvider />
+                  <OfflineIndicator />
+                  <UpdateNotification />
                 </ReadingPlanProvider>
               </ReadingPositionProvider>
             </VerseVersionsProvider>

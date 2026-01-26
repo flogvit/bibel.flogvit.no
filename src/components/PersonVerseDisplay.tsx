@@ -1,12 +1,10 @@
-'use client';
-
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import { VerseDisplay } from './bible/VerseDisplay';
 import type { PersonKeyEvent, PersonVerseRef } from '@/lib/bible';
 import type { VerseWithOriginal } from '@/lib/bible';
 import { toUrlSlug } from '@/lib/url-utils';
-import styles from '@/app/personer/[person]/page.module.scss';
+import styles from '@/styles/pages/person.module.scss';
 
 interface PersonVerseDisplayProps {
   keyEvents: PersonKeyEvent[];
@@ -88,13 +86,13 @@ export function PersonVerseDisplay({ keyEvents }: PersonVerseDisplayProps) {
             <div key={verseIndex} className={styles.verseGroup}>
               <div className={styles.verseHeader}>
                 <Link
-                  href={`/${toUrlSlug(verseData.bookShortName)}/${verseData.verse.chapter}#v${verseData.verse.verse}`}
+                  to={`/${toUrlSlug(verseData.bookShortName)}/${verseData.verse.chapter}#v${verseData.verse.verse}`}
                   className={styles.verseRef}
                 >
                   {verseData.bookShortName} {verseData.verse.chapter}:{verseData.verse.verse}
                 </Link>
                 <Link
-                  href={`/${toUrlSlug(verseData.bookShortName)}/${verseData.verse.chapter}#v${verseData.verse.verse}`}
+                  to={`/${toUrlSlug(verseData.bookShortName)}/${verseData.verse.chapter}#v${verseData.verse.verse}`}
                   className={styles.openContext}
                 >
                   Vis i kontekst →

@@ -1,7 +1,5 @@
-'use client';
-
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 
 interface ChapterKeyboardShortcutsProps {
   bookSlug: string;
@@ -18,7 +16,7 @@ export function ChapterKeyboardShortcuts({
   nextBookSlug,
   bibleQuery = '',
 }: ChapterKeyboardShortcutsProps) {
-  const router = useRouter();
+  const navigate = useNavigate();
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -40,7 +38,7 @@ export function ChapterKeyboardShortcuts({
       if (e.key === 'ArrowLeft' && !e.metaKey && !e.ctrlKey && !e.altKey) {
         e.preventDefault();
         if (currentChapter > 1) {
-          router.push(`/${bookSlug}/${currentChapter - 1}${bibleQuery}`);
+          navigate(`/${bookSlug}/${currentChapter - 1}${bibleQuery}`);
         }
         return;
       }
@@ -48,9 +46,9 @@ export function ChapterKeyboardShortcuts({
       if (e.key === 'ArrowRight' && !e.metaKey && !e.ctrlKey && !e.altKey) {
         e.preventDefault();
         if (currentChapter < maxChapter) {
-          router.push(`/${bookSlug}/${currentChapter + 1}${bibleQuery}`);
+          navigate(`/${bookSlug}/${currentChapter + 1}${bibleQuery}`);
         } else if (nextBookSlug) {
-          router.push(`/${nextBookSlug}/1${bibleQuery}`);
+          navigate(`/${nextBookSlug}/1${bibleQuery}`);
         }
         return;
       }
@@ -69,7 +67,7 @@ export function ChapterKeyboardShortcuts({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [bookSlug, currentChapter, maxChapter, nextBookSlug, bibleQuery, router]);
+  }, [bookSlug, currentChapter, maxChapter, nextBookSlug, bibleQuery, navigate]);
 
   // This component doesn't render anything - it just adds keyboard handlers
   return null;

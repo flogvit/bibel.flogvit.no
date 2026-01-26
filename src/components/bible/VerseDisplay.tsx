@@ -1,7 +1,5 @@
-'use client';
-
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import styles from './VerseDisplay.module.scss';
 import type { Verse, Prophecy, VerseVersion } from '@/lib/bible';
 import { toUrlSlug } from '@/lib/url-utils';
@@ -16,6 +14,8 @@ interface VerseDisplayProps {
   bookId: number;
   originalText?: string;
   originalLanguage: 'hebrew' | 'greek';
+  initialWord4Word?: Word4WordData[];
+  initialReferences?: ReferenceData[];
 }
 
 interface Word4WordData {
@@ -42,15 +42,31 @@ interface VerseExtras {
 
 type TabType = 'original' | 'references' | 'prophecies' | 'prayer' | 'sermon' | 'topics' | 'notes' | 'versions';
 
-export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: VerseDisplayProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+// Hook to detect mobile
+function useIsMobile(breakpoint = 600) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= breakpoint);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, [breakpoint]);
+
+  return isMobile;
+}
+
+export function VerseDisplay({ verse, bookId, originalText, originalLanguage, initialWord4Word, initialReferences }: VerseDisplayProps) {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { settings } = useSettings();
   const { isFavorite, toggleFavorite } = useFavorites();
   const { topics, addTopic, addTopicToVerse, removeTopicFromVerse, getTopicsForVerse, searchTopics } = useTopics();
   const { addNote, updateNote, deleteNote, getNotesForVerse } = useNotes();
   const { getSelectedVersion, setSelectedVersion, clearSelectedVersion } = useVerseVersions();
   const [expanded, setExpanded] = useState(false);
+  const isMobile = useIsMobile();
+  const [openSections, setOpenSections] = useState<Set<TabType>>(new Set(['original']));
   const favorited = isFavorite(bookId, verse.chapter, verse.verse);
   const verseTopics = getTopicsForVerse(bookId, verse.chapter, verse.verse);
   const verseNotes = getNotesForVerse(bookId, verse.chapter, verse.verse);
@@ -121,43 +137,64 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
 
     setLoading(true);
     try {
+      // Use pre-loaded data if available (for offline support)
+      const hasInitialData = initialWord4Word || initialReferences;
+
       // Determine language from current bible (osnb2 → nb, osnn1 → nn)
       const currentBible = searchParams.get('bible') || 'osnb2';
       const lang = currentBible.includes('nn') ? 'nn' : 'nb';
 
-      // Fetch word4word for original languages (Hebrew/Greek)
-      const fetches: Promise<Response>[] = [
-        fetch(`/api/word4word?bookId=${bookId}&chapter=${verse.chapter}&verse=${verse.verse}&bible=original&lang=${lang}`),
-        fetch(`/api/references?bookId=${bookId}&chapter=${verse.chapter}&verse=${verse.verse}`),
-        fetch(`/api/prophecies?book=${bookId}&chapter=${verse.chapter}&verse=${verse.verse}`),
-        fetch(`/api/verse-extras?bookId=${bookId}&chapter=${verse.chapter}&verse=${verse.verse}`)
-      ];
+      // Build fetch list - only fetch what we don't already have
+      const fetches: Promise<Response>[] = [];
+      const fetchTypes: string[] = [];
 
-      if (hasWord4Word) {
-        fetches.unshift(fetch(`/api/word4word?bookId=${bookId}&chapter=${verse.chapter}&verse=${verse.verse}`));
+      if (!initialWord4Word) {
+        fetches.push(fetch(`/api/word4word?bookId=${bookId}&chapter=${verse.chapter}&verse=${verse.verse}&bible=original&lang=${lang}`));
+        fetchTypes.push('word4word');
+      }
+      if (!initialReferences) {
+        fetches.push(fetch(`/api/references?bookId=${bookId}&chapter=${verse.chapter}&verse=${verse.verse}`));
+        fetchTypes.push('references');
+      }
+      fetches.push(fetch(`/api/prophecies?book=${bookId}&chapter=${verse.chapter}&verse=${verse.verse}`));
+      fetchTypes.push('prophecies');
+      fetches.push(fetch(`/api/verse-extras?bookId=${bookId}&chapter=${verse.chapter}&verse=${verse.verse}`));
+      fetchTypes.push('extras');
+
+      let origW4wData: Word4WordData[] = initialWord4Word || [];
+      let refsData: ReferenceData[] = initialReferences || [];
+      let propheciesData: { prophecies?: Prophecy[] } = { prophecies: [] };
+      let extrasData: VerseExtras = { prayer: null, sermon: null };
+
+      if (fetches.length > 0) {
+        try {
+          const responses = await Promise.all(fetches);
+
+          for (let i = 0; i < responses.length; i++) {
+            const type = fetchTypes[i];
+            if (type === 'word4word') {
+              origW4wData = await responses[i].json();
+            } else if (type === 'references') {
+              refsData = await responses[i].json();
+            } else if (type === 'prophecies') {
+              propheciesData = await responses[i].json();
+            } else if (type === 'extras') {
+              extrasData = await responses[i].json();
+            }
+          }
+        } catch (fetchError) {
+          // If fetching fails (offline), use what we have from initial data
+          console.warn('Failed to fetch additional verse data:', fetchError);
+        }
       }
 
-      const responses = await Promise.all(fetches);
-
-      let w4wData: Word4WordData[] = [];
-      let responseIndex = 0;
-
-      if (hasWord4Word) {
-        w4wData = await responses[responseIndex++].json();
-      }
-
-      const origW4wData = await responses[responseIndex++].json();
-      const refsData = await responses[responseIndex++].json();
-      const propheciesData = await responses[responseIndex++].json();
-      const extrasData = await responses[responseIndex++].json();
-
-      setWord4Word(w4wData);
+      setWord4Word([]);
       setOriginalWord4Word(origW4wData);
       setReferences(refsData);
       setProphecies(propheciesData.prophecies || []);
       setVerseExtras(extrasData);
       setLoading(false);
-      return w4wData;
+      return [];
     } catch (error) {
       console.error('Failed to load verse data:', error);
       setLoading(false);
@@ -205,6 +242,18 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
 
   function handleFavoriteClick() {
     toggleFavorite({ bookId, chapter: verse.chapter, verse: verse.verse });
+  }
+
+  function toggleSection(section: TabType) {
+    setOpenSections(prev => {
+      const next = new Set(prev);
+      if (next.has(section)) {
+        next.delete(section);
+      } else {
+        next.add(section);
+      }
+      return next;
+    });
   }
 
   function getTopicSuggestions(): Topic[] {
@@ -317,7 +366,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
           )}
           <button
             className={styles.searchOriginalButton}
-            onClick={() => router.push(`/sok/original?word=${encodeURIComponent(selectedWord.original!)}`)}
+            onClick={() => navigate(`/sok/original?word=${encodeURIComponent(selectedWord.original!)}`)}
           >
             Søk alle forekomster
           </button>
@@ -348,68 +397,70 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
                   {favorited ? '★ Fjern favoritt' : '☆ Legg til favoritt'}
                 </button>
               </div>
-              <div className={styles.tabs}>
-                <button
-                  className={`${styles.tab} ${activeTab === 'original' ? styles.active : ''}`}
-                  onClick={() => setActiveTab('original')}
-                >
-                  Grunntekst
-                </button>
-                {true && (
-                  <button
-                    className={`${styles.tab} ${activeTab === 'references' ? styles.active : ''}`}
-                    onClick={() => setActiveTab('references')}
-                  >
-                    Referanser
-                  </button>
-                )}
-                {prophecies && prophecies.length > 0 && (
-                  <button
-                    className={`${styles.tab} ${activeTab === 'prophecies' ? styles.active : ''}`}
-                    onClick={() => setActiveTab('prophecies')}
-                  >
-                    Profetier ({prophecies.length})
-                  </button>
-                )}
-                {verseExtras?.prayer && (
-                  <button
-                    className={`${styles.tab} ${activeTab === 'prayer' ? styles.active : ''}`}
-                    onClick={() => setActiveTab('prayer')}
-                  >
-                    Bønn
-                  </button>
-                )}
-                {verseExtras?.sermon && (
-                  <button
-                    className={`${styles.tab} ${activeTab === 'sermon' ? styles.active : ''}`}
-                    onClick={() => setActiveTab('sermon')}
-                  >
-                    Andakt
-                  </button>
-                )}
-                <button
-                  className={`${styles.tab} ${activeTab === 'topics' ? styles.active : ''}`}
-                  onClick={() => setActiveTab('topics')}
-                >
-                  Emner {verseTopics.length > 0 && `(${verseTopics.length})`}
-                </button>
-                <button
-                  className={`${styles.tab} ${activeTab === 'notes' ? styles.active : ''}`}
-                  onClick={() => setActiveTab('notes')}
-                >
-                  Notater {verseNotes.length > 0 && `(${verseNotes.length})`}
-                </button>
-                {hasVersions && (
-                  <button
-                    className={`${styles.tab} ${activeTab === 'versions' ? styles.active : ''} ${selectedVersionIndex !== undefined ? styles.hasSelection : ''}`}
-                    onClick={() => setActiveTab('versions')}
-                  >
-                    Versjoner {selectedVersionIndex !== undefined && '●'}
-                  </button>
-                )}
-              </div>
 
-              <div className={styles.tabContent}>
+              {/* Desktop: Tabs */}
+              {!isMobile && (
+                <>
+                  <div className={styles.tabs}>
+                    <button
+                      className={`${styles.tab} ${activeTab === 'original' ? styles.active : ''}`}
+                      onClick={() => setActiveTab('original')}
+                    >
+                      Grunntekst
+                    </button>
+                    <button
+                      className={`${styles.tab} ${activeTab === 'references' ? styles.active : ''}`}
+                      onClick={() => setActiveTab('references')}
+                    >
+                      Referanser
+                    </button>
+                    {prophecies && prophecies.length > 0 && (
+                      <button
+                        className={`${styles.tab} ${activeTab === 'prophecies' ? styles.active : ''}`}
+                        onClick={() => setActiveTab('prophecies')}
+                      >
+                        Profetier ({prophecies.length})
+                      </button>
+                    )}
+                    {verseExtras?.prayer && (
+                      <button
+                        className={`${styles.tab} ${activeTab === 'prayer' ? styles.active : ''}`}
+                        onClick={() => setActiveTab('prayer')}
+                      >
+                        Bønn
+                      </button>
+                    )}
+                    {verseExtras?.sermon && (
+                      <button
+                        className={`${styles.tab} ${activeTab === 'sermon' ? styles.active : ''}`}
+                        onClick={() => setActiveTab('sermon')}
+                      >
+                        Andakt
+                      </button>
+                    )}
+                    <button
+                      className={`${styles.tab} ${activeTab === 'topics' ? styles.active : ''}`}
+                      onClick={() => setActiveTab('topics')}
+                    >
+                      Emner {verseTopics.length > 0 && `(${verseTopics.length})`}
+                    </button>
+                    <button
+                      className={`${styles.tab} ${activeTab === 'notes' ? styles.active : ''}`}
+                      onClick={() => setActiveTab('notes')}
+                    >
+                      Notater {verseNotes.length > 0 && `(${verseNotes.length})`}
+                    </button>
+                    {hasVersions && (
+                      <button
+                        className={`${styles.tab} ${activeTab === 'versions' ? styles.active : ''} ${selectedVersionIndex !== undefined ? styles.hasSelection : ''}`}
+                        onClick={() => setActiveTab('versions')}
+                      >
+                        Versjoner {selectedVersionIndex !== undefined && '●'}
+                      </button>
+                    )}
+                  </div>
+
+                  <div className={styles.tabContent}>
                 {activeTab === 'original' && (
                   <div className={styles.originalTextTab}>
                     {originalText && (
@@ -466,7 +517,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
                             )}
                             <button
                               className={styles.searchOriginalButton}
-                              onClick={() => router.push(`/sok/original?word=${encodeURIComponent(selectedOriginalWord.word)}`)}
+                              onClick={() => navigate(`/sok/original?word=${encodeURIComponent(selectedOriginalWord.word)}`)}
                             >
                               Søk alle forekomster
                             </button>
@@ -778,7 +829,364 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage }: 
                     ))}
                   </div>
                 )}
-              </div>
+                  </div>
+                </>
+              )}
+
+              {/* Mobile: Accordion */}
+              {isMobile && (
+                <div className={styles.accordion}>
+                  {/* Grunntekst */}
+                  <div className={styles.accordionItem}>
+                    <button
+                      className={`${styles.accordionHeader} ${openSections.has('original') ? styles.open : ''}`}
+                      onClick={() => toggleSection('original')}
+                      aria-expanded={openSections.has('original')}
+                    >
+                      <span>Grunntekst</span>
+                      <span className={styles.accordionIcon}>{openSections.has('original') ? '−' : '+'}</span>
+                    </button>
+                    {openSections.has('original') && (
+                      <div className={styles.accordionContent}>
+                        <div className={styles.originalTextTab}>
+                          {originalText && (
+                            <div
+                              className={`${styles.fullOriginalText} ${originalLanguage === 'hebrew' ? styles.hebrew : styles.greek}`}
+                              dir={originalLanguage === 'hebrew' ? 'rtl' : 'ltr'}
+                              lang={originalLanguage === 'hebrew' ? 'he' : 'el'}
+                            >
+                              {originalText}
+                            </div>
+                          )}
+                          {originalWord4word && originalWord4word.length > 0 && (
+                            <>
+                              <h3 className={styles.sectionTitle}>Ord for ord</h3>
+                              <div
+                                className={`${styles.originalText} ${originalLanguage === 'hebrew' ? styles.hebrewWords : ''}`}
+                                dir={originalLanguage === 'hebrew' ? 'rtl' : 'ltr'}
+                                lang={originalLanguage === 'hebrew' ? 'he' : 'el'}
+                              >
+                                {originalWord4word.map(w => (
+                                  <span
+                                    key={w.word_index}
+                                    className={`${styles.originalWord} ${styles.clickableWord} ${selectedOriginalWord?.word_index === w.word_index ? styles.selectedWord : ''}`}
+                                    onClick={() => setSelectedOriginalWord(selectedOriginalWord?.word_index === w.word_index ? null : w)}
+                                    tabIndex={0}
+                                    role="button"
+                                  >
+                                    <span className={styles.originalScript}>{w.word}</span>
+                                    {w.pronunciation && (
+                                      <span className={styles.translatedWord}>{w.pronunciation}</span>
+                                    )}
+                                  </span>
+                                ))}
+                              </div>
+                              {selectedOriginalWord && (
+                                <div className={styles.wordExplanation}>
+                                  <strong>{selectedOriginalWord.word}</strong>
+                                  {selectedOriginalWord.pronunciation && (
+                                    <span className={styles.pronunciationInline}> ({selectedOriginalWord.pronunciation})</span>
+                                  )}
+                                  {selectedOriginalWord.explanation && (
+                                    <p>{selectedOriginalWord.explanation}</p>
+                                  )}
+                                </div>
+                              )}
+                            </>
+                          )}
+                          {(!originalWord4word || originalWord4word.length === 0) && (
+                            <p className="text-muted">Ingen orddata tilgjengelig</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Referanser */}
+                  <div className={styles.accordionItem}>
+                    <button
+                      className={`${styles.accordionHeader} ${openSections.has('references') ? styles.open : ''}`}
+                      onClick={() => toggleSection('references')}
+                      aria-expanded={openSections.has('references')}
+                    >
+                      <span>Referanser {references && references.length > 0 && `(${references.length})`}</span>
+                      <span className={styles.accordionIcon}>{openSections.has('references') ? '−' : '+'}</span>
+                    </button>
+                    {openSections.has('references') && (
+                      <div className={styles.accordionContent}>
+                        <div className={styles.referencesList}>
+                          {references && references.length > 0 ? (
+                            references.map((ref, index) => (
+                              <a
+                                key={index}
+                                href={`/${toUrlSlug(ref.book_short_name)}/${ref.to_chapter}#v${ref.to_verse_start}`}
+                                className={styles.reference}
+                              >
+                                <span className={styles.refLink}>{formatReference(ref)}</span>
+                                {ref.description && (
+                                  <span className={styles.refDescription}>{ref.description}</span>
+                                )}
+                              </a>
+                            ))
+                          ) : (
+                            <p className="text-muted">Ingen referanser</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Profetier */}
+                  {prophecies && prophecies.length > 0 && (
+                    <div className={styles.accordionItem}>
+                      <button
+                        className={`${styles.accordionHeader} ${openSections.has('prophecies') ? styles.open : ''}`}
+                        onClick={() => toggleSection('prophecies')}
+                        aria-expanded={openSections.has('prophecies')}
+                      >
+                        <span>Profetier ({prophecies.length})</span>
+                        <span className={styles.accordionIcon}>{openSections.has('prophecies') ? '−' : '+'}</span>
+                      </button>
+                      {openSections.has('prophecies') && (
+                        <div className={styles.accordionContent}>
+                          <div className={styles.propheciesList}>
+                            {prophecies.map((prophecy) => (
+                              <a
+                                key={prophecy.id}
+                                href={`/profetier#${prophecy.id}`}
+                                className={styles.prophecyItem}
+                              >
+                                <span className={styles.prophecyTitle}>{prophecy.title}</span>
+                                <span className={styles.prophecyCategory}>{prophecy.category?.name}</span>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Bønn */}
+                  {verseExtras?.prayer && (
+                    <div className={styles.accordionItem}>
+                      <button
+                        className={`${styles.accordionHeader} ${openSections.has('prayer') ? styles.open : ''}`}
+                        onClick={() => toggleSection('prayer')}
+                        aria-expanded={openSections.has('prayer')}
+                      >
+                        <span>Bønn</span>
+                        <span className={styles.accordionIcon}>{openSections.has('prayer') ? '−' : '+'}</span>
+                      </button>
+                      {openSections.has('prayer') && (
+                        <div className={styles.accordionContent}>
+                          <div className={styles.prayerContent}>
+                            <p>{verseExtras.prayer}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Andakt */}
+                  {verseExtras?.sermon && (
+                    <div className={styles.accordionItem}>
+                      <button
+                        className={`${styles.accordionHeader} ${openSections.has('sermon') ? styles.open : ''}`}
+                        onClick={() => toggleSection('sermon')}
+                        aria-expanded={openSections.has('sermon')}
+                      >
+                        <span>Andakt</span>
+                        <span className={styles.accordionIcon}>{openSections.has('sermon') ? '−' : '+'}</span>
+                      </button>
+                      {openSections.has('sermon') && (
+                        <div className={styles.accordionContent}>
+                          <div className={styles.sermonContent}>
+                            <p>{verseExtras.sermon}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Emner */}
+                  <div className={styles.accordionItem}>
+                    <button
+                      className={`${styles.accordionHeader} ${openSections.has('topics') ? styles.open : ''}`}
+                      onClick={() => toggleSection('topics')}
+                      aria-expanded={openSections.has('topics')}
+                    >
+                      <span>Emner {verseTopics.length > 0 && `(${verseTopics.length})`}</span>
+                      <span className={styles.accordionIcon}>{openSections.has('topics') ? '−' : '+'}</span>
+                    </button>
+                    {openSections.has('topics') && (
+                      <div className={styles.accordionContent}>
+                        <div className={styles.topicsContent}>
+                          {verseTopics.length > 0 && (
+                            <div className={styles.topicsList}>
+                              {verseTopics.map(topic => (
+                                <span key={topic.id} className={styles.topicTag}>
+                                  {topic.name}
+                                  <button
+                                    className={styles.topicRemove}
+                                    onClick={() => removeTopicFromVerse(bookId, verse.chapter, verse.verse, topic.id)}
+                                  >
+                                    ×
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          <div className={styles.topicInputWrapper}>
+                            <input
+                              type="text"
+                              className={styles.topicInput}
+                              placeholder="Legg til emne..."
+                              value={topicInput}
+                              onChange={(e) => {
+                                setTopicInput(e.target.value);
+                                setShowTopicSuggestions(true);
+                              }}
+                              onFocus={() => setShowTopicSuggestions(true)}
+                              onBlur={() => setTimeout(() => setShowTopicSuggestions(false), 150)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && topicInput.trim()) {
+                                  e.preventDefault();
+                                  const suggestions = getTopicSuggestions();
+                                  if (suggestions.length > 0) {
+                                    handleAddTopic(suggestions[0]);
+                                  } else {
+                                    handleAddTopic(null);
+                                  }
+                                }
+                              }}
+                            />
+                            {showTopicSuggestions && getTopicSuggestions().length > 0 && (
+                              <div className={styles.topicSuggestions}>
+                                {getTopicSuggestions().map((topic) => (
+                                  <div
+                                    key={topic.id}
+                                    className={styles.topicSuggestion}
+                                    onClick={() => handleAddTopic(topic)}
+                                  >
+                                    {topic.name}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Notater */}
+                  <div className={styles.accordionItem}>
+                    <button
+                      className={`${styles.accordionHeader} ${openSections.has('notes') ? styles.open : ''}`}
+                      onClick={() => toggleSection('notes')}
+                      aria-expanded={openSections.has('notes')}
+                    >
+                      <span>Notater {verseNotes.length > 0 && `(${verseNotes.length})`}</span>
+                      <span className={styles.accordionIcon}>{openSections.has('notes') ? '−' : '+'}</span>
+                    </button>
+                    {openSections.has('notes') && (
+                      <div className={styles.accordionContent}>
+                        <div className={styles.notesContent}>
+                          {verseNotes.length > 0 && (
+                            <div className={styles.notesList}>
+                              {verseNotes.map(note => (
+                                <div key={note.id} className={styles.noteItem}>
+                                  <p className={styles.noteText}>{note.content}</p>
+                                  <div className={styles.noteFooter}>
+                                    <span className={styles.noteDate}>
+                                      {new Date(note.updatedAt).toLocaleDateString('nb-NO')}
+                                    </span>
+                                    <button
+                                      className={styles.noteDeleteButton}
+                                      onClick={() => deleteNote(note.id)}
+                                    >
+                                      ×
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          <div className={styles.noteInputWrapper}>
+                            <textarea
+                              className={styles.noteTextarea}
+                              placeholder="Skriv et notat..."
+                              value={noteInput}
+                              onChange={(e) => setNoteInput(e.target.value)}
+                              rows={3}
+                            />
+                            <button
+                              className={styles.noteAddButton}
+                              onClick={() => {
+                                if (noteInput.trim()) {
+                                  addNote(bookId, verse.chapter, verse.verse, noteInput);
+                                  setNoteInput('');
+                                }
+                              }}
+                              disabled={!noteInput.trim()}
+                            >
+                              Legg til
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Versjoner */}
+                  {hasVersions && (
+                    <div className={styles.accordionItem}>
+                      <button
+                        className={`${styles.accordionHeader} ${openSections.has('versions') ? styles.open : ''}`}
+                        onClick={() => toggleSection('versions')}
+                        aria-expanded={openSections.has('versions')}
+                      >
+                        <span>Versjoner {selectedVersionIndex !== undefined && '●'}</span>
+                        <span className={styles.accordionIcon}>{openSections.has('versions') ? '−' : '+'}</span>
+                      </button>
+                      {openSections.has('versions') && (
+                        <div className={styles.accordionContent}>
+                          <div className={styles.versionsContent}>
+                            <div className={styles.versionOption}>
+                              <label className={styles.versionLabel}>
+                                <input
+                                  type="radio"
+                                  name={`version-mobile-${verse.verse}`}
+                                  checked={selectedVersionIndex === undefined}
+                                  onChange={() => clearSelectedVersion(bookId, verse.chapter, verse.verse)}
+                                />
+                                <span className={styles.versionText}>
+                                  <span className={styles.versionTitle}>Standard</span>
+                                </span>
+                              </label>
+                            </div>
+                            {selectableVersions.map((version, index) => (
+                              <div key={index} className={styles.versionOption}>
+                                <label className={styles.versionLabel}>
+                                  <input
+                                    type="radio"
+                                    name={`version-mobile-${verse.verse}`}
+                                    checked={selectedVersionIndex === index}
+                                    onChange={() => setSelectedVersion(bookId, verse.chapter, verse.verse, index)}
+                                  />
+                                  <span className={styles.versionText}>
+                                    <span className={styles.versionTitle}>Alt. {index + 1}</span>
+                                  </span>
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
         </div>

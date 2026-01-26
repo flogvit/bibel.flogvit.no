@@ -1,6 +1,4 @@
-'use client';
-
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import { useReadingPlan } from './ReadingPlanContext';
 import { getBookInfoById } from '@/lib/books-data';
 import { toUrlSlug } from '@/lib/url-utils';
@@ -40,7 +38,7 @@ export function TodaysReading() {
         <div className={styles.completed}>
           <h3>Gratulerer!</h3>
           <p>Du har fullført &laquo;{activePlan.name}&raquo;!</p>
-          <Link href="/leseplan" className={styles.startButton}>
+          <Link to="/leseplan" className={styles.startButton}>
             Velg en ny leseplan
           </Link>
         </div>
@@ -72,7 +70,7 @@ export function TodaysReading() {
     <div className={styles.container}>
       <div className={styles.header}>
         <h3>Dagens lesing</h3>
-        <Link href="/leseplan" className={styles.planLink}>
+        <Link to="/leseplan" className={styles.planLink}>
           {activePlan.name}
         </Link>
       </div>
@@ -96,7 +94,7 @@ export function TodaysReading() {
 
       <div className={styles.chapters}>
         {chapters.map((ch, i) => ch && (
-          <Link key={i} href={ch.url} className={styles.chapterLink}>
+          <Link key={i} to={ch.url} className={styles.chapterLink}>
             {ch.bookName} {ch.chapter}
           </Link>
         ))}

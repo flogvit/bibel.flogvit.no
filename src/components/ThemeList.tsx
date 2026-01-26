@@ -1,8 +1,6 @@
-'use client';
-
 import { useState, useMemo } from 'react';
-import Link from 'next/link';
-import styles from '@/app/temaer/page.module.scss';
+import { Link } from 'react-router-dom';
+import styles from '@/styles/pages/themes.module.scss';
 
 interface ThemeListItem {
   id: number;
@@ -103,7 +101,7 @@ export function ThemeList({ themes }: ThemeListProps) {
           {filteredThemes.map((theme) => (
             <Link
               key={theme.id}
-              href={`/temaer/${theme.name}`}
+              to={`/temaer/${theme.name}`}
               className={styles.themeCard}
             >
               <h2>{theme.title}</h2>

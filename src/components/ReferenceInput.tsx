@@ -1,7 +1,5 @@
-'use client';
-
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 import styles from './ReferenceInput.module.scss';
 
 interface Book {
@@ -62,7 +60,7 @@ export function ReferenceInput({
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
+  const navigate = useNavigate();
 
   // Debounce timer
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -163,7 +161,7 @@ export function ReferenceInput({
       const data: ReferenceResult = await response.json();
 
       if (data.success && data.reference) {
-        router.push(data.reference.url);
+        navigate(data.reference.url);
         return;
       }
     } catch (error) {
@@ -174,7 +172,7 @@ export function ReferenceInput({
     if (onTextSearch) {
       onTextSearch(query);
     } else {
-      router.push(`/sok?q=${encodeURIComponent(query)}`);
+      navigate(`/sok?q=${encodeURIComponent(query)}`);
     }
   }
 
