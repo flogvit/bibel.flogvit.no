@@ -153,3 +153,126 @@ Fullførte oppgaver flyttet fra TODO.md.
 | Kapittelkontekst (historisk, kulturell, arkeologisk, geografisk) | `.md` | `chapter_context.mjs` ✅ | `chapter_context/nb/` |
 | Tidslinje for bibelske hendelser | `.json` | ✅ Manuelt | `timeline/` |
 | Profetier og oppfyllelser | `.json` | ✅ Manuelt | `prophecies/` |
+
+## WCAG 2.2 AA Tilgjengelighet ✓
+
+### Oppfattbar (Perceivable)
+- [x] Alt-tekst på alle bilder og ikoner
+- [x] Beskrivende aria-labels på interaktive elementer
+- [x] Semantisk HTML (header, nav, main, article, aside, footer)
+- [x] Korrekt overskriftshierarki (h1-h6)
+- [x] Landmark-regioner med aria-labels
+- [x] Skip-link til hovedinnhold
+- [x] Kontrastsjekk alle fargekombinasjoner (minimum 4.5:1 for tekst)
+- [x] Tekst kan forstørres 200% uten tap av funksjonalitet
+- [x] Støtte for brukerens foretrukne fargevalg (prefers-color-scheme, prefers-contrast)
+- [x] Støtte for prefers-reduced-motion
+- [x] Ingen informasjon kun formidlet via farge
+
+### Betjenbar (Operable)
+- [x] Alle funksjoner tilgjengelig via tastatur
+- [x] Synlig fokusindikator på alle interaktive elementer
+- [x] Logisk tab-rekkefølge
+- [x] Ingen tastaturfeller
+- [x] Fokus ikke skjult bak sticky elementer (2.4.11)
+- [x] Hurtigtaster implementert (?, piltaster, Alt+Shift+bokstav)
+- [x] Konsistente navigasjonsmekanismer (breadcrumbs på alle sider)
+- [x] Flere måter å finne innhold (søk, meny, sitemap)
+- [x] Beskrivende lenketekster
+- [x] Breadcrumbs for orientering
+- [x] Fokus-håndtering ved sidenavigasjon (NavigationAnnouncer)
+- [x] Target size minimum 24x24px (2.5.8)
+- [x] Alternativ til dra-og-slipp operasjoner (2.5.7)
+
+### Forståelig (Understandable)
+- [x] Språk definert i HTML (lang="nb")
+- [x] Språkendringer markert (hebraisk/gresk tekst med lang-attributt)
+- [x] Forkortelser forklart (abbr-tag)
+- [x] Konsistent plassering av UI-elementer
+- [x] Ingen uventede kontekstendringer ved fokus/input
+- [x] Konsistent hjelp tilgjengelig (3.2.6)
+- [x] Tydelige feilmeldinger
+- [x] Labels for alle skjemafelt
+- [x] Instruksjoner der nødvendig
+- [x] Redundant Entry (3.3.7)
+
+### Robust
+- [x] Validert HTML (build uten feil)
+- [x] ARIA brukt korrekt
+- [x] Statusmeldinger annonsert til skjermlesere (aria-live)
+
+### Verktøy
+- [x] eslint-plugin-jsx-a11y
+- [x] axe-core for automatisk testing
+
+### Tilgjengelighetserklæring
+- [x] /tilgjengelighet-side med erklæring
+- [x] Lenke i footer
+
+## Kapittel-innsikter ✓
+
+Data i `../free-bible/generate/chapter_insights/nb/[bok]-[kapittel].json` (96 kapitler).
+
+### Johannes - Jesu tegn/mirakler
+- [x] Joh 2, 4, 5, 9, 11, 21 - Alle 7 tegn
+
+### GT - Strukturer og lister
+- [x] 2 Mos 25-28 - Tabernakelet og presteklærne
+- [x] 3 Mos 1-7, 11 - Offertyper og rene/urene dyr
+- [x] 4 Mos 33 - Israels 42 leirplasser
+- [x] Neh 3 - Jerusalems 10 porter
+
+### GT - Profetier og syn
+- [x] Esek 37, 47 - De tørre bein, vannet fra tempelet
+- [x] Sak 14 - Herrens dag
+
+### Salmer
+- [x] Sal 1, 22, 51, 91, 119, 139
+
+### Evangeliene - Påskeuken
+- [x] Matt 21/Mark 11/Luk 19 - Palmesøndag
+- [x] Matt 26/Mark 14/Luk 22 - Skjærtorsdag
+- [x] Matt 27/Mark 15/Luk 23 - Langfredag
+- [x] Matt 28/Mark 16/Luk 24 - Påskedag
+
+### NT - Brev
+- [x] Rom 8, 12 - Intet kan skille oss, Lev som et offer
+- [x] 1 Kor 12, 13, 15 - Nådegavene, Kjærligheten, Oppstandelsen
+- [x] Gal 5 - Åndens frukt
+- [x] Ef 6 - Guds fulle rustning
+- [x] Fil 2, 4 - Kristus-hymnen, Gleden i Herren
+- [x] Kol 1 - Kristus-hymnen
+- [x] 1 Tess 4 - Herrens gjenkomst
+- [x] Heb 1, 11 - Jesus > englene, Troens helter
+- [x] Jak 3 - Tungen
+- [x] 1 Pet 2 - Levende steiner
+
+### GT - Skapelse og patriarkene
+- [x] 1 Mos 1, 3, 12, 22, 49 - Skapelsen, Syndefallet, Abraham, Isak, Jakobs velsignelser
+- [x] 2 Mos 12, 14 - Påsken, Sivsjø-underet
+- [x] 5 Mos 28 - Velsignelser og forbannelser
+
+### GT - Profetene
+- [x] Jes 6, 9, 40, 53 - Jesajas kall, Fredsfyrsten, Trøst, Den lidende tjener
+- [x] Jer 31 - Den nye pakt
+- [x] Dan 2, 7 - Nebukadnesars drøm, De fire dyrene
+- [x] Joel 2 - Åndens utøsning
+- [x] Jona 2 - Jonas bønn fra fisken
+
+### GT - Visdomslitteratur
+- [x] Job 38 - Guds tale til Job
+- [x] Ordsp 31 - Den gode hustru
+
+### Evangeliene (flere)
+- [x] Matt 5, 6, 13, 24 - Saligprisningene, Fader vår, Lignelser, Endetidstalen
+- [x] Luk 2, 10, 15 - Juleevangeliet, Samaritan, De tre lignelsene
+- [x] Joh 1, 3, 10, 15, 17 - Prologen, Nikodemus, Hyrden, Vintreet, Yppersteprestlig bønn
+- [x] Apg 2 - Pinsen
+
+### Åpenbaringen
+- [x] Åp 2-5, 12, 21 - Menighetene, Tronerommet, Kvinnen og dragen, Det nye Jerusalem
+
+### Øvrige
+- [x] Dom 2-3 - Dommersyklusen
+- [x] 1 Kong 17-19 - Elia-syklusen
+- [x] 2 Kong 2, 4 - Elisas mirakler
