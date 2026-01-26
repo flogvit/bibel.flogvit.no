@@ -5,17 +5,14 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies (including dev for build)
+# Install all dependencies (tsx is needed at runtime)
 RUN npm ci
 
 # Copy application files
 COPY . .
 
-# Build the application
+# Build the Vite frontend
 RUN npm run build
-
-# Remove dev dependencies after build
-RUN npm prune --production
 
 EXPOSE 8080
 
@@ -23,4 +20,5 @@ EXPOSE 8080
 ENV NODE_ENV=production
 ENV PORT=8080
 
+# Run the Express server (which serves both API and static files)
 CMD ["npm", "run", "start:prod"]
