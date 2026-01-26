@@ -2,6 +2,74 @@
 
 Se DONE.md for fullførte oppgaver.
 
+## Fase 7: Migrering til Vite + React SPA (aktiv)
+
+Migrere fra Next.js til Vite + React Router for bedre offline-støtte.
+Next.js server-rendrer HTML per route, som gjør offline komplisert.
+Med Vite får vi én index.html som fungerer for alle routes offline.
+
+### Struktur
+```
+bibel/
+├── src/                    # React frontend
+│   ├── components/         # Eksisterende komponenter (gjenbrukes)
+│   ├── pages/              # Route-komponenter
+│   ├── hooks/              # Eksisterende hooks (gjenbrukes)
+│   ├── lib/                # Utilities, offline-logikk
+│   ├── App.tsx             # React Router oppsett
+│   └── main.tsx            # Entry point
+├── api/                    # Express backend
+│   ├── routes/             # API routes
+│   ├── server.ts           # Express server
+│   └── db.ts               # SQLite tilkobling
+├── public/
+│   ├── sw.js               # Service worker
+│   └── manifest.json
+├── index.html              # Én HTML entry
+└── vite.config.ts
+```
+
+### Steg 1: Sett opp Vite-prosjekt
+- [ ] Opprett ny Vite + React + TypeScript konfigurasjon
+- [ ] Konfigurer Vite for SCSS modules
+- [ ] Konfigurer path aliases (@/)
+- [ ] Sett opp React Router
+
+### Steg 2: Migrer frontend
+- [ ] Kopier alle komponenter fra src/components/
+- [ ] Kopier alle hooks fra src/hooks/
+- [ ] Kopier lib/ utilities
+- [ ] Kopier styles/ og SCSS variabler
+- [ ] Opprett route-komponenter i pages/
+- [ ] Sett opp App.tsx med React Router routes
+
+### Steg 3: Sett opp Express API
+- [ ] Opprett Express server med TypeScript
+- [ ] Migrer API routes fra Next.js:
+  - [ ] /api/books
+  - [ ] /api/chapter
+  - [ ] /api/verses
+  - [ ] /api/timeline
+  - [ ] /api/prophecies
+  - [ ] /api/persons
+  - [ ] /api/reading-plans
+  - [ ] /api/search
+  - [ ] /api/version
+- [ ] Sett opp SQLite-tilkobling
+- [ ] Konfigurer CORS for utvikling
+
+### Steg 4: Service Worker og Offline
+- [ ] Oppdater service worker for ny struktur
+- [ ] Cache index.html og alle statiske filer
+- [ ] Behold IndexedDB-logikk for API-data
+- [ ] Test offline-funksjonalitet
+
+### Steg 5: Opprydding
+- [ ] Fjern Next.js avhengigheter
+- [ ] Fjern unødvendige filer (app/, offline-fallback, etc.)
+- [ ] Oppdater package.json scripts
+- [ ] Oppdater deployment-konfigurasjon
+
 ## Fase 8: Sam-lesing (fremtidig)
 - [ ] WebSocket-server for realtime
 - [ ] Opprett sesjon som taler
@@ -17,21 +85,25 @@ Se DONE.md for fullførte oppgaver.
 - [ ] Notater på vers
 - [ ] Emnetagging database-versjon (med innlogging, users.db)
 
-## Fase 10: Offline-støtte og IndexedDB (fremtidig)
+## Fase 10: Offline-støtte og IndexedDB (dekkes av Fase 7)
+
+> **Merk:** Mesteparten av dette er allerede implementert eller dekkes av migreringen i Fase 7.
 
 ### IndexedDB for brukerdata
-- [ ] Migrere fra localStorage til IndexedDB (med Dexie.js)
-- [ ] Universell tagging - tagge alle typer innhold (vers, notater, profetier, tidslinje, leseplaner)
+- [x] IndexedDB oppsett (idb-keyval)
+- [ ] Migrere fra localStorage til IndexedDB
+- [ ] Universell tagging - tagge alle typer innhold
 - [ ] Eksport/import av all brukerdata fra IndexedDB
 
 ### PWA og Service Worker
-- [ ] Sett opp next-pwa eller manuell service worker
-- [ ] Cache alle statiske assets (HTML, JS, CSS)
-- [ ] Manifest-fil for installerbar app
+- [x] Service worker implementert
+- [x] Cache statiske assets
+- [x] Manifest-fil for installerbar app
+- [ ] Forbedres i Fase 7 med Vite
 
 ### Bibeldata offline
-- [ ] Last ned all bibeldata til IndexedDB ved første besøk (~25-30 MB)
-- [ ] Offline-first: les fra IndexedDB, fallback til API
+- [x] Last ned bibeldata til IndexedDB
+- [x] Offline-first: les fra IndexedDB, fallback til API
 - [ ] Bakgrunnssynkronisering når online
 
 ## Studiebibel-funksjoner
