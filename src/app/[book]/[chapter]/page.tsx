@@ -27,6 +27,7 @@ import { ChapterKeyboardShortcuts } from '@/components/bible/ChapterKeyboardShor
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { ChapterInsightsPanel } from '@/components/bible/ChapterInsightsPanel';
 import { ReadingModeWrapper } from '@/components/bible/ReadingModeWrapper';
+import { ReadingPositionTracker } from '@/components/bible/ReadingPositionTracker';
 
 interface PageProps {
   params: Promise<{
@@ -42,8 +43,8 @@ export default async function ChapterPage({ params, searchParams }: PageProps) {
   const { book: bookSlug, chapter: chapterStr } = await params;
   const { bible: bibleParam } = await searchParams;
   const chapter = parseInt(chapterStr);
-  const validBibles = ['osnb1', 'osnb2', 'osnn1'];
-  const bible = bibleParam && validBibles.includes(bibleParam) ? bibleParam : 'osnb1';
+  const validBibles = ['osnb2', 'osnn1'];
+  const bible = bibleParam && validBibles.includes(bibleParam) ? bibleParam : 'osnb2';
 
   const book = getBookByShortName(bookSlug);
   if (!book || isNaN(chapter) || chapter < 1 || chapter > book.chapters) {
@@ -52,7 +53,7 @@ export default async function ChapterPage({ params, searchParams }: PageProps) {
 
   // Use ASCII-safe URL slug for all internal links
   const urlSlug = getBookUrlSlug(book);
-  const bibleQuery = bible !== 'osnb1' ? `?bible=${bible}` : '';
+  const bibleQuery = bible !== 'osnb2' ? `?bible=${bible}` : '';
 
   const verses = getVerses(book.id, chapter, bible);
   const originalVerses = getOriginalVerses(book.id, chapter);
@@ -71,6 +72,12 @@ export default async function ChapterPage({ params, searchParams }: PageProps) {
   return (
     <ReadingModeWrapper className={styles.main}>
       <ScrollToVerse />
+      <ReadingPositionTracker
+        bookId={book.id}
+        chapter={chapter}
+        bookSlug={urlSlug}
+        bookName={book.name_no}
+      />
       <ChapterKeyboardShortcuts
         bookSlug={urlSlug}
         currentChapter={chapter}

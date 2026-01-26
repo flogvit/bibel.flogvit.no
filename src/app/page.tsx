@@ -1,6 +1,7 @@
 import { getAllBooks, toUrlSlug, Book } from '@/lib/bible';
 import styles from './page.module.scss';
 import Link from 'next/link';
+import { ContinueReading } from '@/components/ContinueReading';
 import { TodaysReading } from '@/components/TodaysReading';
 
 export default function Home() {
@@ -16,6 +17,7 @@ export default function Home() {
           <p className="text-muted">Velg en bok for å begynne å lese</p>
         </header>
 
+        <ContinueReading />
         <TodaysReading />
 
         <section className={styles.testament}>
