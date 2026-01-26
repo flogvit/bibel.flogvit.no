@@ -1,3 +1,4 @@
+@use "sass:color";
 @use '@/styles/variables' as *;
 @use '@/styles/mixins' as *;
 
@@ -174,7 +175,7 @@
   color: $color-text;
 
   &:hover {
-    background: darken($color-border, 5%);
+    background: color.adjust($color-border, $lightness: -5%);
   }
 }
 
@@ -308,7 +309,7 @@
     color: $dark-color-text;
 
     &:hover {
-      background: lighten($dark-color-border, 5%);
+      background: color.adjust($dark-color-border, $lightness: 5%);
     }
   }
 
