@@ -25,8 +25,8 @@ function SearchContent() {
   const router = useRouter();
   const { settings } = useSettings();
   const initialQuery = searchParams.get('q') || '';
-  const bible = settings.bible || 'osnb1';
-  const bibleQuery = bible !== 'osnb1' ? `?bible=${bible}` : '';
+  const bible = settings.bible || 'osnb2';
+  const bibleQuery = bible !== 'osnb2' ? `?bible=${bible}` : '';
 
   const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState<SearchResult[]>([]);

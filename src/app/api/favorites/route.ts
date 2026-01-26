@@ -22,7 +22,7 @@ export async function POST(request: Request) {
         SELECT v.text, b.name_no as book_name, b.short_name as book_short_name
         FROM verses v
         JOIN books b ON v.book_id = b.id
-        WHERE v.book_id = ? AND v.chapter = ? AND v.verse = ? AND v.bible = 'osnb1'
+        WHERE v.book_id = ? AND v.chapter = ? AND v.verse = ? AND v.bible = 'osnb2'
       `).get(fav.bookId, fav.chapter, fav.verse) as { text: string; book_name: string; book_short_name: string } | undefined;
 
       if (!verse) return null;

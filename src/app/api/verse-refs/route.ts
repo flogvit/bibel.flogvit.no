@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const refs: string[] = body.refs;
-    const bible = body.bible || 'osnb1';
+    const bible = body.bible || 'osnb2';
 
     if (!refs || !Array.isArray(refs)) {
       return NextResponse.json({ error: 'Missing refs array' }, { status: 400 });

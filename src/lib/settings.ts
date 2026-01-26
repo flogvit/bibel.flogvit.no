@@ -1,9 +1,8 @@
 export type FontSize = 'small' | 'medium' | 'large';
-export type BibleVersion = 'osnb1' | 'osnb2' | 'osnn1';
+export type BibleVersion = 'osnb2' | 'osnn1';
 
 export const bibleVersions: { value: BibleVersion; label: string }[] = [
-  { value: 'osnb1', label: 'Bokmål' },
-  { value: 'osnb2', label: 'Bokmål 2' },
+  { value: 'osnb2', label: 'Bokmål' },
   { value: 'osnn1', label: 'Nynorsk' },
 ];
 
@@ -38,7 +37,7 @@ export const defaultSettings: BibleSettings = {
   readingMode: false,
   fontSize: 'medium',
   darkMode: false,
-  bible: 'osnb1',
+  bible: 'osnb2',
 };
 
 const STORAGE_KEY = 'bible-settings';

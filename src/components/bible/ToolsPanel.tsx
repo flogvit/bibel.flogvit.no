@@ -29,11 +29,11 @@ export function ToolsPanel({ onClose }: ToolsPanelProps) {
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState(false);
 
-  const currentBible = (searchParams.get('bible') as BibleVersion) || settings.bible || 'osnb1';
+  const currentBible = (searchParams.get('bible') as BibleVersion) || settings.bible || 'osnb2';
 
   function handleBibleChange(bible: BibleVersion) {
     const params = new URLSearchParams(searchParams.toString());
-    if (bible === 'osnb1') {
+    if (bible === 'osnb2') {
       params.delete('bible');
     } else {
       params.set('bible', bible);

@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   const query = searchParams.get('q') || '';
   const limit = parseInt(searchParams.get('limit') || '50');
   const offset = parseInt(searchParams.get('offset') || '0');
-  const bible = searchParams.get('bible') || 'osnb1';
+  const bible = searchParams.get('bible') || 'osnb2';
 
   if (query.length < 2) {
     return NextResponse.json({ results: [], total: 0, hasMore: false, message: 'Søket må være minst 2 tegn' });

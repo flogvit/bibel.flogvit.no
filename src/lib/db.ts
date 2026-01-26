@@ -42,7 +42,7 @@ function initUsersDb(db: Database.Database): void {
       font_size TEXT DEFAULT 'medium',
       show_word4word INTEGER DEFAULT 0,
       show_references INTEGER DEFAULT 1,
-      preferred_bible TEXT DEFAULT 'osnb1',
+      preferred_bible TEXT DEFAULT 'osnb2',
       dark_mode INTEGER DEFAULT 0,
       FOREIGN KEY (user_id) REFERENCES users(id)
     );
