@@ -1,0 +1,149 @@
+
+
+import { useState, useEffect, useCallback } from 'react';
+import { ChapterAPIResponse } from '@/types/api';
+import { storeChapter, getStoredChapter } from '@/lib/offline/storage';
+
+interface UseChapterOptions {
+  bookId: number;
+  chapter: number;
+  bible?: string;
+}
+
+interface UseChapterResult {
+  data: ChapterAPIResponse | null;
+  isLoading: boolean;
+  error: string | null;
+  isOffline: boolean;
+  refetch: () => Promise<void>;
+}
+
+export function useChapter({ bookId, chapter, bible = 'osnb2' }: UseChapterOptions): UseChapterResult {
+  const [data, setData] = useState<ChapterAPIResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isOffline, setIsOffline] = useState(false);
+
+  const fetchChapter = useCallback(async () => {
+    if (!bookId || !chapter) return;
+
+    setIsLoading(true);
+    setError(null);
+    setIsOffline(false);
+
+    try {
+      const response = await fetch(`/api/chapter?book=${bookId}&chapter=${chapter}&bible=${bible}`);
+
+      if (!response.ok) {
+        // Check if this is an offline error from the service worker
+        if (response.status === 503) {
+          const errorData = await response.json();
+          if (errorData.offline) {
+            setIsOffline(true);
+            setError('Kapittelet er ikke tilgjengelig offline');
+            return;
+          }
+        }
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const chapterData: ChapterAPIResponse = await response.json();
+
+      // Check if response came from IndexedDB (via service worker)
+      const fromIndexedDB = response.headers.get('X-From-IndexedDB') === 'true';
+      if (fromIndexedDB) {
+        setIsOffline(true);
+      }
+
+      setData(chapterData);
+
+      // Store in IndexedDB for offline use (if not already from IDB)
+      if (!fromIndexedDB) {
+        try {
+          await storeChapter({
+            bookId: chapterData.bookId,
+            chapter: chapterData.chapter,
+            bible: chapterData.bible,
+            verses: chapterData.verses,
+            originalVerses: chapterData.originalVerses,
+            word4word: chapterData.word4word,
+            references: chapterData.references,
+            bookSummary: chapterData.bookSummary,
+            summary: chapterData.summary,
+            context: chapterData.context,
+            insight: chapterData.insight,
+            cachedAt: chapterData.cachedAt || Date.now(),
+          });
+        } catch (storeError) {
+          console.warn('Failed to store chapter in IndexedDB:', storeError);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch chapter:', err);
+
+      // Try to load from IndexedDB as fallback
+      try {
+        const cached = await getStoredChapter(bookId, chapter, bible);
+        if (cached) {
+          // Cast to ChapterAPIResponse - IndexedDB types are compatible but looser
+          setData({
+            bookId: cached.bookId,
+            chapter: cached.chapter,
+            bible: cached.bible,
+            verses: cached.verses as ChapterAPIResponse['verses'],
+            originalVerses: cached.originalVerses || [],
+            word4word: (cached.word4word || {}) as ChapterAPIResponse['word4word'],
+            references: (cached.references || {}) as ChapterAPIResponse['references'],
+            bookSummary: cached.bookSummary || null,
+            summary: cached.summary || null,
+            context: cached.context || null,
+            insight: cached.insight || null,
+            cachedAt: cached.cachedAt,
+          });
+          setIsOffline(true);
+          return;
+        }
+      } catch (idbError) {
+        console.warn('IndexedDB fallback failed:', idbError);
+      }
+
+      setError('Kunne ikke laste kapittelet');
+      setIsOffline(!navigator.onLine);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [bookId, chapter, bible]);
+
+  useEffect(() => {
+    fetchChapter();
+  }, [fetchChapter]);
+
+  // Listen for online/offline events
+  useEffect(() => {
+    const handleOnline = () => {
+      if (isOffline && !data) {
+        fetchChapter();
+      }
+    };
+
+    const handleOffline = () => {
+      setIsOffline(true);
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [isOffline, data, fetchChapter]);
+
+  return {
+    data,
+    isLoading,
+    error,
+    isOffline,
+    refetch: fetchChapter,
+  };
+}
