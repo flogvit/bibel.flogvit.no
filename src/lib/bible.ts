@@ -13,9 +13,14 @@ export interface Book {
   chapters: number;
 }
 
+export type VersionType = 'error' | 'suggestion' | 'theological' | 'grammar';
+export type VersionSeverity = 'critical' | 'major' | 'minor';
+
 export interface VerseVersion {
   text: string;
   explanation: string;
+  type?: VersionType;
+  severity?: VersionSeverity;
 }
 
 export interface Verse {
@@ -88,7 +93,7 @@ interface VerseRow {
   versions: string | null;
 }
 
-export function getVerses(bookId: number, chapter: number, bible = 'osnb1'): Verse[] {
+export function getVerses(bookId: number, chapter: number, bible = 'osnb2'): Verse[] {
   const db = getDb();
   const rows = db.prepare(
     'SELECT * FROM verses WHERE book_id = ? AND chapter = ? AND bible = ? ORDER BY verse'
@@ -127,7 +132,7 @@ export interface VerseWithOriginal {
   bookShortName: string;
 }
 
-export function getVerse(bookId: number, chapter: number, verseNum: number, bible = 'osnb1'): Verse | undefined {
+export function getVerse(bookId: number, chapter: number, verseNum: number, bible = 'osnb2'): Verse | undefined {
   const db = getDb();
   const row = db.prepare(
     'SELECT * FROM verses WHERE book_id = ? AND chapter = ? AND verse = ? AND bible = ?'
@@ -149,7 +154,7 @@ export function getOriginalVerse(bookId: number, chapter: number, verseNum: numb
   ).get(bookId, chapter, verseNum, bible) as Verse | undefined;
 }
 
-export function getVersesWithOriginal(refs: VerseRef[], bible = 'osnb1'): VerseWithOriginal[] {
+export function getVersesWithOriginal(refs: VerseRef[], bible = 'osnb2'): VerseWithOriginal[] {
   const results: VerseWithOriginal[] = [];
 
   for (const ref of refs) {
@@ -176,16 +181,18 @@ export function getVersesWithOriginal(refs: VerseRef[], bible = 'osnb1'): VerseW
   return results;
 }
 
-export function getWord4Word(bookId: number, chapter: number, verse: number, bible = 'osnb1'): Word4Word[] {
+export function getWord4Word(bookId: number, chapter: number, verse: number, bible = 'osnb2'): Word4Word[] {
   const db = getDb();
   return db.prepare(
     'SELECT word_index, word, original, pronunciation, explanation FROM word4word WHERE book_id = ? AND chapter = ? AND verse = ? AND bible = ? ORDER BY word_index'
   ).all(bookId, chapter, verse, bible) as Word4Word[];
 }
 
-export function getOriginalWord4Word(bookId: number, chapter: number, verse: number): Word4Word[] {
+export function getOriginalWord4Word(bookId: number, chapter: number, verse: number, lang = 'nb'): Word4Word[] {
   // GT (book 1-39) uses tanach (Hebrew), NT (book 40-66) uses sblgnt (Greek)
-  const bible = bookId <= 39 ? 'tanach' : 'sblgnt';
+  // Combined with language: tanach-nb, tanach-nn, sblgnt-nb, sblgnt-nn
+  const original = bookId <= 39 ? 'tanach' : 'sblgnt';
+  const bible = `${original}-${lang}`;
   return getWord4Word(bookId, chapter, verse, bible);
 }
 
@@ -292,7 +299,7 @@ export function getAllWellKnownVerses(): WellKnownVerse[] {
       v.text as verse_text
     FROM important_verses iv
     JOIN books b ON iv.book_id = b.id
-    JOIN verses v ON iv.book_id = v.book_id AND iv.chapter = v.chapter AND iv.verse = v.verse AND v.bible = 'osnb1'
+    JOIN verses v ON iv.book_id = v.book_id AND iv.chapter = v.chapter AND iv.verse = v.verse AND v.bible = 'osnb2'
     ORDER BY iv.book_id, iv.chapter, iv.verse
   `).all() as WellKnownVerse[];
 }
@@ -384,7 +391,7 @@ export interface SearchResponse {
   hasMore: boolean;
 }
 
-export function searchVerses(query: string, limit = 50, offset = 0, bible = 'osnb1'): SearchResponse {
+export function searchVerses(query: string, limit = 50, offset = 0, bible = 'osnb2'): SearchResponse {
   if (!query || query.length < 2) return { results: [], total: 0, hasMore: false };
 
   const db = getDb();
@@ -410,7 +417,7 @@ export function searchVerses(query: string, limit = 50, offset = 0, bible = 'osn
   return { results, total, hasMore: offset + results.length < total };
 }
 
-export function getVerseCount(bookId: number, chapter: number, bible = 'osnb1'): number {
+export function getVerseCount(bookId: number, chapter: number, bible = 'osnb2'): number {
   const db = getDb();
   const result = db.prepare(
     'SELECT MAX(verse) as count FROM verses WHERE book_id = ? AND chapter = ? AND bible = ?'
@@ -530,7 +537,7 @@ export function searchOriginalWord(word: string, limit = 50, offset = 0): Origin
       v_orig.text as original_text
     FROM word4word w
     JOIN books b ON w.book_id = b.id
-    JOIN verses v_no ON w.book_id = v_no.book_id AND w.chapter = v_no.chapter AND w.verse = v_no.verse AND v_no.bible = 'osnb1'
+    JOIN verses v_no ON w.book_id = v_no.book_id AND w.chapter = v_no.chapter AND w.verse = v_no.verse AND v_no.bible = 'osnb2'
     JOIN verses v_orig ON w.book_id = v_orig.book_id AND w.chapter = v_orig.chapter AND w.verse = v_orig.verse AND v_orig.bible = ?
     WHERE w.word IN (${placeholders}) AND w.bible = ?
     ORDER BY w.book_id, w.chapter, w.verse
@@ -542,7 +549,7 @@ export function searchOriginalWord(word: string, limit = 50, offset = 0): Origin
     // Get Norwegian word4word entries for this verse
     const norwegianEntries = db.prepare(`
       SELECT DISTINCT word, original FROM word4word
-      WHERE book_id = ? AND chapter = ? AND verse = ? AND bible = 'osnb1' AND original IS NOT NULL
+      WHERE book_id = ? AND chapter = ? AND verse = ? AND bible = 'osnb2' AND original IS NOT NULL
     `).all(r.book_id, r.chapter, r.verse) as { word: string; original: string }[];
 
     // Get original language word4word entries for this verse

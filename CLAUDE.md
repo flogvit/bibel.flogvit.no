@@ -15,12 +15,14 @@ En norsk bibel-nettside med oppslagsverk og verktøy for bibellesning. Bygget me
 All bibeldata hentes fra `../free-bible/generate/`:
 
 ### Bibler
-- `bibles_raw/osnb1/[bok]/[kapittel].json` - Norsk bokmål (OSNB1)
+- `bibles_raw/osnb2/[bok]/[kapittel].json` - Norsk bokmål (standard)
+- `bibles_raw/osnn1/[bok]/[kapittel].json` - Norsk nynorsk
 - `bibles_raw/sblgnt/[bok]/[kapittel].json` - Gresk NT (SBL Greek New Testament)
 - `bibles_raw/tanach/[bok]/[kapittel].json` - Hebraisk GT
 
 ### Tilleggsdata
-- `word4word/osnb1/[bok]/[kapittel]/[vers].json` - Ord-for-ord oversettelse med originalspråk
+- `word4word/sblgnt/{nb|nn}/[bok]/[kapittel]/[vers].json` - Ord-for-ord NT (gresk → norsk)
+- `word4word/tanach/{nb|nn}/[bok]/[kapittel]/[vers].json` - Ord-for-ord GT (hebraisk → norsk)
 - `references/[bok]/[kapittel]/[vers].json` - Kryssreferanser mellom bibeltekster
 - `book_summaries/nb/[bok].txt` - Sammendrag av hver bok
 - `chapter_summaries/nb/[bok]-[kapittel].txt` - Sammendrag av hvert kapittel

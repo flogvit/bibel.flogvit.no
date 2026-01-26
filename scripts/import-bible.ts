@@ -107,7 +107,7 @@ db.exec(`
     chapter INTEGER NOT NULL,
     verse INTEGER NOT NULL,
     text TEXT NOT NULL,
-    bible TEXT NOT NULL DEFAULT 'osnb1',
+    bible TEXT NOT NULL DEFAULT 'osnb2',
     versions TEXT,
     FOREIGN KEY (book_id) REFERENCES books(id),
     UNIQUE (book_id, chapter, verse, bible)
@@ -123,7 +123,7 @@ db.exec(`
     original TEXT,
     pronunciation TEXT,
     explanation TEXT,
-    bible TEXT NOT NULL DEFAULT 'osnb1',
+    bible TEXT NOT NULL DEFAULT 'osnb2',
     FOREIGN KEY (book_id) REFERENCES books(id),
     UNIQUE (book_id, chapter, verse, word_index, bible)
   );
@@ -335,8 +335,6 @@ function importVerses(bible: string) {
   }
 }
 
-console.log('  Importerer osnb1...');
-importVerses('osnb1');
 console.log('  Importerer osnb2...');
 importVerses('osnb2');
 console.log('  Importerer osnn1...');
@@ -353,12 +351,16 @@ const insertWord4Word = db.prepare(`
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
-function importWord4Word(bible: string) {
-  const word4wordPath = path.join(GENERATE_PATH, 'word4word', bible);
+function importWord4Word(original: string, lang: string) {
+  // New path structure: word4word/{original}/{lang}/{bookId}/{chapterId}/{verseId}.json
+  const word4wordPath = path.join(GENERATE_PATH, 'word4word', original, lang);
   if (!fs.existsSync(word4wordPath)) {
-    console.log(`  Hopper over word4word for ${bible} (ikke funnet)`);
+    console.log(`  Hopper over word4word for ${original}/${lang} (ikke funnet)`);
     return;
   }
+
+  // Store as combined value, e.g. 'tanach-nb' or 'sblgnt-nn'
+  const bibleValue = `${original}-${lang}`;
 
   const bookDirs = fs.readdirSync(word4wordPath).filter(f => !f.startsWith('.'));
 
@@ -392,7 +394,7 @@ function importWord4Word(bible: string) {
               wordData.original || null,
               wordData.pronunciation || null,
               wordData.explanation || null,
-              bible
+              bibleValue
             );
           }
         }
@@ -401,11 +403,15 @@ function importWord4Word(bible: string) {
   }
 }
 
-// Kun originalspråk (hebraisk/gresk) har word4word
-console.log('  Importerer word4word for sblgnt...');
-importWord4Word('sblgnt');
-console.log('  Importerer word4word for tanach...');
-importWord4Word('tanach');
+// Import word4word for all original/language combinations
+const languages = ['nb', 'nn'];
+const originals = ['tanach', 'sblgnt'];
+for (const original of originals) {
+  for (const lang of languages) {
+    console.log(`  Importerer word4word for ${original}/${lang}...`);
+    importWord4Word(original, lang);
+  }
+}
 
 // Importer referanser
 console.log('Importerer referanser...');
