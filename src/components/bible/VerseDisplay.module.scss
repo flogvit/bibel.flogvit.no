@@ -180,6 +180,70 @@
   }
 }
 
+// Accordion styles for mobile
+.accordion {
+  display: flex;
+  flex-direction: column;
+}
+
+.accordionItem {
+  border-bottom: 1px solid $color-border;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.accordionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: $spacing-md;
+  background: transparent;
+  border: none;
+  font-family: $font-sans;
+  font-size: $font-size-base;
+  font-weight: 500;
+  color: $color-text;
+  cursor: pointer;
+  text-align: left;
+  transition: background $transition-fast;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.03);
+  }
+
+  &.open {
+    background: $color-paper;
+  }
+}
+
+.accordionIcon {
+  font-size: $font-size-lg;
+  color: $color-text-muted;
+  font-weight: 300;
+  width: 24px;
+  text-align: center;
+}
+
+.accordionContent {
+  padding: $spacing-md;
+  background: $color-paper;
+  animation: accordionSlideDown 0.2s ease;
+}
+
+@keyframes accordionSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .tabContent {
   padding: $spacing-md;
 }
@@ -1182,5 +1246,30 @@
 
   .tab.hasSelection {
     color: $dark-color-secondary;
+  }
+
+  // Accordion dark mode
+  .accordionItem {
+    border-bottom-color: $dark-color-border;
+  }
+
+  .accordionHeader {
+    color: $dark-color-text;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    &.open {
+      background: $dark-color-paper;
+    }
+  }
+
+  .accordionIcon {
+    color: $dark-color-text-muted;
+  }
+
+  .accordionContent {
+    background: $dark-color-paper;
   }
 }
