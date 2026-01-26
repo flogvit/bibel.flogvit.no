@@ -5,7 +5,7 @@
   position: fixed;
   inset: 0;
   background: $color-paper;
-  z-index: 300;
+  z-index: 600; // Higher than header (500)
   display: flex;
   flex-direction: column;
   animation: fadeIn 0.2s ease;
