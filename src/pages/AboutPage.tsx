@@ -16,7 +16,7 @@ export function AboutPage() {
           <h2>Prosjektet</h2>
           <p>
             Denne bibelsiden er en del av et åpent prosjekt for å gjøre Bibelen
-            tilgjengelig med gode studieverktøy. All kildekode og data er åpent
+            tilgjengelig med gode studieverktøy. Alle bibeldata er åpent
             tilgjengelig.
           </p>
           <p>
@@ -29,7 +29,7 @@ export function AboutPage() {
         <section className={styles.section}>
           <h2>Bibeloversettelser</h2>
 
-          <h3>Norsk tekst (OSNB1)</h3>
+          <h3>Norsk tekst (OSNB2)</h3>
           <p>
             Den norske teksten er en åpen oversettelse som er fritt tilgjengelig
             for alle å bruke.
@@ -66,18 +66,25 @@ export function AboutPage() {
         <section className={styles.section}>
           <h2>Hjelpemidler</h2>
           <ul>
-            <li><strong>Ord-for-ord</strong> - Forklaring av hvert ord med hebraisk/gresk original</li>
+            <li><strong>Grunntekst</strong> - Vis hebraisk/gresk originaltekst med ord-for-ord oversettelse</li>
             <li><strong>Referanser</strong> - Kryssreferanser mellom bibelvers</li>
             <li><strong>Boksammendrag</strong> - Oversikt over hver boks innhold</li>
             <li><strong>Kapittelsammendrag</strong> - Kort beskrivelse av hvert kapittel</li>
             <li><strong>Viktige ord</strong> - Nøkkelbegreper forklart</li>
+            <li><strong>Tidslinje</strong> - Bibelske hendelser i kronologisk rekkefølge</li>
+            <li><strong>Profetier</strong> - Profetier og deres oppfyllelser</li>
+            <li><strong>Temaer</strong> - Tematiske oversikter med relevante bibelvers</li>
+            <li><strong>Leseplaner</strong> - Ulike planer for systematisk bibellesing</li>
+            <li><strong>Favoritter</strong> - Lagre dine favorittvers</li>
+            <li><strong>Emner</strong> - Tag vers med egne emner</li>
+            <li><strong>Notater</strong> - Skriv egne notater til vers</li>
           </ul>
         </section>
 
         <section id="hjelp" className={styles.section}>
           <h2>Hjelp og brukerveiledning</h2>
           <p>
-            Her er noen tips for å få mest mulig ut av bibel.flogvit.no:
+            Her er noen tips for å få mest mulig ut av siden:
           </p>
 
           <h3>Navigasjon</h3>
@@ -97,10 +104,14 @@ export function AboutPage() {
           </ul>
 
           <h3>Versinteraksjon</h3>
+          <p>Klikk på <strong>versnummeret</strong> for å åpne versdetaljer med følgende faner:</p>
           <ul>
-            <li>Klikk på <strong>versnummeret</strong> for å se referanser, bønn og andakt</li>
-            <li>Klikk på et <strong>ord</strong> for å se originalordet og forklaring</li>
-            <li>Legg til vers i <strong>favoritter</strong> eller tag med <strong>emner</strong></li>
+            <li><strong>Grunntekst</strong> - Hebraisk/gresk originaltekst (klikk på ord for oversettelse)</li>
+            <li><strong>Referanser</strong> - Kryssreferanser til andre bibelvers</li>
+            <li><strong>Profetier</strong> - Profetier knyttet til verset (hvis relevant)</li>
+            <li><strong>Emner</strong> - Tag verset med egne emner</li>
+            <li><strong>Notater</strong> - Skriv egne notater til verset</li>
+            <li><strong>Versjoner</strong> - Sammenlign med andre bibeloversettelser</li>
           </ul>
 
           <h3>Hjelpemidler-panelet</h3>
