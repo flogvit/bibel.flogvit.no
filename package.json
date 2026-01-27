@@ -15,6 +15,7 @@
     "preview": "vite preview",
     "lint": "eslint",
     "import-bible": "npx tsx scripts/import-bible.ts",
+    "generate-sitemap": "npx tsx scripts/generate-sitemap.ts",
     "deploy": "bash deploy/deploy-docker.sh",
     "deploy:scaleway": "bash deploy/deploy-scaleway.sh"
   },
