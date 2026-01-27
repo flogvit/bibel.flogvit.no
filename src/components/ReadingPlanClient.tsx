@@ -6,6 +6,7 @@ import { toUrlSlug } from '@/lib/url-utils';
 import { ReadingPlanSummary } from '@/lib/reading-plan';
 import styles from './ReadingPlanClient.module.scss';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { ItemTagging } from '@/components/ItemTagging';
 
 export function ReadingPlanClient() {
   const {
@@ -239,7 +240,10 @@ function PlanCard({
     <div className={`${styles.planCard} ${isActive ? styles.activePlanCard : ''}`}>
       <div className={styles.planCardHeader}>
         <h3>{plan.name}</h3>
-        <span className={styles.duration}>{durationText}</span>
+        <div className={styles.planCardActions}>
+          <ItemTagging itemType="readingplan" itemId={plan.id} compact />
+          <span className={styles.duration}>{durationText}</span>
+        </div>
       </div>
       <p className={styles.planDescription}>{plan.description}</p>
       {isActive ? (

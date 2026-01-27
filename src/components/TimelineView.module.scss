@@ -173,6 +173,13 @@
   line-height: $line-height-base;
 }
 
+.taggingSection {
+  margin: $spacing-md 0;
+  padding: $spacing-sm;
+  background: $color-background;
+  border-radius: $radius-sm;
+}
+
 .eventReferences {
   margin-top: $spacing-md;
   padding-top: $spacing-md;
@@ -384,6 +391,10 @@
 
   .eventDescription {
     color: $dark-color-text-light;
+  }
+
+  .taggingSection {
+    background: $dark-color-background;
   }
 
   .eventReferences {

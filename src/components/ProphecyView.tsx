@@ -4,6 +4,7 @@ import styles from './ProphecyView.module.scss';
 import type { ProphecyCategory, Prophecy, ProphecyReference, VerseWithOriginal, VerseRef } from '@/lib/bible';
 import { toUrlSlug } from '@/lib/url-utils';
 import { VerseDisplay } from './bible/VerseDisplay';
+import { ItemTagging } from './ItemTagging';
 
 interface ProphecyViewProps {
   categories: ProphecyCategory[];
@@ -176,6 +177,10 @@ export function ProphecyView({ categories, prophecies }: ProphecyViewProps) {
                     {prophecy.explanation && (
                       <p className={styles.explanation}>{prophecy.explanation}</p>
                     )}
+
+                    <div className={styles.taggingSection}>
+                      <ItemTagging itemType="prophecy" itemId={prophecy.id} />
+                    </div>
 
                     <div className={styles.versesSection}>
                       <button

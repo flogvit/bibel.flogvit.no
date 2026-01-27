@@ -350,6 +350,12 @@
   }
 }
 
+.planCardActions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
 .duration {
   font-size: $font-size-sm;
   color: $color-text-muted;

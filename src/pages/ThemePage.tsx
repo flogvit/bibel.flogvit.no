@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ThemeVerseDisplay } from '@/components/bible/ThemeVerseDisplay';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { ItemTagging } from '@/components/ItemTagging';
 import styles from '@/styles/pages/theme.module.scss';
 
 interface ThemeData {
@@ -115,7 +116,7 @@ export function ThemePage() {
     );
   }
 
-  if (isJsonFormat && themeData) {
+  if (isJsonFormat && themeData && tema) {
     return (
       <div className={styles.main}>
         <div className="reading-container">
@@ -126,6 +127,10 @@ export function ThemePage() {
           ]} />
 
           <h1>{themeData.title}</h1>
+
+          <div className={styles.taggingSection}>
+            <ItemTagging itemType="theme" itemId={tema} />
+          </div>
 
           <ThemeVerseDisplay themeData={themeData} />
         </div>
@@ -144,6 +149,12 @@ export function ThemePage() {
         ]} />
 
         <h1>{displayName}</h1>
+
+        {tema && (
+          <div className={styles.taggingSection}>
+            <ItemTagging itemType="theme" itemId={tema} />
+          </div>
+        )}
 
         <div className={styles.themeItems}>
           {oldFormatItems.map((item, index) => (

@@ -16,6 +16,13 @@
   }
 }
 
+.taggingSection {
+  margin-bottom: $spacing-xl;
+  padding: $spacing-md;
+  background: $color-background;
+  border-radius: $radius-md;
+}
+
 .introduction {
   font-size: $font-size-lg;
   line-height: $line-height-verse;
@@ -126,6 +133,10 @@
     &:hover {
       color: $dark-color-secondary;
     }
+  }
+
+  .taggingSection {
+    background: $dark-color-background;
   }
 
   .introduction {

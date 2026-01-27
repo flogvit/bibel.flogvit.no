@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { PersonVerseDisplay } from '@/components/PersonVerseDisplay';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { ItemTagging } from '@/components/ItemTagging';
 import styles from '@/styles/pages/person.module.scss';
 
 // Label maps for era and roles
@@ -279,6 +280,10 @@ export function PersonContent({ personId }: PersonContentProps) {
         </header>
 
         <p className={styles.summary}>{personData.summary}</p>
+
+        <div className={styles.taggingSection}>
+          <ItemTagging itemType="person" itemId={personData.id} />
+        </div>
 
         {familyMembers.length > 0 && (
           <section className={styles.familySection}>

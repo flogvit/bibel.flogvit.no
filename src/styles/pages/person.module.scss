@@ -67,11 +67,18 @@
   font-size: $font-size-lg;
   line-height: $line-height-verse;
   color: $color-text;
-  margin-bottom: $spacing-2xl;
+  margin-bottom: $spacing-lg;
   padding: $spacing-lg;
   background: rgba($color-accent, 0.05);
   border-left: 3px solid $color-accent;
   border-radius: 0 $radius-md $radius-md 0;
+}
+
+.taggingSection {
+  margin-bottom: $spacing-2xl;
+  padding: $spacing-md;
+  background: $color-background;
+  border-radius: $radius-md;
 }
 
 // Family section
@@ -281,6 +288,10 @@
     color: $dark-color-text;
     background: rgba($dark-color-accent, 0.1);
     border-left-color: $dark-color-accent;
+  }
+
+  .taggingSection {
+    background: $dark-color-background;
   }
 
   .familySection h2,

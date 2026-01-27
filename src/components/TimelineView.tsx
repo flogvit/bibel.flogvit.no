@@ -4,6 +4,7 @@ import styles from './TimelineView.module.scss';
 import type { TimelinePeriod, TimelineEvent, TimelineReference, VerseWithOriginal, VerseRef } from '@/lib/bible';
 import { toUrlSlug } from '@/lib/url-utils';
 import { VerseDisplay } from './bible/VerseDisplay';
+import { ItemTagging } from './ItemTagging';
 
 interface TimelineViewProps {
   periods: TimelinePeriod[];
@@ -162,6 +163,12 @@ export function TimelineView({ periods, events }: TimelineViewProps) {
 
                   {(isExpanded || event.importance === 'major') && event.description && (
                     <p className={styles.eventDescription}>{event.description}</p>
+                  )}
+
+                  {isExpanded && (
+                    <div className={styles.taggingSection} onClick={(e) => e.stopPropagation()}>
+                      <ItemTagging itemType="timeline" itemId={event.id} />
+                    </div>
                   )}
 
                   {isExpanded && event.references && event.references.length > 0 && (
