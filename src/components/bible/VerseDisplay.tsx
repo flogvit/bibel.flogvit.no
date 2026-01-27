@@ -5,7 +5,7 @@ import type { Verse, Prophecy, VerseVersion } from '@/lib/bible';
 import { toUrlSlug } from '@/lib/url-utils';
 import { useSettings } from '@/components/SettingsContext';
 import { useFavorites } from '@/components/FavoritesContext';
-import { useTopics, Topic } from '@/components/TopicsContext';
+import { useTopics, Topic, ItemType } from '@/components/TopicsContext';
 import { useNotes, Note } from '@/components/NotesContext';
 import { useVerseVersions } from '@/components/VerseVersionsContext';
 
@@ -61,7 +61,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, in
   const [searchParams] = useSearchParams();
   const { settings } = useSettings();
   const { isFavorite, toggleFavorite } = useFavorites();
-  const { topics, addTopic, addTopicToVerse, removeTopicFromVerse, getTopicsForVerse, searchTopics } = useTopics();
+  const { topics, addTopic, addTopicToVerse, removeTopicFromVerse, getTopicsForVerse, searchTopics, addTopicToItem, removeTopicFromItem, getTopicsForItem } = useTopics();
   const { addNote, updateNote, deleteNote, getNotesForVerse } = useNotes();
   const { getSelectedVersion, setSelectedVersion, clearSelectedVersion } = useVerseVersions();
   const [expanded, setExpanded] = useState(false);
@@ -98,6 +98,8 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, in
   const [noteInput, setNoteInput] = useState('');
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editNoteContent, setEditNoteContent] = useState('');
+  const [noteTopicInput, setNoteTopicInput] = useState<Record<string, string>>({});
+  const [showNoteTopicSuggestions, setShowNoteTopicSuggestions] = useState<string | null>(null);
 
   // Auto-expand if URL hash matches this verse with -open suffix
   useEffect(() => {
@@ -290,6 +292,38 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, in
     setSelectedSuggestionIndex(0);
   }
 
+  function getNoteTopicSuggestions(noteId: string): Topic[] {
+    const noteTopics = getTopicsForItem('note', noteId);
+    const existingTopicIds = noteTopics.map(t => t.id);
+    const input = noteTopicInput[noteId] || '';
+
+    if (!input.trim()) {
+      return topics
+        .filter(t => !existingTopicIds.includes(t.id))
+        .slice(0, 8);
+    }
+
+    return searchTopics(input)
+      .filter(t => !existingTopicIds.includes(t.id))
+      .slice(0, 8);
+  }
+
+  function handleAddNoteTopicFromInput(noteId: string, existingTopic: Topic | null) {
+    const input = noteTopicInput[noteId]?.trim() || '';
+    if (!input && !existingTopic) return;
+
+    let topic: Topic;
+    if (existingTopic) {
+      topic = existingTopic;
+    } else {
+      topic = addTopic(input);
+    }
+
+    addTopicToItem('note', noteId, topic.id);
+    setNoteTopicInput(prev => ({ ...prev, [noteId]: '' }));
+    setShowNoteTopicSuggestions(null);
+  }
+
   return (
     <div id={`v${verse.verse}`} className={styles.verse}>
       {settings.showVerseDetails ? (
@@ -420,22 +454,6 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, in
                         onClick={() => setActiveTab('prophecies')}
                       >
                         Profetier ({prophecies.length})
-                      </button>
-                    )}
-                    {verseExtras?.prayer && (
-                      <button
-                        className={`${styles.tab} ${activeTab === 'prayer' ? styles.active : ''}`}
-                        onClick={() => setActiveTab('prayer')}
-                      >
-                        Bønn
-                      </button>
-                    )}
-                    {verseExtras?.sermon && (
-                      <button
-                        className={`${styles.tab} ${activeTab === 'sermon' ? styles.active : ''}`}
-                        onClick={() => setActiveTab('sermon')}
-                      >
-                        Andakt
                       </button>
                     )}
                     <button
@@ -571,18 +589,6 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, in
                   </div>
                 )}
 
-                {activeTab === 'prayer' && verseExtras?.prayer && (
-                  <div className={styles.prayerContent}>
-                    <p>{verseExtras.prayer}</p>
-                  </div>
-                )}
-
-                {activeTab === 'sermon' && verseExtras?.sermon && (
-                  <div className={styles.sermonContent}>
-                    <p>{verseExtras.sermon}</p>
-                  </div>
-                )}
-
                 {activeTab === 'topics' && (
                   <div className={styles.topicsContent}>
                     {verseTopics.length > 0 ? (
@@ -668,7 +674,9 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, in
                   <div className={styles.notesContent}>
                     {verseNotes.length > 0 && (
                       <div className={styles.notesList}>
-                        {verseNotes.map(note => (
+                        {verseNotes.map(note => {
+                          const noteTopics = getTopicsForItem('note', note.id);
+                          return (
                           <div key={note.id} className={styles.noteItem}>
                             {editingNoteId === note.id ? (
                               <div className={styles.noteEditForm}>
@@ -707,6 +715,76 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, in
                             ) : (
                               <>
                                 <p className={styles.noteText}>{note.content}</p>
+
+                                {/* Emner for dette notatet */}
+                                <div className={styles.noteTopics}>
+                                  {noteTopics.length > 0 && (
+                                    <div className={styles.topicsList}>
+                                      {noteTopics.map(topic => (
+                                        <span key={topic.id} className={styles.topicTag}>
+                                          {topic.name}
+                                          <button
+                                            className={styles.topicRemove}
+                                            onClick={() => removeTopicFromItem('note', note.id, topic.id)}
+                                            title="Fjern emne"
+                                          >
+                                            ×
+                                          </button>
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                  <div className={styles.noteTopicInputWrapper}>
+                                    <input
+                                      type="text"
+                                      className={styles.noteTopicInput}
+                                      placeholder="Legg til emne..."
+                                      value={noteTopicInput[note.id] || ''}
+                                      onChange={(e) => {
+                                        setNoteTopicInput(prev => ({ ...prev, [note.id]: e.target.value }));
+                                        setShowNoteTopicSuggestions(note.id);
+                                      }}
+                                      onFocus={() => setShowNoteTopicSuggestions(note.id)}
+                                      onBlur={() => setTimeout(() => setShowNoteTopicSuggestions(null), 150)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && (noteTopicInput[note.id]?.trim() || getNoteTopicSuggestions(note.id).length > 0)) {
+                                          e.preventDefault();
+                                          const suggestions = getNoteTopicSuggestions(note.id);
+                                          if (suggestions.length > 0) {
+                                            handleAddNoteTopicFromInput(note.id, suggestions[0]);
+                                          } else {
+                                            handleAddNoteTopicFromInput(note.id, null);
+                                          }
+                                        } else if (e.key === 'Escape') {
+                                          setShowNoteTopicSuggestions(null);
+                                        }
+                                      }}
+                                    />
+                                    {showNoteTopicSuggestions === note.id && (getNoteTopicSuggestions(note.id).length > 0 || noteTopicInput[note.id]?.trim()) && (
+                                      <div className={styles.topicSuggestions}>
+                                        {getNoteTopicSuggestions(note.id).map((topic) => (
+                                          <div
+                                            key={topic.id}
+                                            className={styles.topicSuggestion}
+                                            onClick={() => handleAddNoteTopicFromInput(note.id, topic)}
+                                          >
+                                            {topic.name}
+                                          </div>
+                                        ))}
+                                        {noteTopicInput[note.id]?.trim() && !topics.some(t => t.name.toLowerCase() === noteTopicInput[note.id].trim().toLowerCase()) && (
+                                          <div
+                                            className={styles.topicSuggestion}
+                                            onClick={() => handleAddNoteTopicFromInput(note.id, null)}
+                                          >
+                                            {noteTopicInput[note.id].trim()}
+                                            <span className={styles.topicNewLabel}>(nytt emne)</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+
                                 <div className={styles.noteFooter}>
                                   <span className={styles.noteDate}>
                                     {new Date(note.updatedAt).toLocaleDateString('nb-NO', {
@@ -742,7 +820,8 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, in
                               </>
                             )}
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
 
@@ -966,48 +1045,6 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, in
                     </div>
                   )}
 
-                  {/* Bønn */}
-                  {verseExtras?.prayer && (
-                    <div className={styles.accordionItem}>
-                      <button
-                        className={`${styles.accordionHeader} ${openSections.has('prayer') ? styles.open : ''}`}
-                        onClick={() => toggleSection('prayer')}
-                        aria-expanded={openSections.has('prayer')}
-                      >
-                        <span>Bønn</span>
-                        <span className={styles.accordionIcon}>{openSections.has('prayer') ? '−' : '+'}</span>
-                      </button>
-                      {openSections.has('prayer') && (
-                        <div className={styles.accordionContent}>
-                          <div className={styles.prayerContent}>
-                            <p>{verseExtras.prayer}</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Andakt */}
-                  {verseExtras?.sermon && (
-                    <div className={styles.accordionItem}>
-                      <button
-                        className={`${styles.accordionHeader} ${openSections.has('sermon') ? styles.open : ''}`}
-                        onClick={() => toggleSection('sermon')}
-                        aria-expanded={openSections.has('sermon')}
-                      >
-                        <span>Andakt</span>
-                        <span className={styles.accordionIcon}>{openSections.has('sermon') ? '−' : '+'}</span>
-                      </button>
-                      {openSections.has('sermon') && (
-                        <div className={styles.accordionContent}>
-                          <div className={styles.sermonContent}>
-                            <p>{verseExtras.sermon}</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
                   {/* Emner */}
                   <div className={styles.accordionItem}>
                     <button
@@ -1094,9 +1131,69 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, in
                         <div className={styles.notesContent}>
                           {verseNotes.length > 0 && (
                             <div className={styles.notesList}>
-                              {verseNotes.map(note => (
+                              {verseNotes.map(note => {
+                                const noteTopics = getTopicsForItem('note', note.id);
+                                return (
                                 <div key={note.id} className={styles.noteItem}>
                                   <p className={styles.noteText}>{note.content}</p>
+
+                                  {/* Emner for dette notatet */}
+                                  <div className={styles.noteTopics}>
+                                    {noteTopics.length > 0 && (
+                                      <div className={styles.topicsList}>
+                                        {noteTopics.map(topic => (
+                                          <span key={topic.id} className={styles.topicTag}>
+                                            {topic.name}
+                                            <button
+                                              className={styles.topicRemove}
+                                              onClick={() => removeTopicFromItem('note', note.id, topic.id)}
+                                            >
+                                              ×
+                                            </button>
+                                          </span>
+                                        ))}
+                                      </div>
+                                    )}
+                                    <div className={styles.noteTopicInputWrapper}>
+                                      <input
+                                        type="text"
+                                        className={styles.noteTopicInput}
+                                        placeholder="Legg til emne..."
+                                        value={noteTopicInput[note.id] || ''}
+                                        onChange={(e) => {
+                                          setNoteTopicInput(prev => ({ ...prev, [note.id]: e.target.value }));
+                                          setShowNoteTopicSuggestions(note.id);
+                                        }}
+                                        onFocus={() => setShowNoteTopicSuggestions(note.id)}
+                                        onBlur={() => setTimeout(() => setShowNoteTopicSuggestions(null), 150)}
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter' && (noteTopicInput[note.id]?.trim() || getNoteTopicSuggestions(note.id).length > 0)) {
+                                            e.preventDefault();
+                                            const suggestions = getNoteTopicSuggestions(note.id);
+                                            if (suggestions.length > 0) {
+                                              handleAddNoteTopicFromInput(note.id, suggestions[0]);
+                                            } else {
+                                              handleAddNoteTopicFromInput(note.id, null);
+                                            }
+                                          }
+                                        }}
+                                      />
+                                      {showNoteTopicSuggestions === note.id && getNoteTopicSuggestions(note.id).length > 0 && (
+                                        <div className={styles.topicSuggestions}>
+                                          {getNoteTopicSuggestions(note.id).map((topic) => (
+                                            <div
+                                              key={topic.id}
+                                              className={styles.topicSuggestion}
+                                              onClick={() => handleAddNoteTopicFromInput(note.id, topic)}
+                                            >
+                                              {topic.name}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+
                                   <div className={styles.noteFooter}>
                                     <span className={styles.noteDate}>
                                       {new Date(note.updatedAt).toLocaleDateString('nb-NO')}
@@ -1109,7 +1206,8 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, in
                                     </button>
                                   </div>
                                 </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           )}
                           <div className={styles.noteInputWrapper}>
@@ -1161,7 +1259,8 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, in
                                   onChange={() => clearSelectedVersion(bookId, verse.chapter, verse.verse)}
                                 />
                                 <span className={styles.versionText}>
-                                  <span className={styles.versionTitle}>Standard</span>
+                                  <span className={styles.versionTitle}>Standard versjon</span>
+                                  <span className={styles.versionPreview}>{verse.text}</span>
                                 </span>
                               </label>
                             </div>
@@ -1175,7 +1274,27 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, in
                                     onChange={() => setSelectedVersion(bookId, verse.chapter, verse.verse, index)}
                                   />
                                   <span className={styles.versionText}>
-                                    <span className={styles.versionTitle}>Alt. {index + 1}</span>
+                                    <span className={styles.versionHeader}>
+                                      <span className={styles.versionTitle}>Alternativ {index + 1}</span>
+                                      {version.type && (
+                                        <span className={`${styles.versionBadge} ${styles[`badge${version.type.charAt(0).toUpperCase() + version.type.slice(1)}`]}`}>
+                                          {version.type === 'suggestion' && 'Forslag'}
+                                          {version.type === 'theological' && 'Teologisk'}
+                                          {version.type === 'grammar' && 'Grammatikk'}
+                                        </span>
+                                      )}
+                                      {version.severity && (
+                                        <span className={`${styles.versionSeverity} ${styles[`severity${version.severity.charAt(0).toUpperCase() + version.severity.slice(1)}`]}`}>
+                                          {version.severity === 'critical' && 'Kritisk'}
+                                          {version.severity === 'major' && 'Viktig'}
+                                          {version.severity === 'minor' && 'Liten'}
+                                        </span>
+                                      )}
+                                    </span>
+                                    <span className={styles.versionPreview}>{version.text}</span>
+                                    {version.explanation && (
+                                      <span className={styles.versionExplanation}>{version.explanation}</span>
+                                    )}
                                   </span>
                                 </label>
                               </div>
