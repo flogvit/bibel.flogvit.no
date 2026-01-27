@@ -1,7 +1,7 @@
 
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { precacheChapters, CachedChapter, precacheSupportingData } from '@/lib/offline/register-sw';
+import { precacheChapters, CachedChapter, precacheSupportingData, precacheAppAssets } from '@/lib/offline/register-sw';
 import {
   storeBooks,
   getAllStoredBooks,
@@ -409,6 +409,9 @@ export function OfflineDownload({ onDownloadComplete }: OfflineDownloadProps) {
 
     // Also cache HTML pages in Service Worker for quick navigation
     await precacheSupportingData();
+
+    // Precache all app assets (JS/CSS chunks) for full offline support
+    await precacheAppAssets();
 
     // Set the sync version from server
     try {

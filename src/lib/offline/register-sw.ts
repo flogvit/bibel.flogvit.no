@@ -193,6 +193,47 @@ export const SUPPORTING_DATA_URLS = [
   '/temaer',
 ];
 
+/**
+ * Precache all application assets (JS/CSS chunks) for offline use
+ * Reads the asset manifest generated at build time
+ */
+export async function precacheAppAssets(): Promise<PrecacheResult> {
+  try {
+    // Fetch the asset manifest
+    const response = await fetch('/asset-manifest.json');
+    if (!response.ok) {
+      console.warn('[SW] Asset manifest not found - skipping app asset precaching');
+      return { success: true, cached: 0, failed: 0 };
+    }
+
+    const manifest = await response.json();
+    const assets: string[] = manifest.assets || [];
+
+    if (assets.length === 0) {
+      return { success: true, cached: 0, failed: 0 };
+    }
+
+    // Also include the main HTML page and other static files
+    const allAssets = [
+      '/',
+      '/favicon.svg',
+      '/manifest.json',
+      ...assets,
+    ];
+
+    const result = await sendMessage<PrecacheResult>({
+      type: 'PRECACHE_CHAPTERS',
+      payload: { urls: allAssets },
+    });
+
+    console.log(`[SW] Precached ${result?.cached || 0} app assets`);
+    return result ?? { success: false, cached: 0, failed: allAssets.length };
+  } catch (error) {
+    console.error('[SW] Failed to precache app assets:', error);
+    return { success: false, cached: 0, failed: 0 };
+  }
+}
+
 export async function precacheSupportingData(): Promise<PrecacheResult> {
   const result = await sendMessage<PrecacheResult>({
     type: 'PRECACHE_CHAPTERS',

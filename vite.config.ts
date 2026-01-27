@@ -1,9 +1,38 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import fs from 'fs';
+
+// Plugin to generate asset manifest for offline precaching
+function assetManifestPlugin() {
+  return {
+    name: 'asset-manifest',
+    writeBundle(options, bundle) {
+      const assets: string[] = [];
+      for (const [fileName] of Object.entries(bundle)) {
+        // Include JS and CSS files
+        if (fileName.endsWith('.js') || fileName.endsWith('.css')) {
+          assets.push(`/assets/${fileName.replace('assets/', '')}`);
+        }
+      }
+
+      const manifest = {
+        assets,
+        generatedAt: new Date().toISOString(),
+      };
+
+      const outDir = options.dir || 'dist';
+      fs.writeFileSync(
+        path.join(outDir, 'asset-manifest.json'),
+        JSON.stringify(manifest, null, 2)
+      );
+      console.log(`[asset-manifest] Generated manifest with ${assets.length} assets`);
+    },
+  };
+}
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), assetManifestPlugin()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
