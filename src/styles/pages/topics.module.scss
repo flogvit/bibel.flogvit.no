@@ -101,7 +101,8 @@
   font-weight: 500;
 }
 
-.verseCount {
+.verseCount,
+.itemCount {
   font-size: $font-size-sm;
   color: $color-text-muted;
 }
@@ -186,6 +187,35 @@
   }
 }
 
+.filterBar {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+  flex-wrap: wrap;
+}
+
+.filterButton {
+  padding: $spacing-xs $spacing-md;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  background: $color-paper;
+  color: $color-text;
+  font-family: $font-sans;
+  font-size: $font-size-sm;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    border-color: $color-secondary;
+  }
+
+  &.active {
+    background: $color-secondary;
+    border-color: $color-secondary;
+    color: white;
+  }
+}
+
 .loading,
 .noVerses,
 .selectPrompt {
@@ -208,6 +238,61 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: $spacing-sm;
+}
+
+.cardTitleRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.itemTypeBadge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: $radius-sm;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  background: rgba($color-secondary, 0.1);
+  color: $color-secondary;
+}
+
+.noteBadge {
+  background: rgba($color-accent, 0.15);
+  color: color.adjust($color-accent, $lightness: -15%);
+}
+
+.prophecyBadge {
+  background: rgba(#9c27b0, 0.15);
+  color: #7b1fa2;
+}
+
+.timelineBadge {
+  background: rgba(#2196f3, 0.15);
+  color: #1565c0;
+}
+
+.personBadge {
+  background: rgba(#4caf50, 0.15);
+  color: #2e7d32;
+}
+
+.readingplanBadge {
+  background: rgba(#ff9800, 0.15);
+  color: #e65100;
+}
+
+.themeBadge {
+  background: rgba(#795548, 0.15);
+  color: #5d4037;
+}
+
+.noteCard {
+  border-left: 3px solid $color-accent;
+}
+
+.genericCard {
+  border-left: 3px solid $color-text-muted;
 }
 
 .reference {
@@ -280,8 +365,68 @@
     }
   }
 
-  .verseCount {
+  .verseCount,
+  .itemCount {
     color: $dark-color-text-muted;
+  }
+
+  .filterButton {
+    background: $dark-color-paper;
+    border-color: $dark-color-border;
+    color: $dark-color-text;
+
+    &:hover {
+      border-color: $dark-color-secondary;
+    }
+
+    &.active {
+      background: $dark-color-secondary;
+      border-color: $dark-color-secondary;
+      color: $dark-color-background;
+    }
+  }
+
+  .itemTypeBadge {
+    background: rgba($dark-color-secondary, 0.2);
+    color: $dark-color-secondary;
+  }
+
+  .noteBadge {
+    background: rgba($dark-color-accent, 0.2);
+    color: $dark-color-accent;
+  }
+
+  .prophecyBadge {
+    background: rgba(#9c27b0, 0.2);
+    color: #ce93d8;
+  }
+
+  .timelineBadge {
+    background: rgba(#2196f3, 0.2);
+    color: #64b5f6;
+  }
+
+  .personBadge {
+    background: rgba(#4caf50, 0.2);
+    color: #81c784;
+  }
+
+  .readingplanBadge {
+    background: rgba(#ff9800, 0.2);
+    color: #ffb74d;
+  }
+
+  .themeBadge {
+    background: rgba(#795548, 0.2);
+    color: #a1887f;
+  }
+
+  .noteCard {
+    border-left-color: $dark-color-accent;
+  }
+
+  .genericCard {
+    border-left-color: $dark-color-text-muted;
   }
 
   .editButton,

@@ -154,6 +154,16 @@ export interface Topic {
   name: string;
 }
 
+// Generisk tagging - støtter alle typer innhold
+export type ItemType = 'verse' | 'note' | 'prophecy' | 'timeline' | 'person' | 'readingplan' | 'theme';
+
+export interface ItemTopic {
+  itemType: ItemType;
+  itemId: string;      // Unik ID basert på type (f.eks. "1-1-1" for vers)
+  topicId: string;
+}
+
+// Legacy interface - beholdes for bakoverkompatibilitet
 export interface VerseTopic {
   bookId: number;
   chapter: number;
@@ -163,11 +173,42 @@ export interface VerseTopic {
 
 export interface TopicsData {
   topics: Topic[];
-  verseTopics: VerseTopic[];
+  verseTopics: VerseTopic[];  // Legacy - migreres til itemTopics
+  itemTopics: ItemTopic[];    // Ny generisk struktur
+}
+
+// Hjelpefunksjon for å generere vers-ID
+export function getVerseItemId(bookId: number, chapter: number, verse: number): string {
+  return `${bookId}-${chapter}-${verse}`;
+}
+
+// Hjelpefunksjon for å parse vers-ID
+export function parseVerseItemId(itemId: string): { bookId: number; chapter: number; verse: number } | null {
+  const parts = itemId.split('-');
+  if (parts.length !== 3) return null;
+  const [bookId, chapter, verse] = parts.map(Number);
+  if (isNaN(bookId) || isNaN(chapter) || isNaN(verse)) return null;
+  return { bookId, chapter, verse };
 }
 
 export async function getTopics(): Promise<TopicsData> {
-  return getData<TopicsData>('topics', { topics: [], verseTopics: [] });
+  const data = await getData<TopicsData>('topics', { topics: [], verseTopics: [], itemTopics: [] });
+
+  // Migrer gamle verseTopics til itemTopics hvis nødvendig
+  if (data.verseTopics.length > 0 && data.itemTopics.length === 0) {
+    data.itemTopics = data.verseTopics.map(vt => ({
+      itemType: 'verse' as ItemType,
+      itemId: getVerseItemId(vt.bookId, vt.chapter, vt.verse),
+      topicId: vt.topicId
+    }));
+  }
+
+  // Sørg for at itemTopics alltid eksisterer
+  if (!data.itemTopics) {
+    data.itemTopics = [];
+  }
+
+  return data;
 }
 
 export async function saveTopics(data: TopicsData): Promise<void> {
