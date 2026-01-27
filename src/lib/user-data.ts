@@ -1,8 +1,6 @@
 // Export/import user data functionality
 import type { BibleSettings } from './settings';
-import type { FavoriteVerse } from '@/components/FavoritesContext';
-import type { Topic, VerseTopic } from '@/components/TopicsContext';
-import type { Note } from '@/components/NotesContext';
+import type { FavoriteVerse, Topic, VerseTopic, Note } from './offline/userData';
 import type { ReadingPlanProgress } from './reading-plan';
 
 export interface TopicsData {

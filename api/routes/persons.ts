@@ -35,7 +35,7 @@ personsRouter.get('/', (req: Request, res: Response) => {
  * Returns a specific person
  */
 personsRouter.get('/:id', (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
 
   try {
     const person = getPersonData(id);

@@ -24,7 +24,7 @@ themesRouter.get('/', (_req: Request, res: Response) => {
  * Returns a specific theme
  */
 themesRouter.get('/:id', (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
 
   try {
     const theme = getThemeByName(id);
