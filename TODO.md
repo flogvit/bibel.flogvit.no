@@ -149,6 +149,7 @@ bibel/
 | Bilder og illustrasjoner | Public domain bilder, eller lisensiert |
 
 ### Frontend-funksjoner
+- [ ] Dagens vers (verse of the day) på forsiden
 - [ ] Bibelvers-memorering med repetisjon (spaced repetition)
 - [ ] Studienotater (brukerdata i users.db, krever innlogging)
 - [ ] Kart for bibelske reiser (Leaflet-komponent med koordinater fra places/)
