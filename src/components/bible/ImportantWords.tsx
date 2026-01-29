@@ -26,7 +26,7 @@ export function ImportantWords({ bookId, chapter }: ImportantWordsProps) {
       fetch(`/api/important-words?bookId=${bookId}&chapter=${chapter}`)
         .then(res => res.json())
         .then(data => {
-          setWords(data);
+          setWords(Array.isArray(data) ? data : []);
           setLoading(false);
         })
         .catch(() => {
