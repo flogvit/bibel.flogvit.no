@@ -23,6 +23,7 @@ interface ImportStats {
   word4word: { updated: number; unchanged: number };
   references: { updated: number; unchanged: number };
   bookSummaries: { updated: number; unchanged: number };
+  bookContext: { updated: number; unchanged: number };
   chapterSummaries: { updated: number; unchanged: number };
   chapterContext: { updated: number; unchanged: number };
   importantWords: { updated: number; unchanged: number };
@@ -33,6 +34,7 @@ interface ImportStats {
   prophecies: { updated: number; unchanged: number };
   persons: { updated: number; unchanged: number };
   chapterInsights: { updated: number; unchanged: number };
+  dailyVerses: { updated: number; unchanged: number };
   readingPlans: { updated: number; unchanged: number };
 }
 
@@ -41,6 +43,7 @@ const stats: ImportStats = {
   word4word: { updated: 0, unchanged: 0 },
   references: { updated: 0, unchanged: 0 },
   bookSummaries: { updated: 0, unchanged: 0 },
+  bookContext: { updated: 0, unchanged: 0 },
   chapterSummaries: { updated: 0, unchanged: 0 },
   chapterContext: { updated: 0, unchanged: 0 },
   importantWords: { updated: 0, unchanged: 0 },
@@ -51,6 +54,7 @@ const stats: ImportStats = {
   prophecies: { updated: 0, unchanged: 0 },
   persons: { updated: 0, unchanged: 0 },
   chapterInsights: { updated: 0, unchanged: 0 },
+  dailyVerses: { updated: 0, unchanged: 0 },
   readingPlans: { updated: 0, unchanged: 0 },
 };
 
@@ -206,6 +210,12 @@ db.exec(`
     FOREIGN KEY (book_id) REFERENCES books(id)
   );
 
+  CREATE TABLE IF NOT EXISTS book_context (
+    book_id INTEGER PRIMARY KEY,
+    context TEXT NOT NULL,
+    FOREIGN KEY (book_id) REFERENCES books(id)
+  );
+
   CREATE TABLE IF NOT EXISTS chapter_summaries (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     book_id INTEGER NOT NULL,
@@ -344,6 +354,26 @@ db.exec(`
     content TEXT NOT NULL,
     FOREIGN KEY (book_id) REFERENCES books(id),
     UNIQUE (book_id, chapter)
+  );
+
+  CREATE TABLE IF NOT EXISTS daily_verses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT NOT NULL UNIQUE,
+    book_id INTEGER NOT NULL,
+    chapter INTEGER NOT NULL,
+    verse_start INTEGER NOT NULL,
+    verse_end INTEGER NOT NULL,
+    note TEXT,
+    FOREIGN KEY (book_id) REFERENCES books(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS reading_plans (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    category TEXT,
+    days INTEGER NOT NULL,
+    content TEXT NOT NULL
   );
 
   CREATE TABLE IF NOT EXISTS db_meta (
@@ -616,6 +646,36 @@ if (fs.existsSync(bookSummariesPath)) {
   }
 }
 
+// Importer bokkontekst
+console.log('Importerer bokkontekst...');
+const insertBookContext = db.prepare(`
+  INSERT OR REPLACE INTO book_context (book_id, context) VALUES (?, ?)
+`);
+
+const bookContextPath = path.join(GENERATE_PATH, 'book_context', 'nb');
+if (fs.existsSync(bookContextPath)) {
+  const files = fs.readdirSync(bookContextPath).filter(f => f.endsWith('.md'));
+
+  for (const file of files) {
+    const bookId = parseInt(file.replace('.md', ''));
+    if (isNaN(bookId)) continue;
+
+    const filePath = path.join(bookContextPath, file);
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const contentHash = computeHash(content);
+    const contentKey = String(bookId);
+
+    if (!isFullImport && !hasContentChanged(db, 'book_context', contentKey, contentHash)) {
+      stats.bookContext.unchanged++;
+      continue;
+    }
+
+    insertBookContext.run(bookId, content);
+    updateContentHash(db, 'book_context', contentKey, contentHash);
+    stats.bookContext.updated++;
+  }
+}
+
 // Importer kapittelsammendrag
 console.log('Importerer kapittelsammendrag...');
 const insertChapterSummary = db.prepare(`
@@ -656,36 +716,31 @@ const insertChapterContext = db.prepare(`
   INSERT OR REPLACE INTO chapter_context (book_id, chapter, context) VALUES (?, ?, ?)
 `);
 
-const chapterContextPaths = [
-  path.join(GENERATE_PATH, 'chapter_context', 'nb'),
-  path.join(GENERATE_PATH, 'chapter_context', 'osnb1'),
-];
-for (const chapterContextPath of chapterContextPaths) {
-  if (fs.existsSync(chapterContextPath)) {
-    const files = fs.readdirSync(chapterContextPath).filter(f => f.endsWith('.md'));
+const chapterContextPath = path.join(GENERATE_PATH, 'chapter_context', 'nb');
+if (fs.existsSync(chapterContextPath)) {
+  const files = fs.readdirSync(chapterContextPath).filter(f => f.endsWith('.md'));
 
-    for (const file of files) {
-      const match = file.match(/^(\d+)-(\d+)\.md$/);
-      if (!match) continue;
+  for (const file of files) {
+    const match = file.match(/^(\d+)-(\d+)\.md$/);
+    if (!match) continue;
 
-      const [, bookIdStr, chapterStr] = match;
-      const bookId = parseInt(bookIdStr);
-      const chapter = parseInt(chapterStr);
+    const [, bookIdStr, chapterStr] = match;
+    const bookId = parseInt(bookIdStr);
+    const chapter = parseInt(chapterStr);
 
-      const filePath = path.join(chapterContextPath, file);
-      const content = fs.readFileSync(filePath, 'utf-8');
-      const contentHash = computeHash(content);
-      const contentKey = `${bookId}-${chapter}`;
+    const filePath = path.join(chapterContextPath, file);
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const contentHash = computeHash(content);
+    const contentKey = `${bookId}-${chapter}`;
 
-      if (!isFullImport && !hasContentChanged(db, 'chapter_context', contentKey, contentHash)) {
-        stats.chapterContext.unchanged++;
-        continue;
-      }
-
-      insertChapterContext.run(bookId, chapter, content);
-      updateContentHash(db, 'chapter_context', contentKey, contentHash);
-      stats.chapterContext.updated++;
+    if (!isFullImport && !hasContentChanged(db, 'chapter_context', contentKey, contentHash)) {
+      stats.chapterContext.unchanged++;
+      continue;
     }
+
+    insertChapterContext.run(bookId, chapter, content);
+    updateContentHash(db, 'chapter_context', contentKey, contentHash);
+    stats.chapterContext.updated++;
   }
 }
 
@@ -1148,6 +1203,101 @@ if (fs.existsSync(chapterInsightsPath)) {
   console.log(`  Importerte ${stats.chapterInsights.updated} kapittel-innsikter`);
 }
 
+// Importer dagens vers
+console.log('Importerer dagens vers...');
+const insertDailyVerse = db.prepare(`
+  INSERT OR REPLACE INTO daily_verses (date, book_id, chapter, verse_start, verse_end, note)
+  VALUES (?, ?, ?, ?, ?, ?)
+`);
+
+const dailyVersePath = path.join(GENERATE_PATH, 'daily_verse');
+if (fs.existsSync(dailyVersePath)) {
+  const yearFiles = fs.readdirSync(dailyVersePath).filter(f => f.endsWith('.json'));
+
+  for (const file of yearFiles) {
+    const filePath = path.join(dailyVersePath, file);
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const contentHash = computeHash(content);
+    const contentKey = file.replace('.json', '');
+
+    if (!isFullImport && !hasContentChanged(db, 'daily_verse', contentKey, contentHash)) {
+      stats.dailyVerses.unchanged++;
+      continue;
+    }
+
+    const yearData = JSON.parse(content);
+
+    if (yearData.verses) {
+      for (const verse of yearData.verses) {
+        // Parse ref format: "book:chapter:verse" or "book:chapter:verseStart-verseEnd"
+        const refParts = verse.ref.split(':');
+        const bookId = parseInt(refParts[0]);
+        const chapter = parseInt(refParts[1]);
+        const versePart = refParts[2];
+
+        let verseStart: number;
+        let verseEnd: number;
+
+        if (versePart.includes('-')) {
+          const [start, end] = versePart.split('-');
+          verseStart = parseInt(start);
+          verseEnd = parseInt(end);
+        } else {
+          verseStart = parseInt(versePart);
+          verseEnd = verseStart;
+        }
+
+        insertDailyVerse.run(verse.date, bookId, chapter, verseStart, verseEnd, verse.note || null);
+      }
+    }
+
+    updateContentHash(db, 'daily_verse', contentKey, contentHash);
+    stats.dailyVerses.updated++;
+  }
+  console.log(`  Importerte ${stats.dailyVerses.updated} årsfiler (${stats.dailyVerses.unchanged} uendret)`);
+}
+
+// Importer leseplaner
+console.log('Importerer leseplaner...');
+const insertReadingPlan = db.prepare(`
+  INSERT OR REPLACE INTO reading_plans (id, name, description, category, days, content)
+  VALUES (?, ?, ?, ?, ?, ?)
+`);
+
+const readingPlansPath = path.join(GENERATE_PATH, 'reading_plans');
+if (fs.existsSync(readingPlansPath)) {
+  const planFiles = fs.readdirSync(readingPlansPath).filter(f => f.endsWith('.json') && f !== 'index.json');
+
+  for (const file of planFiles) {
+    const filePath = path.join(readingPlansPath, file);
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const contentHash = computeHash(content);
+    const contentKey = file.replace('.json', '');
+
+    if (!isFullImport && !hasContentChanged(db, 'reading_plan', contentKey, contentHash)) {
+      stats.readingPlans.unchanged++;
+      continue;
+    }
+
+    try {
+      const plan = JSON.parse(content);
+      insertReadingPlan.run(
+        plan.id,
+        plan.name,
+        plan.description || null,
+        plan.category || null,
+        plan.days,
+        content
+      );
+      updateContentHash(db, 'reading_plan', contentKey, contentHash);
+      stats.readingPlans.updated++;
+    } catch (e) {
+      console.error(`Ugyldig JSON i ${file}:`, e);
+    }
+  }
+  console.log(`  Importerte ${stats.readingPlans.updated} leseplaner (${stats.readingPlans.unchanged} uendret)`);
+}
+
 // Opprett indekser
 console.log('Oppretter indekser...');
 db.exec(`
@@ -1163,6 +1313,7 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_prophecy_fulfillments_prophecy ON prophecy_fulfillments(prophecy_id);
   CREATE INDEX IF NOT EXISTS idx_prophecy_fulfillments_book ON prophecy_fulfillments(book_id, chapter);
   CREATE INDEX IF NOT EXISTS idx_chapter_insights_book ON chapter_insights(book_id, chapter);
+  CREATE INDEX IF NOT EXISTS idx_daily_verses_date ON daily_verses(date);
 `);
 
 // Check if any content was updated
@@ -1189,44 +1340,6 @@ if (totalUpdated > 0 || isFullImport) {
 
 db.close();
 
-// Kopier leseplaner til data-mappen
-console.log('\nKopierer leseplaner...');
-const readingPlansSource = path.join(GENERATE_PATH, 'reading_plans');
-const readingPlansTarget = path.join(process.cwd(), 'data', 'reading_plans');
-
-if (fs.existsSync(readingPlansSource)) {
-  if (!fs.existsSync(readingPlansTarget)) {
-    fs.mkdirSync(readingPlansTarget, { recursive: true });
-  }
-
-  const planFiles = fs.readdirSync(readingPlansSource).filter(f => f.endsWith('.json'));
-  let plansUpdated = 0;
-  let plansUnchanged = 0;
-
-  for (const file of planFiles) {
-    const sourcePath = path.join(readingPlansSource, file);
-    const targetPath = path.join(readingPlansTarget, file);
-
-    const sourceContent = fs.readFileSync(sourcePath, 'utf-8');
-    const sourceHash = computeHash(sourceContent);
-
-    // Check if file exists and has same content
-    if (!isFullImport && fs.existsSync(targetPath)) {
-      const targetContent = fs.readFileSync(targetPath, 'utf-8');
-      const targetHash = computeHash(targetContent);
-      if (sourceHash === targetHash) {
-        plansUnchanged++;
-        continue;
-      }
-    }
-
-    fs.copyFileSync(sourcePath, targetPath);
-    plansUpdated++;
-  }
-  stats.readingPlans = { updated: plansUpdated, unchanged: plansUnchanged };
-  console.log(`  Kopierte ${plansUpdated} leseplaner (${plansUnchanged} uendret)`);
-}
-
 // Print summary
 console.log('\n=== Import-sammendrag ===');
 console.log(`Modus: ${isFullImport ? 'Full reimport' : 'Inkrementell'}`);
@@ -1237,6 +1350,7 @@ console.log(`Kapitler              ${String(stats.chapters.updated).padStart(9)}
 console.log(`Word4word             ${String(stats.word4word.updated).padStart(9)}  ${String(stats.word4word.unchanged).padStart(7)}`);
 console.log(`Referanser            ${String(stats.references.updated).padStart(9)}  ${String(stats.references.unchanged).padStart(7)}`);
 console.log(`Boksammendrag         ${String(stats.bookSummaries.updated).padStart(9)}  ${String(stats.bookSummaries.unchanged).padStart(7)}`);
+console.log(`Bokkontekst           ${String(stats.bookContext.updated).padStart(9)}  ${String(stats.bookContext.unchanged).padStart(7)}`);
 console.log(`Kapittelsammendrag    ${String(stats.chapterSummaries.updated).padStart(9)}  ${String(stats.chapterSummaries.unchanged).padStart(7)}`);
 console.log(`Kapittelkontekst      ${String(stats.chapterContext.updated).padStart(9)}  ${String(stats.chapterContext.unchanged).padStart(7)}`);
 console.log(`Viktige ord           ${String(stats.importantWords.updated).padStart(9)}  ${String(stats.importantWords.unchanged).padStart(7)}`);
@@ -1247,6 +1361,7 @@ console.log(`Tidslinje             ${String(stats.timeline.updated).padStart(9)}
 console.log(`Profetier             ${String(stats.prophecies.updated).padStart(9)}  ${String(stats.prophecies.unchanged).padStart(7)}`);
 console.log(`Personer              ${String(stats.persons.updated).padStart(9)}  ${String(stats.persons.unchanged).padStart(7)}`);
 console.log(`Kapittel-innsikter    ${String(stats.chapterInsights.updated).padStart(9)}  ${String(stats.chapterInsights.unchanged).padStart(7)}`);
+console.log(`Dagens vers           ${String(stats.dailyVerses.updated).padStart(9)}  ${String(stats.dailyVerses.unchanged).padStart(7)}`);
 console.log(`Leseplaner            ${String(stats.readingPlans.updated).padStart(9)}  ${String(stats.readingPlans.unchanged).padStart(7)}`);
 console.log('----------------------------------------');
 console.log(`Totalt                ${String(totalUpdated).padStart(9)}  ${String(totalUnchanged).padStart(7)}`);
