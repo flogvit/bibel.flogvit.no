@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { booksData } from '@/lib/books-data';
 import { ContinueReading } from '@/components/ContinueReading';
+import { DailyVerse } from '@/components/DailyVerse';
 import { TodaysReading } from '@/components/TodaysReading';
 import styles from '@/styles/pages/home.module.scss';
 
@@ -21,6 +22,7 @@ export function HomeContent() {
         </header>
 
         <ContinueReading />
+        <DailyVerse />
         <TodaysReading />
 
         <section className={styles.testament}>
