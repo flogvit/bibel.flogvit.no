@@ -45,10 +45,10 @@ searchRouter.get('/original', (req: Request, res: Response) => {
   }
 
   try {
-    const { results, total, hasMore } = searchOriginalWord(query, limit, offset);
+    const result = searchOriginalWord(query, limit, offset);
 
     res.set('Cache-Control', 'public, max-age=3600');
-    res.json({ results, total, hasMore });
+    res.json(result);
   } catch (error) {
     console.error('Error searching original text:', error);
     res.status(500).json({ error: 'Internal server error' });

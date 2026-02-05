@@ -67,7 +67,7 @@ export function OriginalSearchPage() {
     }
 
     try {
-      const res = await fetch(`/api/search/original-word?word=${encodeURIComponent(searchWord)}&limit=${RESULTS_PER_PAGE}&offset=${offset}`);
+      const res = await fetch(`/api/search/original?q=${encodeURIComponent(searchWord)}&limit=${RESULTS_PER_PAGE}&offset=${offset}`);
       const data: SearchResponse = await res.json();
       if (append) {
         setResults(prev => [...prev, ...(data.results || [])]);
