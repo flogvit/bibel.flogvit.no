@@ -12,6 +12,28 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Inline SW update listener - works even if main JS bundle is cached
+      // This is a fallback for when React hasn't loaded yet or old code doesn't have the listener
+      if ('serviceWorker' in navigator) {
+        var updatePending = false;
+        navigator.serviceWorker.addEventListener('controllerchange', function() {
+          // New SW has taken control - if React is handling it, let React decide
+          // If React hasn't loaded yet, mark as pending so React can show notification when it loads
+          if (!window.__swUpdateHandled) {
+            updatePending = true;
+            window.__swUpdatePending = true;
+          }
+        });
+        navigator.serviceWorker.addEventListener('message', function(event) {
+          if (event.data && event.data.type === 'SW_ACTIVATED') {
+            if (!window.__swUpdateHandled) {
+              window.__swUpdatePending = true;
+            }
+          }
+        });
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

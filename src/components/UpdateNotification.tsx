@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import styles from './UpdateNotification.module.scss';
+import { skipWaiting } from '@/lib/offline/register-sw';
 
 interface UpdateInfo {
   hasUpdate: boolean;
@@ -24,6 +25,7 @@ export function UpdateNotification() {
   const [progress, setProgress] = useState<RefreshProgress | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const [refreshComplete, setRefreshComplete] = useState(false);
+  const [appUpdateAvailable, setAppUpdateAvailable] = useState(false);
 
   // Check for updates
   const checkForUpdates = useCallback(async () => {
@@ -130,6 +132,59 @@ export function UpdateNotification() {
     };
   }, [checkForUpdates]);
 
+  // Listen for app (Service Worker) updates
+  useEffect(() => {
+    // Mark that React is handling SW updates (prevents inline script from also reloading)
+    (window as Window & { __swUpdateHandled?: boolean }).__swUpdateHandled = true;
+
+    // Check if inline script already detected an update before React loaded
+    if ((window as Window & { __swUpdatePending?: boolean }).__swUpdatePending) {
+      setAppUpdateAvailable(true);
+    }
+
+    const handleSwUpdate = () => {
+      setAppUpdateAvailable(true);
+    };
+
+    window.addEventListener('sw-update-available', handleSwUpdate);
+
+    // Listen for controllerchange - show notification instead of auto-reloading
+    // This gives the user control over when to refresh
+    const handleControllerChange = () => {
+      // New SW has taken over, show update notification
+      setAppUpdateAvailable(true);
+    };
+
+    navigator.serviceWorker?.addEventListener('controllerchange', handleControllerChange);
+
+    // Listen for SW_ACTIVATED message from service worker
+    // This helps when old code doesn't have the sw-update-available listener
+    const handleSwMessage = (event: MessageEvent) => {
+      const { type } = event.data || {};
+      if (type === 'SW_ACTIVATED') {
+        // New SW has activated, show update notification
+        // (This works even if the old code didn't listen for sw-update-available)
+        setAppUpdateAvailable(true);
+      }
+    };
+
+    navigator.serviceWorker?.addEventListener('message', handleSwMessage);
+
+    return () => {
+      window.removeEventListener('sw-update-available', handleSwUpdate);
+      navigator.serviceWorker?.removeEventListener('controllerchange', handleControllerChange);
+      navigator.serviceWorker?.removeEventListener('message', handleSwMessage);
+    };
+  }, []);
+
+  // Handle app update - activate new SW if waiting, then reload
+  const handleAppUpdate = useCallback(async () => {
+    // If there's a waiting SW, activate it
+    await skipWaiting();
+    // Reload to get the new version
+    window.location.reload();
+  }, []);
+
   // Auto-hide refresh complete message
   useEffect(() => {
     if (refreshComplete) {
@@ -139,6 +194,37 @@ export function UpdateNotification() {
       return () => clearTimeout(timeout);
     }
   }, [refreshComplete]);
+
+  // Show app update available notification (highest priority)
+  if (appUpdateAvailable) {
+    return (
+      <div className={styles.notification}>
+        <div className={styles.content}>
+          <span className={styles.icon}>🔄</span>
+          <div className={styles.message}>
+            <span className={styles.title}>Ny versjon tilgjengelig</span>
+            <span className={styles.subtitle}>
+              Oppdater for å få siste endringer
+            </span>
+          </div>
+        </div>
+        <div className={styles.actions}>
+          <button
+            className={styles.updateButton}
+            onClick={handleAppUpdate}
+          >
+            Oppdater nå
+          </button>
+          <button
+            className={styles.dismissButton}
+            onClick={() => setAppUpdateAvailable(false)}
+          >
+            Senere
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Show refresh complete message
   if (refreshComplete) {

@@ -4,6 +4,8 @@
  * Handles SW lifecycle and provides functions to interact with the SW.
  */
 
+import { deleteAllChapters, deleteAllSupportingData } from './storage';
+
 let swRegistration: ServiceWorkerRegistration | null = null;
 
 /**
@@ -63,10 +65,22 @@ export async function unregisterServiceWorker(): Promise<boolean> {
 /**
  * Skip waiting and activate new service worker
  */
-export function skipWaiting(): void {
-  if (!swRegistration?.waiting) return;
+export async function skipWaiting(): Promise<void> {
+  // Try with stored registration first
+  if (swRegistration?.waiting) {
+    swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
+    return;
+  }
 
-  swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
+  // Fallback: get registration directly
+  try {
+    const registration = await navigator.serviceWorker.getRegistration();
+    if (registration?.waiting) {
+      registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+    }
+  } catch (error) {
+    console.error('[SW] Failed to skip waiting:', error);
+  }
 }
 
 /**
@@ -115,7 +129,6 @@ export async function clearAllCaches(): Promise<boolean> {
     await sendMessage({ type: 'CLEAR_CACHE' });
 
     // Clear IndexedDB data
-    const { deleteAllChapters, deleteAllSupportingData } = await import('./storage');
     await deleteAllChapters();
     await deleteAllSupportingData();
 

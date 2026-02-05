@@ -115,6 +115,17 @@ self.addEventListener('activate', (event) => {
             return caches.delete(name);
           })
       );
+    }).then(() => {
+      // Notify all clients that a new SW has activated
+      // This helps older clients know they should refresh
+      return self.clients.matchAll().then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({
+            type: 'SW_ACTIVATED',
+            payload: { version: CACHE_VERSION },
+          });
+        });
+      });
     })
   );
 
