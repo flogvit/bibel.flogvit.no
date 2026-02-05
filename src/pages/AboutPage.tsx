@@ -16,13 +16,20 @@ export function AboutPage() {
           <h2>Prosjektet</h2>
           <p>
             Denne bibelsiden er en del av et åpent prosjekt for å gjøre Bibelen
-            tilgjengelig med gode studieverktøy. Alle bibeldata er åpent
-            tilgjengelig.
+            tilgjengelig med gode studieverktøy. Både nettsiden og alle bibeldata
+            er åpen kildekode og fritt tilgjengelig.
+          </p>
+          <p>
+            <a href="https://github.com/flogvit/bibel.flogvit.no" target="_blank" rel="noopener noreferrer">
+              github.com/flogvit/bibel.flogvit.no
+            </a>
+            {' '}&ndash; kildekoden til denne nettsiden
           </p>
           <p>
             <a href="https://github.com/flogvit/free-bible/" target="_blank" rel="noopener noreferrer">
               github.com/flogvit/free-bible
             </a>
+            {' '}&ndash; bibeldata (tekst, grunntekst, referanser, m.m.)
           </p>
         </section>
 
