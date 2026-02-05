@@ -44,6 +44,10 @@ export function saveSettingsSync(settings: import('./offline/userData').BibleSet
 
   try {
     localStorage.setItem('bible-settings', JSON.stringify(settings));
+    // Also update IndexedDB in background for consistency
+    import('./offline/userData').then(({ saveSettings }) => {
+      saveSettings(settings);
+    });
   } catch (e) {
     console.error('Failed to save settings:', e);
   }

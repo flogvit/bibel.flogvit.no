@@ -128,7 +128,10 @@ export function getActivePlanId(): string | null {
   if (typeof window === 'undefined') return null;
 
   try {
-    return localStorage.getItem(ACTIVE_PLAN_KEY);
+    const stored = localStorage.getItem(ACTIVE_PLAN_KEY);
+    if (!stored) return null;
+    // Parse JSON since we store as JSON.stringify()
+    return JSON.parse(stored);
   } catch {
     return null;
   }
@@ -140,7 +143,8 @@ export function setActivePlanId(planId: string | null): void {
 
   try {
     if (planId) {
-      localStorage.setItem(ACTIVE_PLAN_KEY, planId);
+      // Store as JSON to be consistent with userData.ts which uses JSON.stringify
+      localStorage.setItem(ACTIVE_PLAN_KEY, JSON.stringify(planId));
     } else {
       localStorage.removeItem(ACTIVE_PLAN_KEY);
     }
