@@ -90,7 +90,7 @@ function GenealogyContent({ insight }: { insight: GenealogyInsight }) {
                   <span className={styles.person}>
                     {person.personId ? (
                       <Link
-                        href={`/personer/${person.personId}`}
+                        to={`/personer/${person.personId}`}
                         className={styles.personLink}
                         title={`Les mer om ${person.name}`}
                       >

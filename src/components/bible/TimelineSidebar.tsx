@@ -90,7 +90,7 @@ export function TimelineSidebar({ events, currentBookId, currentChapter }: Timel
                         return (
                           <Link
                             key={i}
-                            href={getReferenceUrl(ref)}
+                            to={getReferenceUrl(ref)}
                             className={`${styles.referenceLink} ${isCurrent ? styles.currentRef : ''}`}
                           >
                             {formatReference(ref)}

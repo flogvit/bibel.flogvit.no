@@ -165,7 +165,7 @@ export function TimelineMobileOverlay({ events, currentBookId, currentChapter, o
                               return (
                                 <Link
                                   key={i}
-                                  href={getReferenceUrl(ref)}
+                                  to={getReferenceUrl(ref)}
                                   className={`${styles.referenceLink} ${isCurrent ? styles.currentRef : ''}`}
                                   onClick={onClose}
                                 >
