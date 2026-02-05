@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import styles from '@/styles/pages/themes.module.scss';
 
 interface ThemeListItem {
-  id: number;
+  id: string;
   name: string;
   title: string;
   introduction: string;

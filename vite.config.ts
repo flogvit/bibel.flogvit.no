@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import type { NormalizedOutputOptions, OutputBundle } from 'rollup';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import fs from 'fs';
@@ -7,7 +8,7 @@ import fs from 'fs';
 function assetManifestPlugin() {
   return {
     name: 'asset-manifest',
-    writeBundle(options, bundle) {
+    writeBundle(options: NormalizedOutputOptions, bundle: OutputBundle) {
       const assets: string[] = [];
       for (const [fileName] of Object.entries(bundle)) {
         // Include JS and CSS files

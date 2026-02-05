@@ -32,7 +32,7 @@ interface ReferenceData {
   to_verse_start: number;
   to_verse_end: number;
   description: string | null;
-  book_short_name: string;
+  book_short_name?: string;
 }
 
 interface VerseExtras {
@@ -239,7 +239,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, in
     const verseRange = ref.to_verse_start === ref.to_verse_end
       ? `${ref.to_verse_start}`
       : `${ref.to_verse_start}-${ref.to_verse_end}`;
-    return `${ref.book_short_name} ${ref.to_chapter}:${verseRange}`;
+    return `${ref.book_short_name || ''} ${ref.to_chapter}:${verseRange}`;
   }
 
   function handleFavoriteClick() {
@@ -556,7 +556,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, in
                       references.map((ref, index) => (
                         <a
                           key={index}
-                          href={`/${toUrlSlug(ref.book_short_name)}/${ref.to_chapter}#v${ref.to_verse_start}`}
+                          href={`/${toUrlSlug(ref.book_short_name || '')}/${ref.to_chapter}#v${ref.to_verse_start}`}
                           className={styles.reference}
                         >
                           <span className={styles.refLink}>{formatReference(ref)}</span>
@@ -998,7 +998,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, in
                             references.map((ref, index) => (
                               <a
                                 key={index}
-                                href={`/${toUrlSlug(ref.book_short_name)}/${ref.to_chapter}#v${ref.to_verse_start}`}
+                                href={`/${toUrlSlug(ref.book_short_name || '')}/${ref.to_chapter}#v${ref.to_verse_start}`}
                                 className={styles.reference}
                               >
                                 <span className={styles.refLink}>{formatReference(ref)}</span>

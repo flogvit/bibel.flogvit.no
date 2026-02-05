@@ -3,20 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ThemeVerseDisplay } from '@/components/bible/ThemeVerseDisplay';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { ItemTagging } from '@/components/ItemTagging';
+import type { ThemeData } from '@/lib/bible';
 import styles from '@/styles/pages/theme.module.scss';
-
-interface ThemeData {
-  title: string;
-  introduction?: string;
-  sections: Array<{
-    title: string;
-    description?: string;
-    verses: Array<{
-      ref: string;
-      text?: string;
-    }>;
-  }>;
-}
 
 interface ThemeItem {
   title: string;
@@ -36,9 +24,11 @@ export function ThemePage() {
   useEffect(() => {
     if (!tema) return;
 
+    const currentTema = tema; // Capture for closure
+
     async function fetchTheme() {
       try {
-        const response = await fetch(`/api/themes/${encodeURIComponent(tema)}`);
+        const response = await fetch(`/api/themes/${encodeURIComponent(currentTema)}`);
 
         if (response.status === 404) {
           navigate('/temaer', { replace: true });
@@ -54,11 +44,11 @@ export function ThemePage() {
           const parsed = JSON.parse(theme.content);
           setThemeData(parsed);
           setIsJsonFormat(true);
-          setDisplayName(parsed.title || tema);
+          setDisplayName(parsed.title || currentTema);
         } catch {
           // Old txt format
           setIsJsonFormat(false);
-          setDisplayName(tema.charAt(0).toUpperCase() + tema.slice(1));
+          setDisplayName(currentTema.charAt(0).toUpperCase() + currentTema.slice(1));
 
           // Parse old format
           const lines = theme.content.split('\n').filter((l: string) => l.trim());
