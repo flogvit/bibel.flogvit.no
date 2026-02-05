@@ -22,6 +22,8 @@ import { verseExtrasRouter } from './routes/verse-extras';
 import { referenceRouter } from './routes/reference';
 import { importantWordsRouter } from './routes/important-words';
 import { dailyVerseRouter } from './routes/daily-verse';
+import { parallelsRouter } from './routes/parallels';
+import { statisticsRouter } from './routes/statistics';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -53,6 +55,8 @@ app.use('/api/verse-extras', verseExtrasRouter);
 app.use('/api/reference', referenceRouter);
 app.use('/api/important-words', importantWordsRouter);
 app.use('/api/daily-verse', dailyVerseRouter);
+app.use('/api/parallels', parallelsRouter);
+app.use('/api/statistics', statisticsRouter);
 
 // Serve static files from Vite build
 const distPath = path.join(__dirname, '..', 'dist');

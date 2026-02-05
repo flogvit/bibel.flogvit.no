@@ -14,9 +14,10 @@ import styles from './ToolsPanel.module.scss';
 
 interface ToolsPanelProps {
   onClose?: () => void;
+  hasParallels?: boolean;
 }
 
-export function ToolsPanel({ onClose }: ToolsPanelProps) {
+export function ToolsPanel({ onClose, hasParallels = false }: ToolsPanelProps) {
   const { settings, toggleSetting, updateSetting } = useSettings();
   const [searchParams] = useSearchParams();
   const location = useLocation();
@@ -111,6 +112,7 @@ export function ToolsPanel({ onClose }: ToolsPanelProps) {
     { key: 'showVerseIndicators' as const, label: 'Versindikatorer' },
     { key: 'showOriginalText' as const, label: 'Grunntekst' },
     { key: 'showTimeline' as const, label: 'Tidslinje' },
+    ...(hasParallels ? [{ key: 'showParallels' as const, label: 'Parallelle tekster' }] : []),
   ];
 
   const fontSizes: { value: FontSize; label: string }[] = [

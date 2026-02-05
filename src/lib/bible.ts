@@ -481,7 +481,8 @@ export function searchOriginalWord(word: string, limit = 50, offset = 0): Origin
 
   // Determine language based on word characters
   const isHebrew = /[\u0590-\u05FF]/.test(word);
-  const bible = isHebrew ? 'tanach' : 'sblgnt';
+  const word4wordBible = isHebrew ? 'tanach-nb' : 'sblgnt-nb';  // word4word table uses -nb suffix
+  const versesBible = isHebrew ? 'tanach' : 'sblgnt';            // verses table uses plain names
   const language = isHebrew ? 'hebrew' : 'greek';
 
   // Normalize the search word
@@ -490,7 +491,7 @@ export function searchOriginalWord(word: string, limit = 50, offset = 0): Origin
   // Get all unique words from the bible and find those matching when normalized
   const allWords = db.prepare(`
     SELECT DISTINCT word FROM word4word WHERE bible = ?
-  `).all(bible) as { word: string }[];
+  `).all(word4wordBible) as { word: string }[];
 
   // For Hebrew, also match words that CONTAIN the normalized word (to handle prefixes)
   // Hebrew prefixes like בְּ (be-), הַ (ha-), וְ (ve-) are attached to the word
@@ -521,7 +522,7 @@ export function searchOriginalWord(word: string, limit = 50, offset = 0): Origin
     SELECT COUNT(DISTINCT w.book_id || '-' || w.chapter || '-' || w.verse) as total
     FROM word4word w
     WHERE w.word IN (${placeholders}) AND w.bible = ?
-  `).get(...matchingWords, bible) as { total: number };
+  `).get(...matchingWords, word4wordBible) as { total: number };
 
   const total = countResult.total;
 
@@ -542,7 +543,7 @@ export function searchOriginalWord(word: string, limit = 50, offset = 0): Origin
     WHERE w.word IN (${placeholders}) AND w.bible = ?
     ORDER BY w.book_id, w.chapter, w.verse
     LIMIT ? OFFSET ?
-  `).all(bible, ...matchingWords, bible, limit, offset) as Omit<OriginalWordSearchResult, 'norwegianWords'>[];
+  `).all(versesBible, ...matchingWords, word4wordBible, limit, offset) as Omit<OriginalWordSearchResult, 'norwegianWords'>[];
 
   // For each result, find the Norwegian words and original words that match
   const results: OriginalWordSearchResult[] = rawResults.map(r => {
@@ -556,7 +557,7 @@ export function searchOriginalWord(word: string, limit = 50, offset = 0): Origin
     const originalEntries = db.prepare(`
       SELECT DISTINCT word FROM word4word
       WHERE book_id = ? AND chapter = ? AND verse = ? AND bible = ?
-    `).all(r.book_id, r.chapter, r.verse, bible) as { word: string }[];
+    `).all(r.book_id, r.chapter, r.verse, word4wordBible) as { word: string }[];
 
     // Find Norwegian words whose 'original' matches when normalized/stripped
     const norwegianWords = norwegianEntries
@@ -636,7 +637,7 @@ export function getTimelineEvents(): TimelineEvent[] {
     SELECT e.*, p.name as period_name, p.color as period_color
     FROM timeline_events e
     LEFT JOIN timeline_periods p ON e.period_id = p.id
-    ORDER BY e.sort_order
+    ORDER BY p.sort_order, e.year IS NULL DESC, e.year, e.sort_order
   `).all() as (TimelineEvent & { period_name?: string; period_color?: string })[];
 
   // Get references for each event
@@ -700,7 +701,7 @@ export function getTimelineEventsByPeriod(periodId: string): TimelineEvent[] {
     FROM timeline_events e
     LEFT JOIN timeline_periods p ON e.period_id = p.id
     WHERE e.period_id = ?
-    ORDER BY e.sort_order
+    ORDER BY e.year IS NULL DESC, e.year, e.sort_order
   `).all(periodId) as (TimelineEvent & { period_name?: string; period_color?: string })[];
 
   return events.map(event => {
@@ -752,8 +753,14 @@ export function getTimelineEventsForChapter(bookId: number, chapter: number): Ti
     }
   }
 
-  // Sort by sort_order
-  return events.sort((a, b) => a.sort_order - b.sort_order);
+  // Sort by year (chronologically), then sort_order as tiebreaker
+  return events.sort((a, b) => {
+    if (a.year == null && b.year == null) return a.sort_order - b.sort_order;
+    if (a.year == null) return -1;
+    if (b.year == null) return 1;
+    if (a.year !== b.year) return a.year - b.year;
+    return a.sort_order - b.sort_order;
+  });
 }
 
 // Prophecy types and functions
@@ -1147,4 +1154,400 @@ export function getChapterInsight(bookId: number, chapter: number): any | null {
   } catch {
     return null;
   }
+}
+
+// Gospel Parallels types and functions
+
+export interface GospelParallelSection {
+  id: string;
+  name: string;
+  description: string | null;
+  sort_order: number;
+}
+
+export interface GospelParallelPassage {
+  gospel: string;
+  book_id: number;
+  chapter: number;
+  verse_start: number;
+  verse_end: number;
+  reference: string;
+  book_short_name?: string;
+  book_name_no?: string;
+}
+
+export interface GospelParallel {
+  id: string;
+  section_id: string;
+  title: string;
+  notes: string | null;
+  sort_order: number;
+  passages?: Record<string, GospelParallelPassage>;
+  section?: GospelParallelSection;
+}
+
+export interface GospelParallelsData {
+  sections: GospelParallelSection[];
+  parallels: GospelParallel[];
+}
+
+export function getGospelParallelSections(): GospelParallelSection[] {
+  const db = getDb();
+  return db.prepare('SELECT * FROM gospel_parallel_sections ORDER BY sort_order').all() as GospelParallelSection[];
+}
+
+export function getGospelParallels(): GospelParallel[] {
+  const db = getDb();
+  const parallels = db.prepare(`
+    SELECT p.*, s.name as section_name, s.description as section_description
+    FROM gospel_parallels p
+    LEFT JOIN gospel_parallel_sections s ON p.section_id = s.id
+    ORDER BY p.sort_order
+  `).all() as (GospelParallel & { section_name?: string; section_description?: string })[];
+
+  return parallels.map(parallel => {
+    // Get passages for this parallel
+    const passages = db.prepare(`
+      SELECT gpp.*, b.short_name as book_short_name, b.name_no as book_name_no
+      FROM gospel_parallel_passages gpp
+      JOIN books b ON gpp.book_id = b.id
+      WHERE gpp.parallel_id = ?
+    `).all(parallel.id) as (GospelParallelPassage & { parallel_id: string })[];
+
+    // Convert passages array to Record keyed by gospel
+    const passagesRecord: Record<string, GospelParallelPassage> = {};
+    for (const passage of passages) {
+      passagesRecord[passage.gospel] = {
+        gospel: passage.gospel,
+        book_id: passage.book_id,
+        chapter: passage.chapter,
+        verse_start: passage.verse_start,
+        verse_end: passage.verse_end,
+        reference: passage.reference,
+        book_short_name: passage.book_short_name,
+        book_name_no: passage.book_name_no
+      };
+    }
+
+    return {
+      id: parallel.id,
+      section_id: parallel.section_id,
+      title: parallel.title,
+      notes: parallel.notes,
+      sort_order: parallel.sort_order,
+      passages: passagesRecord,
+      section: parallel.section_id ? {
+        id: parallel.section_id,
+        name: parallel.section_name || '',
+        description: parallel.section_description || null,
+        sort_order: 0
+      } : undefined
+    };
+  });
+}
+
+export function getGospelParallelsData(): GospelParallelsData {
+  return {
+    sections: getGospelParallelSections(),
+    parallels: getGospelParallels()
+  };
+}
+
+export function getGospelParallelById(id: string): GospelParallel | undefined {
+  const db = getDb();
+  const parallel = db.prepare(`
+    SELECT p.*, s.name as section_name, s.description as section_description
+    FROM gospel_parallels p
+    LEFT JOIN gospel_parallel_sections s ON p.section_id = s.id
+    WHERE p.id = ?
+  `).get(id) as (GospelParallel & { section_name?: string; section_description?: string }) | undefined;
+
+  if (!parallel) return undefined;
+
+  // Get passages for this parallel
+  const passages = db.prepare(`
+    SELECT gpp.*, b.short_name as book_short_name, b.name_no as book_name_no
+    FROM gospel_parallel_passages gpp
+    JOIN books b ON gpp.book_id = b.id
+    WHERE gpp.parallel_id = ?
+  `).all(id) as (GospelParallelPassage & { parallel_id: string })[];
+
+  // Convert passages array to Record keyed by gospel
+  const passagesRecord: Record<string, GospelParallelPassage> = {};
+  for (const passage of passages) {
+    passagesRecord[passage.gospel] = {
+      gospel: passage.gospel,
+      book_id: passage.book_id,
+      chapter: passage.chapter,
+      verse_start: passage.verse_start,
+      verse_end: passage.verse_end,
+      reference: passage.reference,
+      book_short_name: passage.book_short_name,
+      book_name_no: passage.book_name_no
+    };
+  }
+
+  return {
+    id: parallel.id,
+    section_id: parallel.section_id,
+    title: parallel.title,
+    notes: parallel.notes,
+    sort_order: parallel.sort_order,
+    passages: passagesRecord,
+    section: parallel.section_id ? {
+      id: parallel.section_id,
+      name: parallel.section_name || '',
+      description: parallel.section_description || null,
+      sort_order: 0
+    } : undefined
+  };
+}
+
+export function getGospelParallelsBySection(sectionId: string): GospelParallel[] {
+  const all = getGospelParallels();
+  return all.filter(p => p.section_id === sectionId);
+}
+
+export function getGospelParallelsForChapter(bookId: number, chapter: number): GospelParallel[] {
+  const db = getDb();
+
+  // Find all parallels that have a passage in this book/chapter
+  const parallelIds = db.prepare(`
+    SELECT DISTINCT parallel_id
+    FROM gospel_parallel_passages
+    WHERE book_id = ? AND chapter = ?
+  `).all(bookId, chapter) as { parallel_id: string }[];
+
+  if (parallelIds.length === 0) return [];
+
+  // Get full parallel data for each
+  const parallels: GospelParallel[] = [];
+  for (const { parallel_id } of parallelIds) {
+    const parallel = getGospelParallelById(parallel_id);
+    if (parallel) {
+      parallels.push(parallel);
+    }
+  }
+
+  return parallels;
+}
+
+// Statistics types and functions
+
+export interface BookStatistics {
+  bookId: number;
+  bookName: string;
+  shortName: string;
+  testament: string;
+  chapters: number;
+  verses: number;
+  words: number;
+  originalWords: number;
+  originalLanguage: 'hebrew' | 'greek';
+}
+
+export interface BibleStatistics {
+  totalBooks: number;
+  totalChapters: number;
+  totalVerses: number;
+  totalWords: number;
+  totalOriginalWords: number;
+  otBooks: number;
+  otChapters: number;
+  otVerses: number;
+  otWords: number;
+  ntBooks: number;
+  ntChapters: number;
+  ntVerses: number;
+  ntWords: number;
+  books: BookStatistics[];
+}
+
+export interface WordFrequency {
+  word: string;
+  count: number;
+}
+
+function countWords(text: string): number {
+  if (!text) return 0;
+  return text.split(/\s+/).filter(w => w.length > 0).length;
+}
+
+export function getBookStatistics(bookId: number, bible = 'osnb2'): BookStatistics | null {
+  const db = getDb();
+  const book = getBookById(bookId);
+  if (!book) return null;
+
+  // Get verse count and word count for the book (Norwegian)
+  const verseData = db.prepare(`
+    SELECT COUNT(*) as verseCount, GROUP_CONCAT(text, ' ') as allText
+    FROM verses WHERE book_id = ? AND bible = ?
+  `).get(bookId, bible) as { verseCount: number; allText: string };
+
+  // Get original text word count
+  const originalBible = bookId <= 39 ? 'tanach' : 'sblgnt';
+  const originalData = db.prepare(`
+    SELECT GROUP_CONCAT(text, ' ') as allText
+    FROM verses WHERE book_id = ? AND bible = ?
+  `).get(bookId, originalBible) as { allText: string };
+
+  // Count original words (split on whitespace, remove punctuation)
+  let originalWords = 0;
+  if (originalData?.allText) {
+    originalWords = originalData.allText
+      .replace(/[.,;:!?־׃׀·]/g, ' ')
+      .split(/\s+/)
+      .filter(w => w.length > 0).length;
+  }
+
+  return {
+    bookId: book.id,
+    bookName: book.name_no,
+    shortName: book.short_name,
+    testament: book.testament,
+    chapters: book.chapters,
+    verses: verseData.verseCount,
+    words: countWords(verseData.allText),
+    originalWords,
+    originalLanguage: bookId <= 39 ? 'hebrew' : 'greek'
+  };
+}
+
+export function getBibleStatistics(bible = 'osnb2'): BibleStatistics {
+  const db = getDb();
+  const books = getAllBooks();
+
+  let totalChapters = 0;
+  let totalVerses = 0;
+  let totalWords = 0;
+  let totalOriginalWords = 0;
+  let otChapters = 0;
+  let otVerses = 0;
+  let otWords = 0;
+  let ntChapters = 0;
+  let ntVerses = 0;
+  let ntWords = 0;
+
+  const bookStats: BookStatistics[] = [];
+
+  for (const book of books) {
+    const stats = getBookStatistics(book.id, bible);
+    if (stats) {
+      bookStats.push(stats);
+      totalChapters += stats.chapters;
+      totalVerses += stats.verses;
+      totalWords += stats.words;
+      totalOriginalWords += stats.originalWords;
+
+      if (book.testament === 'OT') {
+        otChapters += stats.chapters;
+        otVerses += stats.verses;
+        otWords += stats.words;
+      } else {
+        ntChapters += stats.chapters;
+        ntVerses += stats.verses;
+        ntWords += stats.words;
+      }
+    }
+  }
+
+  const otBooks = books.filter(b => b.testament === 'OT').length;
+  const ntBooks = books.filter(b => b.testament === 'NT').length;
+
+  return {
+    totalBooks: books.length,
+    totalChapters,
+    totalVerses,
+    totalWords,
+    totalOriginalWords,
+    otBooks,
+    otChapters,
+    otVerses,
+    otWords,
+    ntBooks,
+    ntChapters,
+    ntVerses,
+    ntWords,
+    books: bookStats
+  };
+}
+
+export function getTopWords(bible = 'osnb2', limit = 100, includeStopWords = false): WordFrequency[] {
+  const db = getDb();
+
+  // Get all text from verses
+  const verses = db.prepare(`
+    SELECT text FROM verses WHERE bible = ?
+  `).all(bible) as { text: string }[];
+
+  // Count words
+  const wordCounts: Record<string, number> = {};
+  const stopWords = new Set(['og', 'i', 'til', 'som', 'for', 'med', 'den', 'det', 'de', 'en', 'et',
+    'av', 'på', 'er', 'var', 'han', 'ham', 'hun', 'seg', 'skal', 'vil', 'har', 'ikke',
+    'jeg', 'du', 'vi', 'dere', 'dem', 'sin', 'sine', 'sitt', 'fra', 'om', 'eller',
+    'men', 'så', 'da', 'når', 'ble', 'blir', 'være', 'min', 'mitt', 'mine', 'din',
+    'ditt', 'dine', 'dette', 'denne', 'disse', 'at', 'over', 'under', 'ut', 'inn',
+    'opp', 'ned', 'mot', 'ved', 'etter', 'før', 'selv', 'alle', 'alt', 'noe', 'ingen',
+    'hver', 'noen', 'andre', 'mange', 'hele', 'også', 'bare', 'kunne', 'skulle', 'ville',
+    'måtte', 'måtte', 'må', 'kan', 'kunne', 'la', 'lot', 'oss', 'deg', 'dem', 'der', 'her']);
+
+  for (const { text } of verses) {
+    if (!text) continue;
+    const words = text.toLowerCase()
+      .replace(/[.,;:!?»«"'"'\-–—()[\]{}]/g, '')
+      .split(/\s+/)
+      .filter(w => w.length > 1 && (includeStopWords || !stopWords.has(w)));
+
+    for (const word of words) {
+      wordCounts[word] = (wordCounts[word] || 0) + 1;
+    }
+  }
+
+  // Sort by frequency and return top N
+  return Object.entries(wordCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([word, count]) => ({ word, count }));
+}
+
+export function getTopOriginalWords(language: 'hebrew' | 'greek', limit = 100): WordFrequency[] {
+  const db = getDb();
+  const bible = language === 'hebrew' ? 'tanach' : 'sblgnt';
+
+  // Get all text from verses in the original language
+  const verses = db.prepare(`
+    SELECT text FROM verses WHERE bible = ?
+  `).all(bible) as { text: string }[];
+
+  // Count words
+  const wordCounts: Record<string, number> = {};
+
+  for (const { text } of verses) {
+    if (!text) continue;
+    // Remove directional formatting characters
+    const cleaned = text.replace(/[\u200E\u200F\u202A-\u202E\u2066-\u2069\u200B-\u200D]/g, '');
+    // Split on whitespace
+    const words = cleaned
+      .split(/\s+/)
+      .map(w => w.replace(/[׃׀·.,;:!?]/g, '').trim())  // Remove punctuation
+      .filter(w => w.length > 1 || (w.length === 1 && !/[ספ]/.test(w)));  // Filter out paragraph markers
+
+    for (const word of words) {
+      // Normalize Hebrew by removing cantillation marks (U+0591-U+05AF) for counting
+      // This groups words that differ only in cantillation
+      const normalized = language === 'hebrew'
+        ? word.replace(/[\u0591-\u05AF]/g, '')
+        : word;
+
+      if (normalized.length > 0) {
+        wordCounts[normalized] = (wordCounts[normalized] || 0) + 1;
+      }
+    }
+  }
+
+  // Sort by frequency and return top N
+  return Object.entries(wordCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([word, count]) => ({ word, count }));
 }

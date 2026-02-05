@@ -36,6 +36,7 @@ interface ImportStats {
   chapterInsights: { updated: number; unchanged: number };
   dailyVerses: { updated: number; unchanged: number };
   readingPlans: { updated: number; unchanged: number };
+  gospelParallels: { updated: number; unchanged: number };
 }
 
 const stats: ImportStats = {
@@ -56,6 +57,7 @@ const stats: ImportStats = {
   chapterInsights: { updated: 0, unchanged: 0 },
   dailyVerses: { updated: 0, unchanged: 0 },
   readingPlans: { updated: 0, unchanged: 0 },
+  gospelParallels: { updated: 0, unchanged: 0 },
 };
 
 // Sørg for at data-mappen eksisterer
@@ -379,6 +381,35 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS db_meta (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS gospel_parallel_sections (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    sort_order INTEGER NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS gospel_parallels (
+    id TEXT PRIMARY KEY,
+    section_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    notes TEXT,
+    sort_order INTEGER NOT NULL,
+    FOREIGN KEY (section_id) REFERENCES gospel_parallel_sections(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS gospel_parallel_passages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    parallel_id TEXT NOT NULL,
+    gospel TEXT NOT NULL,
+    book_id INTEGER NOT NULL,
+    chapter INTEGER NOT NULL,
+    verse_start INTEGER NOT NULL,
+    verse_end INTEGER NOT NULL,
+    reference TEXT NOT NULL,
+    FOREIGN KEY (parallel_id) REFERENCES gospel_parallels(id),
+    FOREIGN KEY (book_id) REFERENCES books(id)
   );
 `);
 
@@ -1327,6 +1358,89 @@ if (fs.existsSync(readingPlansPath)) {
   console.log(`  Importerte ${stats.readingPlans.updated} leseplaner (${stats.readingPlans.unchanged} uendret)`);
 }
 
+// Importer evangelieparalleller
+console.log('Importerer evangelieparalleller...');
+const insertGospelParallelSection = db.prepare(`
+  INSERT OR REPLACE INTO gospel_parallel_sections (id, name, description, sort_order) VALUES (?, ?, ?, ?)
+`);
+const insertGospelParallel = db.prepare(`
+  INSERT OR REPLACE INTO gospel_parallels (id, section_id, title, notes, sort_order) VALUES (?, ?, ?, ?, ?)
+`);
+const insertGospelParallelPassage = db.prepare(`
+  INSERT INTO gospel_parallel_passages (parallel_id, gospel, book_id, chapter, verse_start, verse_end, reference)
+  VALUES (?, ?, ?, ?, ?, ?, ?)
+`);
+const deleteGospelParallelPassages = db.prepare(`DELETE FROM gospel_parallel_passages`);
+const deleteGospelParallels = db.prepare(`DELETE FROM gospel_parallels`);
+const deleteGospelParallelSections = db.prepare(`DELETE FROM gospel_parallel_sections`);
+
+const gospelParallelsPath = path.join(GENERATE_PATH, 'gospel_parallels', 'parallels.json');
+if (fs.existsSync(gospelParallelsPath)) {
+  const content = fs.readFileSync(gospelParallelsPath, 'utf-8');
+  const contentHash = computeHash(content);
+
+  if (isFullImport || hasContentChanged(db, 'gospel_parallels', 'data', contentHash)) {
+    const data = JSON.parse(content);
+
+    // Clear existing data
+    deleteGospelParallelPassages.run();
+    deleteGospelParallels.run();
+    deleteGospelParallelSections.run();
+
+    // Import sections
+    if (data.sections) {
+      let sectionOrder = 0;
+      for (const section of data.sections) {
+        insertGospelParallelSection.run(
+          section.id,
+          section.name,
+          section.description || null,
+          sectionOrder++
+        );
+      }
+      console.log(`  Importerte ${data.sections.length} seksjoner`);
+    }
+
+    // Import parallels
+    if (data.parallels) {
+      let parallelOrder = 0;
+      for (const parallel of data.parallels) {
+        insertGospelParallel.run(
+          parallel.id,
+          parallel.section,
+          parallel.title,
+          parallel.notes || null,
+          parallelOrder++
+        );
+
+        // Import passages
+        if (parallel.passages) {
+          for (const [gospel, passage] of Object.entries(parallel.passages)) {
+            const p = passage as { bookId: number; chapter: number; verseStart: number; verseEnd: number; reference: string };
+            insertGospelParallelPassage.run(
+              parallel.id,
+              gospel,
+              p.bookId,
+              p.chapter,
+              p.verseStart,
+              p.verseEnd,
+              p.reference
+            );
+          }
+        }
+      }
+      console.log(`  Importerte ${data.parallels.length} paralleller`);
+    }
+
+    updateContentHash(db, 'gospel_parallels', 'data', contentHash);
+    stats.gospelParallels.updated = data.parallels?.length || 0;
+  } else {
+    const parallelCount = db.prepare('SELECT COUNT(*) as count FROM gospel_parallels').get() as { count: number };
+    console.log(`  Uendret (${parallelCount.count} paralleller)`);
+    stats.gospelParallels.unchanged = parallelCount.count;
+  }
+}
+
 // Opprett indekser
 console.log('Oppretter indekser...');
 db.exec(`
@@ -1343,6 +1457,8 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_prophecy_fulfillments_book ON prophecy_fulfillments(book_id, chapter);
   CREATE INDEX IF NOT EXISTS idx_chapter_insights_book ON chapter_insights(book_id, chapter);
   CREATE INDEX IF NOT EXISTS idx_daily_verses_date ON daily_verses(date);
+  CREATE INDEX IF NOT EXISTS idx_gospel_parallels_section ON gospel_parallels(section_id);
+  CREATE INDEX IF NOT EXISTS idx_gospel_parallel_passages_parallel ON gospel_parallel_passages(parallel_id);
 `);
 
 // Check if any content was updated
@@ -1392,6 +1508,7 @@ console.log(`Personer              ${String(stats.persons.updated).padStart(9)} 
 console.log(`Kapittel-innsikter    ${String(stats.chapterInsights.updated).padStart(9)}  ${String(stats.chapterInsights.unchanged).padStart(7)}`);
 console.log(`Dagens vers           ${String(stats.dailyVerses.updated).padStart(9)}  ${String(stats.dailyVerses.unchanged).padStart(7)}`);
 console.log(`Leseplaner            ${String(stats.readingPlans.updated).padStart(9)}  ${String(stats.readingPlans.unchanged).padStart(7)}`);
+console.log(`Evangelieparalleller  ${String(stats.gospelParallels.updated).padStart(9)}  ${String(stats.gospelParallels.unchanged).padStart(7)}`);
 console.log('----------------------------------------');
 console.log(`Totalt                ${String(totalUpdated).padStart(9)}  ${String(totalUnchanged).padStart(7)}`);
 console.log('\nFerdig!');

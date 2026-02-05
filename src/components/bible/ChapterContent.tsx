@@ -2,10 +2,12 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useChapter } from '@/hooks/useChapter';
 import { useTimeline } from '@/hooks/useTimeline';
+import { useChapterParallels } from '@/hooks/useChapterParallels';
 import { VerseDisplay } from '@/components/bible/VerseDisplay';
 import { Summary } from '@/components/bible/Summary';
 import { ImportantWords } from '@/components/bible/ImportantWords';
 import { ChapterInsightsPanel } from '@/components/bible/ChapterInsightsPanel';
+import { ChapterParallelsView } from '@/components/bible/ChapterParallelsView';
 import { ToolsPanel } from '@/components/bible/ToolsPanel';
 import { MobileToolbar } from '@/components/bible/MobileToolbar';
 import { ScrollToVerse } from '@/components/bible/ScrollToVerse';
@@ -14,6 +16,7 @@ import { ChapterKeyboardShortcuts } from '@/components/bible/ChapterKeyboardShor
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { ReadingModeWrapper } from '@/components/bible/ReadingModeWrapper';
 import { ReadingPositionTracker } from '@/components/bible/ReadingPositionTracker';
+import { useSettings } from '@/components/SettingsContext';
 import styles from '@/styles/pages/chapter.module.scss';
 
 interface ChapterContentProps {
@@ -54,6 +57,7 @@ export function ChapterContent({
   initialData,
 }: ChapterContentProps) {
   const bibleQuery = bible !== 'osnb2' ? `?bible=${bible}` : '';
+  const { settings } = useSettings();
 
   // Use client-side data fetching
   const { data, isLoading, error, isOffline } = useChapter({
@@ -64,6 +68,9 @@ export function ChapterContent({
 
   // Fetch timeline events (shared between desktop sidebar and mobile toolbar)
   const { events: timelineEvents } = useTimeline();
+
+  // Fetch parallels for gospel chapters
+  const { parallels, hasParallels } = useChapterParallels(bookId, chapter);
 
   // Use initial data for SSR, then switch to client data
   const verses = data?.verses || initialData?.verses || [];
@@ -146,7 +153,7 @@ export function ChapterContent({
               ))}
             </div>
           </nav>
-          <ToolsPanel />
+          <ToolsPanel hasParallels={hasParallels} />
         </aside>
 
         <article className={styles.content}>
@@ -203,6 +210,15 @@ export function ChapterContent({
 
           <ChapterInsightsPanel bookId={bookId} chapter={chapter} insight={insight} />
 
+          {settings.showParallels && hasParallels && (
+            <ChapterParallelsView
+              bookId={bookId}
+              chapter={chapter}
+              parallels={parallels}
+              bible={bible}
+            />
+          )}
+
           <section className={styles.verses}>
             {verses.map(verse => (
               <VerseDisplay
@@ -252,6 +268,7 @@ export function ChapterContent({
         bookSlug={bookSlug}
         bookId={bookId}
         timelineEvents={timelineEvents}
+        hasParallels={hasParallels}
       />
     </ReadingModeWrapper>
   );

@@ -10,6 +10,7 @@ import { ChapterPage } from './pages/ChapterPage';
 // Lazy-loaded pages - loaded on demand
 const TimelinePage = lazy(() => import('./pages/TimelinePage').then(m => ({ default: m.TimelinePage })));
 const PropheciesPage = lazy(() => import('./pages/PropheciesPage').then(m => ({ default: m.PropheciesPage })));
+const ParallelsPage = lazy(() => import('./pages/ParallelsPage').then(m => ({ default: m.ParallelsPage })));
 const PersonsPage = lazy(() => import('./pages/PersonsPage').then(m => ({ default: m.PersonsPage })));
 const PersonPage = lazy(() => import('./pages/PersonPage').then(m => ({ default: m.PersonPage })));
 const ReadingPlanPage = lazy(() => import('./pages/ReadingPlanPage').then(m => ({ default: m.ReadingPlanPage })));
@@ -25,6 +26,7 @@ const TextPage = lazy(() => import('./pages/TextPage').then(m => ({ default: m.T
 const OfflinePage = lazy(() => import('./pages/OfflinePage').then(m => ({ default: m.OfflinePage })));
 const AboutPage = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })));
 const AccessibilityPage = lazy(() => import('./pages/AccessibilityPage').then(m => ({ default: m.AccessibilityPage })));
+const StatisticsPage = lazy(() => import('./pages/StatisticsPage').then(m => ({ default: m.StatisticsPage })));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 
 // Loading fallback
@@ -51,6 +53,7 @@ export function App() {
             {/* Study tools */}
             <Route path="/tidslinje" element={<TimelinePage />} />
             <Route path="/profetier" element={<PropheciesPage />} />
+            <Route path="/paralleller" element={<ParallelsPage />} />
             <Route path="/personer" element={<PersonsPage />} />
             <Route path="/personer/:personId" element={<PersonPage />} />
             <Route path="/temaer" element={<ThemesPage />} />
@@ -72,6 +75,7 @@ export function App() {
             <Route path="/offline" element={<OfflinePage />} />
             <Route path="/om" element={<AboutPage />} />
             <Route path="/tilgjengelighet" element={<AccessibilityPage />} />
+            <Route path="/statistikk" element={<StatisticsPage />} />
 
             {/* 404 */}
             <Route path="*" element={<NotFoundPage />} />

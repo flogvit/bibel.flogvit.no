@@ -189,8 +189,14 @@ export function Header() {
               <Link to="/profetier" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Profetier
               </Link>
+              <Link to="/paralleller" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
+                Paralleller
+              </Link>
               <Link to="/personer" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Personer
+              </Link>
+              <Link to="/statistikk" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
+                Statistikk
               </Link>
             </div>
           </div>
@@ -221,8 +227,14 @@ export function Header() {
             <Link to="/profetier" className={styles.navLink} onClick={handleNavClick}>
               Profetier
             </Link>
+            <Link to="/paralleller" className={styles.navLink} onClick={handleNavClick}>
+              Paralleller
+            </Link>
             <Link to="/personer" className={styles.navLink} onClick={handleNavClick}>
               Personer
+            </Link>
+            <Link to="/statistikk" className={styles.navLink} onClick={handleNavClick}>
+              Statistikk
             </Link>
           </div>
 

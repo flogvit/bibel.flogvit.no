@@ -13,9 +13,10 @@ interface MobileToolbarProps {
   bookSlug: string;
   bookId: number;
   timelineEvents?: TimelineEvent[];
+  hasParallels?: boolean;
 }
 
-export function MobileToolbar({ bookName, chapter, maxChapter, bookSlug, bookId, timelineEvents = [] }: MobileToolbarProps) {
+export function MobileToolbar({ bookName, chapter, maxChapter, bookSlug, bookId, timelineEvents = [], hasParallels = false }: MobileToolbarProps) {
   const [showTools, setShowTools] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
   const { settings } = useSettings();
@@ -75,7 +76,7 @@ export function MobileToolbar({ bookName, chapter, maxChapter, bookSlug, bookId,
       {showTools && (
         <div className={styles.overlay} onClick={() => setShowTools(false)}>
           <div className={styles.sheet} onClick={e => e.stopPropagation()}>
-            <ToolsPanel onClose={() => setShowTools(false)} />
+            <ToolsPanel onClose={() => setShowTools(false)} hasParallels={hasParallels} />
           </div>
         </div>
       )}
