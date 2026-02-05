@@ -1,4 +1,4 @@
-# bibel.flogvit.com
+# bibel.flogvit.no
 
 Norsk bibel-nettside med oppslagsverk og verktøy for bibellesning.
 
