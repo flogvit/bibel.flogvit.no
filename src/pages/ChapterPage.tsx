@@ -1,11 +1,14 @@
 import { useParams, useSearchParams } from 'react-router-dom';
 import { ChapterContent } from '@/components/bible/ChapterContent';
 import { getBookInfoBySlug, getBookInfoById } from '@/lib/books-data';
+import { useSettings } from '@/components/SettingsContext';
 
 export function ChapterPage() {
   const { book: bookSlug, chapter: chapterStr } = useParams<{ book: string; chapter: string }>();
   const [searchParams] = useSearchParams();
-  const bible = searchParams.get('bible') || 'osnb2';
+  const { settings } = useSettings();
+  // Use URL parameter if present, otherwise fall back to user's saved setting
+  const bible = searchParams.get('bible') || settings.bible || 'osnb2';
 
   if (!bookSlug || !chapterStr) {
     return (
