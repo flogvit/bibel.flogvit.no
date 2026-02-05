@@ -1,11 +1,13 @@
 
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {
+  VerseVersionChoices,
+  getVerseVersions,
+  saveVerseVersions,
+} from '@/lib/offline/userData';
 
 const STORAGE_KEY = 'bible-verse-versions';
-
-// Maps verse key (bookId-chapter-verse) to selected version index
-type VerseVersionChoices = Record<string, number>;
 
 interface VerseVersionsContextType {
   choices: VerseVersionChoices;
@@ -20,7 +22,8 @@ function makeKey(bookId: number, chapter: number, verse: number): string {
   return `${bookId}-${chapter}-${verse}`;
 }
 
-function loadChoices(): VerseVersionChoices {
+// Sync load for initial render (avoids hydration issues)
+function loadChoicesSync(): VerseVersionChoices {
   if (typeof window === 'undefined') return {};
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -30,27 +33,31 @@ function loadChoices(): VerseVersionChoices {
   }
 }
 
-function saveChoices(choices: VerseVersionChoices): void {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(choices));
-  } catch {
-    // Ignore storage errors
-  }
-}
-
 export function VerseVersionsProvider({ children }: { children: ReactNode }) {
   const [choices, setChoices] = useState<VerseVersionChoices>({});
   const [loaded, setLoaded] = useState(false);
 
+  // Load from localStorage synchronously on mount, then try IndexedDB
   useEffect(() => {
-    setChoices(loadChoices());
+    // First, load from localStorage for immediate display
+    const syncChoices = loadChoicesSync();
+    setChoices(syncChoices);
     setLoaded(true);
+
+    // Then try to load from IndexedDB (may have more data)
+    getVerseVersions().then(idbChoices => {
+      if (idbChoices && Object.keys(idbChoices).length > 0) {
+        // Merge IndexedDB data with localStorage data
+        // IndexedDB takes precedence for conflicts
+        setChoices(prev => ({ ...prev, ...idbChoices }));
+      }
+    });
   }, []);
 
+  // Save to both localStorage and IndexedDB when choices change
   useEffect(() => {
     if (loaded) {
-      saveChoices(choices);
+      saveVerseVersions(choices);
     }
   }, [choices, loaded]);
 

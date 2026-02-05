@@ -1,6 +1,6 @@
 // Export/import user data functionality
 import type { BibleSettings } from './settings';
-import type { FavoriteVerse, Topic, VerseTopic, Note } from './offline/userData';
+import type { FavoriteVerse, Topic, VerseTopic, Note, ReadingPosition, VerseVersionChoices } from './offline/userData';
 import type { ReadingPlanProgress } from './reading-plan';
 
 export interface TopicsData {
@@ -18,6 +18,8 @@ export interface UserDataExport {
     notes?: Note[];
     readingPlanProgress?: Record<string, ReadingPlanProgress>;
     activeReadingPlan?: string | null;
+    readingPosition?: ReadingPosition | null;
+    verseVersions?: VerseVersionChoices;
   };
 }
 
@@ -28,6 +30,8 @@ const STORAGE_KEYS = {
   notes: 'bible-notes',
   readingPlanProgress: 'readingPlanProgress',
   activeReadingPlan: 'activeReadingPlan',
+  readingPosition: 'bible-reading-position',
+  verseVersions: 'bible-verse-versions',
 } as const;
 
 /**
@@ -71,9 +75,23 @@ export function exportUserData(): UserDataExport {
       data.readingPlanProgress = JSON.parse(progressStr);
     }
 
-    // Active reading plan
-    const activePlan = localStorage.getItem(STORAGE_KEYS.activeReadingPlan);
-    data.activeReadingPlan = activePlan;
+    // Active reading plan (stored as JSON string)
+    const activePlanStr = localStorage.getItem(STORAGE_KEYS.activeReadingPlan);
+    if (activePlanStr) {
+      data.activeReadingPlan = JSON.parse(activePlanStr);
+    }
+
+    // Reading position
+    const readingPositionStr = localStorage.getItem(STORAGE_KEYS.readingPosition);
+    if (readingPositionStr) {
+      data.readingPosition = JSON.parse(readingPositionStr);
+    }
+
+    // Verse versions
+    const verseVersionsStr = localStorage.getItem(STORAGE_KEYS.verseVersions);
+    if (verseVersionsStr) {
+      data.verseVersions = JSON.parse(verseVersionsStr);
+    }
   } catch (e) {
     console.error('Failed to export user data:', e);
   }
@@ -204,12 +222,34 @@ export function importUserData(data: UserDataExport, merge = false): void {
       }
     }
 
-    // Active reading plan
+    // Active reading plan (store as JSON string for consistency)
     if (data.data.activeReadingPlan !== undefined) {
       if (data.data.activeReadingPlan) {
-        localStorage.setItem(STORAGE_KEYS.activeReadingPlan, data.data.activeReadingPlan);
+        localStorage.setItem(STORAGE_KEYS.activeReadingPlan, JSON.stringify(data.data.activeReadingPlan));
       } else if (!merge) {
         localStorage.removeItem(STORAGE_KEYS.activeReadingPlan);
+      }
+    }
+
+    // Reading position - always overwrite (only one position makes sense)
+    if (data.data.readingPosition !== undefined) {
+      if (data.data.readingPosition) {
+        localStorage.setItem(STORAGE_KEYS.readingPosition, JSON.stringify(data.data.readingPosition));
+      } else if (!merge) {
+        localStorage.removeItem(STORAGE_KEYS.readingPosition);
+      }
+    }
+
+    // Verse versions
+    if (data.data.verseVersions) {
+      if (merge) {
+        const existingStr = localStorage.getItem(STORAGE_KEYS.verseVersions);
+        const existing: VerseVersionChoices = existingStr ? JSON.parse(existingStr) : {};
+        // Merge: imported data overwrites existing for same verse
+        const merged = { ...existing, ...data.data.verseVersions };
+        localStorage.setItem(STORAGE_KEYS.verseVersions, JSON.stringify(merged));
+      } else {
+        localStorage.setItem(STORAGE_KEYS.verseVersions, JSON.stringify(data.data.verseVersions));
       }
     }
   } catch (e) {
@@ -289,6 +329,17 @@ export function getImportSummary(data: UserDataExport): string[] {
 
   if (data.data.activeReadingPlan) {
     summary.push('Aktiv leseplan');
+  }
+
+  if (data.data.readingPosition) {
+    summary.push('Leseposisjon');
+  }
+
+  if (data.data.verseVersions) {
+    const versionCount = Object.keys(data.data.verseVersions).length;
+    if (versionCount > 0) {
+      summary.push(`${versionCount} versvalg`);
+    }
   }
 
   return summary;

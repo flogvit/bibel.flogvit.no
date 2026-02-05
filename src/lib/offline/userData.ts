@@ -17,6 +17,8 @@ const STORAGE_KEYS = {
   settings: 'bible-settings',
   activePlan: 'activeReadingPlan',
   planProgress: 'readingPlanProgress',
+  readingPosition: 'bible-reading-position',
+  verseVersions: 'bible-verse-versions',
 } as const;
 
 type StorageKey = keyof typeof STORAGE_KEYS;
@@ -315,6 +317,53 @@ export async function saveSinglePlanProgress(planId: string, progress: ReadingPl
 }
 
 // ============================================
+// Reading Position
+// ============================================
+
+export interface ReadingPosition {
+  bookId: number;
+  chapter: number;
+  verse: number;
+  timestamp: number;
+  bookSlug: string;
+  bookName: string;
+}
+
+export async function getReadingPosition(): Promise<ReadingPosition | null> {
+  return getData<ReadingPosition | null>('readingPosition', null);
+}
+
+export async function saveReadingPosition(position: ReadingPosition | null): Promise<void> {
+  if (position === null) {
+    // Clear from both storages
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(STORAGE_KEYS.readingPosition);
+    }
+    if (await shouldUseIndexedDB()) {
+      const { deleteUserData } = await import('./storage');
+      await deleteUserData('readingPosition');
+    }
+    return;
+  }
+  return saveData('readingPosition', position);
+}
+
+// ============================================
+// Verse Versions
+// ============================================
+
+// Maps verse key (bookId-chapter-verse) to selected version index
+export type VerseVersionChoices = Record<string, number>;
+
+export async function getVerseVersions(): Promise<VerseVersionChoices> {
+  return getData<VerseVersionChoices>('verseVersions', {});
+}
+
+export async function saveVerseVersions(choices: VerseVersionChoices): Promise<void> {
+  return saveData('verseVersions', choices);
+}
+
+// ============================================
 // Migration Check
 // ============================================
 
@@ -373,6 +422,16 @@ export async function migrateToIndexedDB(): Promise<void> {
     const planProgress = getFromLocalStorage<Record<string, ReadingPlanProgress>>(STORAGE_KEYS.planProgress);
     if (planProgress) {
       await setUserData('planProgress', planProgress);
+    }
+
+    const readingPosition = getFromLocalStorage<ReadingPosition>(STORAGE_KEYS.readingPosition);
+    if (readingPosition) {
+      await setUserData('readingPosition', readingPosition);
+    }
+
+    const verseVersions = getFromLocalStorage<VerseVersionChoices>(STORAGE_KEYS.verseVersions);
+    if (verseVersions) {
+      await setUserData('verseVersions', verseVersions);
     }
 
     markMigrationComplete();

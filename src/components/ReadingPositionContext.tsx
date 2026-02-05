@@ -1,18 +1,16 @@
 
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
+import {
+  ReadingPosition,
+  getReadingPosition,
+  saveReadingPosition,
+} from '@/lib/offline/userData';
+
+export type { ReadingPosition };
 
 const STORAGE_KEY = 'bible-reading-position';
 const DEBOUNCE_MS = 500;
-
-export interface ReadingPosition {
-  bookId: number;
-  chapter: number;
-  verse: number;
-  timestamp: number;
-  bookSlug: string;
-  bookName: string;
-}
 
 interface ReadingPositionContextType {
   position: ReadingPosition | null;
@@ -22,7 +20,8 @@ interface ReadingPositionContextType {
 
 const ReadingPositionContext = createContext<ReadingPositionContextType | null>(null);
 
-function loadPosition(): ReadingPosition | null {
+// Sync load for initial render (avoids hydration issues)
+function loadPositionSync(): ReadingPosition | null {
   if (typeof window === 'undefined') return null;
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -32,32 +31,33 @@ function loadPosition(): ReadingPosition | null {
   }
 }
 
-function savePosition(position: ReadingPosition | null): void {
-  if (typeof window === 'undefined') return;
-  try {
-    if (position) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(position));
-    } else {
-      localStorage.removeItem(STORAGE_KEY);
-    }
-  } catch {
-    // Ignore storage errors
-  }
-}
-
 export function ReadingPositionProvider({ children }: { children: ReactNode }) {
   const [position, setPosition] = useState<ReadingPosition | null>(null);
   const [loaded, setLoaded] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Load from localStorage synchronously on mount, then try IndexedDB
   useEffect(() => {
-    setPosition(loadPosition());
+    // First, load from localStorage for immediate display
+    const syncPosition = loadPositionSync();
+    setPosition(syncPosition);
     setLoaded(true);
+
+    // Then try to load from IndexedDB (may have newer data)
+    getReadingPosition().then(idbPosition => {
+      if (idbPosition) {
+        // Use IndexedDB data if it's newer
+        if (!syncPosition || idbPosition.timestamp > syncPosition.timestamp) {
+          setPosition(idbPosition);
+        }
+      }
+    });
   }, []);
 
+  // Save to both localStorage and IndexedDB when position changes
   useEffect(() => {
     if (loaded) {
-      savePosition(position);
+      saveReadingPosition(position);
     }
   }, [position, loaded]);
 
