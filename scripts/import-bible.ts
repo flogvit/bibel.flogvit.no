@@ -996,61 +996,90 @@ const deleteTimelineReferences = db.prepare(`DELETE FROM timeline_references`);
 const deleteTimelineEvents = db.prepare(`DELETE FROM timeline_events`);
 const deleteTimelinePeriods = db.prepare(`DELETE FROM timeline_periods`);
 
-const timelinePath = path.join(GENERATE_PATH, 'timeline', 'timeline.json');
-if (fs.existsSync(timelinePath)) {
-  const content = fs.readFileSync(timelinePath, 'utf-8');
-  const contentHash = computeHash(content);
+const timelineDir = path.join(GENERATE_PATH, 'timeline');
+const periodsPath = path.join(timelineDir, 'periods.json');
+if (fs.existsSync(periodsPath)) {
+  // Read periods file
+  const periodsContent = fs.readFileSync(periodsPath, 'utf-8');
+
+  // Read all event files and combine hashes
+  const periodsData = JSON.parse(periodsContent);
+  let combinedContent = periodsContent;
+
+  for (const period of periodsData.periods) {
+    if (period.eventsFile) {
+      const eventsPath = path.join(timelineDir, period.eventsFile);
+      if (fs.existsSync(eventsPath)) {
+        combinedContent += fs.readFileSync(eventsPath, 'utf-8');
+      }
+    }
+  }
+
+  const contentHash = computeHash(combinedContent);
 
   if (isFullImport || hasContentChanged(db, 'timeline', 'data', contentHash)) {
-    const timelineData = JSON.parse(content);
-
     // Clear existing timeline data
     deleteTimelineReferences.run();
     deleteTimelineEvents.run();
     deleteTimelinePeriods.run();
 
-    if (timelineData.periods) {
-      let periodOrder = 0;
-      for (const period of timelineData.periods) {
-        insertTimelinePeriod.run(
-          period.id,
-          period.name,
-          period.color || null,
-          period.description || null,
-          periodOrder++
-        );
-      }
-      console.log(`  Importerte ${timelineData.periods.length} perioder`);
+    // Import periods
+    let periodOrder = 0;
+    for (const period of periodsData.periods) {
+      insertTimelinePeriod.run(
+        period.id,
+        period.name,
+        period.color || null,
+        period.description || null,
+        periodOrder++
+      );
     }
+    console.log(`  Importerte ${periodsData.periods.length} perioder`);
 
-    if (timelineData.events) {
-      for (const event of timelineData.events) {
-        insertTimelineEvent.run(
-          event.id,
-          event.title,
-          event.description || null,
-          event.year || null,
-          event.year_display || null,
-          event.period || null,
-          event.importance || 'minor',
-          event.sort_order
-        );
+    // Import events from each period's event file
+    let totalEvents = 0;
+    for (const period of periodsData.periods) {
+      if (period.eventsFile) {
+        const eventsPath = path.join(timelineDir, period.eventsFile);
+        if (fs.existsSync(eventsPath)) {
+          const eventsContent = fs.readFileSync(eventsPath, 'utf-8');
+          const eventsData = JSON.parse(eventsContent);
 
-        if (event.references && event.references.length > 0) {
-          for (const ref of event.references) {
-            const verseStart = ref.verseStart ?? ref.verse ?? 1;
-            const verseEnd = ref.verseEnd ?? ref.verse ?? verseStart;
-            insertTimelineReference.run(event.id, ref.book, ref.chapter, verseStart, verseEnd);
+          if (eventsData.events) {
+            for (const event of eventsData.events) {
+              insertTimelineEvent.run(
+                event.id,
+                event.title,
+                event.description || null,
+                event.year || null,
+                event.year_display || null,
+                event.period || null,
+                event.importance || 'minor',
+                event.sort_order
+              );
+
+              if (event.references && event.references.length > 0) {
+                for (const ref of event.references) {
+                  const verseStart = ref.verseStart ?? ref.verse ?? 1;
+                  const verseEnd = ref.verseEnd ?? ref.verse ?? verseStart;
+                  insertTimelineReference.run(event.id, ref.book, ref.chapter, verseStart, verseEnd);
+                }
+              }
+              totalEvents++;
+            }
           }
         }
       }
-      console.log(`  Importerte ${timelineData.events.length} hendelser`);
     }
+    console.log(`  Importerte ${totalEvents} hendelser`);
 
     updateContentHash(db, 'timeline', 'data', contentHash);
-    stats.timeline.updated++;
+    stats.timeline.updated = totalEvents;
   } else {
-    stats.timeline.unchanged++;
+    // Count existing events for logging
+    const eventCount = db.prepare('SELECT COUNT(*) as count FROM timeline_events').get() as { count: number };
+    console.log(`  Uendret (${periodsData.periods.length} perioder, ${eventCount.count} hendelser)`);
+    stats.timeline.unchanged = eventCount.count;
   }
 }
 
