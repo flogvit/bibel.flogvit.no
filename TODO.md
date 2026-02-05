@@ -139,7 +139,6 @@ bibel/
 | Funksjon | Kilde | Skript | Output |
 |----------|-------|--------|--------|
 | Konkordans | word4word + verses | `build_concordance.mjs` | `concordance/` |
-| Parallelle tekster (synoptikerne) | Eksterne datasett | `sync_gospels.mjs` | `parallel_texts/` |
 
 ### Eksterne kilder
 | Funksjon | Mulige kilder |

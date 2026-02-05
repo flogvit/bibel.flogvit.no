@@ -115,6 +115,18 @@ Fullførte oppgaver flyttet fra TODO.md.
   - Fallback til nærmeste hendelse når kapitlet ikke har hendelser
   - Respekterer showTimeline toggle i innstillinger
 
+### Parallelle evangelietekster ✓
+- [x] JSON-data med 74 paralleller i 11 seksjoner (fødsel/barndom, forberedelse, tjeneste, etc.)
+- [x] Database-tabeller (gospel_parallel_sections, gospel_parallels, gospel_parallel_passages)
+- [x] Import-funksjonalitet i import-bible.ts
+- [x] API-endepunkter (/api/parallels, /api/parallels/:id, /api/parallels/:id/verses)
+- [x] Parallellside (/paralleller) med seksjonsfilter
+- [x] Ekspanderbar visning med lazy-loading av vers
+- [x] Fargekoding: Matteus=blå, Markus=grønn, Lukas=oransje, Johannes=lilla
+- [x] Desktop: Side-ved-side kolonner for evangeliene
+- [x] Mobil: Tabs for å bytte mellom evangelier
+- [x] Navigasjonslenke i header og mobil-meny
+
 ### Leseplan-funksjonalitet ✓
 - [x] Velg aktiv leseplan (localStorage: `activeReadingPlan`)
 - [x] Lagre progresjon (localStorage: `readingPlanProgress`)

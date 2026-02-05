@@ -1,37 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# bibel.flogvit.com
 
-## Getting Started
+Norsk bibel-nettside med oppslagsverk og verktøy for bibellesning.
 
-First, run the development server:
+## Teknologi
+
+- **Frontend**: React + Vite med TypeScript
+- **Backend**: Express API-server
+- **Database**: SQLite (via better-sqlite3)
+- **Styling**: SASS Modules
+- **Offline**: Service Worker + IndexedDB
+
+## Kom i gang
 
 ```bash
+# Installer avhengigheter
+npm install
+
+# Start utviklingsserver (frontend + API)
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Bygg for produksjon
+npm run build
+
+# Importer bibeldata til databasen
+npm run import-bible
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Frontend kjører på `http://localhost:3000`, API-kall proxyes til Express-backend på port 3018.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Datakilder
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Bibeldata importeres fra https://github.com/flogvit/free-bible/, `../free-bible/generate/`:
 
-## Learn More
+- Norsk bokmål (osnb2), nynorsk (osnn1)
+- Gresk NT (SBLGNT), hebraisk GT (Tanach)
+- Ord-for-ord oversettelser, kryssreferanser, sammendrag
+- Temaer, profetier, tidslinje, leseplaner
 
-To learn more about Next.js, take a look at the following resources:
+## Funksjonalitet
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# bibel.flogvit.no
+- Bibellesning med grunntekst-visning (hebraisk/gresk)
+- Ord-for-ord analyse med uttale og forklaring
+- Kryssreferanser og tematiske oversikter
+- Profetier med GT-referanser og NT-oppfyllelser
+- Bibelsk tidslinje
+- Leseplaner med streak-teller
+- Favoritter, notater og emnetagging
+- Søk i bibeltekst og originalspråk
+- Offline-støtte med nedlasting av data
+- Mørk/lys modus
