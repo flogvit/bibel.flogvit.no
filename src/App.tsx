@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Layout } from './components/Layout';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Critical pages - loaded immediately
 import { HomePage } from './pages/HomePage';
@@ -38,43 +39,45 @@ function PageLoader() {
 export function App() {
   return (
     <Layout>
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          {/* Home */}
-          <Route path="/" element={<HomePage />} />
+      <ErrorBoundary>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            {/* Home */}
+            <Route path="/" element={<HomePage />} />
 
-          {/* Bible reading */}
-          <Route path="/:book/:chapter" element={<ChapterPage />} />
+            {/* Bible reading */}
+            <Route path="/:book/:chapter" element={<ChapterPage />} />
 
-          {/* Study tools */}
-          <Route path="/tidslinje" element={<TimelinePage />} />
-          <Route path="/profetier" element={<PropheciesPage />} />
-          <Route path="/personer" element={<PersonsPage />} />
-          <Route path="/personer/:personId" element={<PersonPage />} />
-          <Route path="/temaer" element={<ThemesPage />} />
-          <Route path="/temaer/:tema" element={<ThemePage />} />
-          <Route path="/leseplan" element={<ReadingPlanPage />} />
+            {/* Study tools */}
+            <Route path="/tidslinje" element={<TimelinePage />} />
+            <Route path="/profetier" element={<PropheciesPage />} />
+            <Route path="/personer" element={<PersonsPage />} />
+            <Route path="/personer/:personId" element={<PersonPage />} />
+            <Route path="/temaer" element={<ThemesPage />} />
+            <Route path="/temaer/:tema" element={<ThemePage />} />
+            <Route path="/leseplan" element={<ReadingPlanPage />} />
 
-          {/* Search */}
-          <Route path="/sok" element={<SearchPage />} />
-          <Route path="/sok/original" element={<OriginalSearchPage />} />
+            {/* Search */}
+            <Route path="/sok" element={<SearchPage />} />
+            <Route path="/sok/original" element={<OriginalSearchPage />} />
 
-          {/* User content */}
-          <Route path="/favoritter" element={<FavoritesPage />} />
-          <Route path="/kjente-vers" element={<FamousVersesPage />} />
-          <Route path="/emner" element={<TopicsPage />} />
-          <Route path="/notater" element={<NotesPage />} />
-          <Route path="/tekst" element={<TextPage />} />
+            {/* User content */}
+            <Route path="/favoritter" element={<FavoritesPage />} />
+            <Route path="/kjente-vers" element={<FamousVersesPage />} />
+            <Route path="/emner" element={<TopicsPage />} />
+            <Route path="/notater" element={<NotesPage />} />
+            <Route path="/tekst" element={<TextPage />} />
 
-          {/* Utility */}
-          <Route path="/offline" element={<OfflinePage />} />
-          <Route path="/om" element={<AboutPage />} />
-          <Route path="/tilgjengelighet" element={<AccessibilityPage />} />
+            {/* Utility */}
+            <Route path="/offline" element={<OfflinePage />} />
+            <Route path="/om" element={<AboutPage />} />
+            <Route path="/tilgjengelighet" element={<AccessibilityPage />} />
 
-          {/* 404 */}
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </Suspense>
+            {/* 404 */}
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </Suspense>
+      </ErrorBoundary>
     </Layout>
   );
 }
