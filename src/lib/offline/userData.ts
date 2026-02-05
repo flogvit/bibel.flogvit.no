@@ -6,7 +6,7 @@
  * Handles automatic migration from localStorage to IndexedDB.
  */
 
-import { getUserData, setUserData } from './storage';
+import { getUserData, setUserData, deleteUserData } from './storage';
 import { isOfflineStorageAvailable } from './db';
 
 // Storage keys
@@ -235,6 +235,7 @@ export interface BibleSettings {
   showVerseIndicators: boolean;
   showOriginalText: boolean;
   showTimeline: boolean;
+  showParallels: boolean;
   readingMode: boolean;
   fontSize: FontSize;
   darkMode: boolean;
@@ -252,6 +253,7 @@ export const defaultSettings: BibleSettings = {
   showVerseIndicators: false,
   showOriginalText: false,
   showTimeline: true,
+  showParallels: false,
   readingMode: false,
   fontSize: 'medium',
   darkMode: false,
@@ -289,7 +291,6 @@ export async function setActivePlanId(planId: string | null): Promise<void> {
       localStorage.removeItem(STORAGE_KEYS.activePlan);
     }
     if (await shouldUseIndexedDB()) {
-      const { deleteUserData } = await import('./storage');
       await deleteUserData('activePlan');
     }
     return;
@@ -340,7 +341,6 @@ export async function saveReadingPosition(position: ReadingPosition | null): Pro
       localStorage.removeItem(STORAGE_KEYS.readingPosition);
     }
     if (await shouldUseIndexedDB()) {
-      const { deleteUserData } = await import('./storage');
       await deleteUserData('readingPosition');
     }
     return;
