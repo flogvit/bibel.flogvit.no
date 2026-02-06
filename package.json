@@ -2,6 +2,15 @@
   "name": "bibel.flogvit.no",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/flogvit/bibel.flogvit.no.git"
+  },
+  "bugs": {
+    "url": "https://github.com/flogvit/bibel.flogvit.no/issues"
+  },
+  "homepage": "https://bibel.flogvit.no",
   "type": "module",
   "scripts": {
     "dev": "vite",

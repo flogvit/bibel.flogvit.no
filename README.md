@@ -49,3 +49,15 @@ Bibeldata importeres fra https://github.com/flogvit/free-bible/, `../free-bible/
 - Søk i bibeltekst og originalspråk
 - Offline-støtte med nedlasting av data
 - Mørk/lys modus
+
+## Bidra
+
+Feil og forslag rapporteres via [GitHub Issues](https://github.com/flogvit/bibel.flogvit.no/issues).
+
+For å kjøre prosjektet lokalt trenger du bibeldata fra [free-bible](https://github.com/flogvit/free-bible/) i `../free-bible/generate/`.
+
+**Viktig:** Ikke legg ved kopibeskyttet materiale i pull requests eller issues. Bibeltekster og oversettelser kan ha opphavsrettslige begrensninger. Kun materiale som er i det fri (public domain) eller har en åpen lisens kan inkluderes i prosjektet.
+
+## Lisens
+
+[MIT](LICENSE)
