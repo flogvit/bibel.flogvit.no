@@ -282,11 +282,13 @@ db.exec(`
   );
 
   CREATE TABLE IF NOT EXISTS timeline_periods (
-    id TEXT PRIMARY KEY,
+    id TEXT NOT NULL,
+    timeline_type TEXT NOT NULL DEFAULT 'bible',
     name TEXT NOT NULL,
     color TEXT,
     description TEXT,
-    sort_order INTEGER
+    sort_order INTEGER,
+    PRIMARY KEY (id, timeline_type)
   );
 
   CREATE TABLE IF NOT EXISTS timeline_events (
@@ -298,7 +300,10 @@ db.exec(`
     period_id TEXT,
     importance TEXT DEFAULT 'minor',
     sort_order INTEGER NOT NULL,
-    FOREIGN KEY (period_id) REFERENCES timeline_periods(id)
+    timeline_type TEXT NOT NULL DEFAULT 'bible',
+    region TEXT,
+    book_id INTEGER,
+    section_id TEXT
   );
 
   CREATE TABLE IF NOT EXISTS timeline_references (
@@ -309,6 +314,18 @@ db.exec(`
     verse_start INTEGER NOT NULL,
     verse_end INTEGER NOT NULL,
     FOREIGN KEY (event_id) REFERENCES timeline_events(id),
+    FOREIGN KEY (book_id) REFERENCES books(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS timeline_book_sections (
+    id TEXT NOT NULL,
+    book_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    chapter_start INTEGER NOT NULL,
+    chapter_end INTEGER NOT NULL,
+    description TEXT,
+    sort_order INTEGER,
+    PRIMARY KEY (id, book_id),
     FOREIGN KEY (book_id) REFERENCES books(id)
   );
 
@@ -1011,41 +1028,172 @@ if (fs.existsSync(themesPath)) {
   }
 }
 
-// Importer tidslinje
+// Importer tidslinje (bible, world, books)
 console.log('Importerer tidslinje...');
 const insertTimelinePeriod = db.prepare(`
-  INSERT OR REPLACE INTO timeline_periods (id, name, color, description, sort_order) VALUES (?, ?, ?, ?, ?)
+  INSERT OR REPLACE INTO timeline_periods (id, timeline_type, name, color, description, sort_order) VALUES (?, ?, ?, ?, ?, ?)
 `);
 const insertTimelineEvent = db.prepare(`
-  INSERT OR REPLACE INTO timeline_events (id, title, description, year, year_display, period_id, importance, sort_order)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  INSERT OR REPLACE INTO timeline_events (id, title, description, year, year_display, period_id, importance, sort_order, timeline_type, region, book_id, section_id)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 const insertTimelineReference = db.prepare(`
   INSERT INTO timeline_references (event_id, book_id, chapter, verse_start, verse_end) VALUES (?, ?, ?, ?, ?)
 `);
+const insertTimelineBookSection = db.prepare(`
+  INSERT OR REPLACE INTO timeline_book_sections (id, book_id, title, chapter_start, chapter_end, description, sort_order)
+  VALUES (?, ?, ?, ?, ?, ?, ?)
+`);
 const deleteTimelineReferences = db.prepare(`DELETE FROM timeline_references`);
 const deleteTimelineEvents = db.prepare(`DELETE FROM timeline_events`);
 const deleteTimelinePeriods = db.prepare(`DELETE FROM timeline_periods`);
+const deleteTimelineBookSections = db.prepare(`DELETE FROM timeline_book_sections`);
 
-const timelineDir = path.join(GENERATE_PATH, 'timeline');
-const periodsPath = path.join(timelineDir, 'periods.json');
-if (fs.existsSync(periodsPath)) {
-  // Read periods file
-  const periodsContent = fs.readFileSync(periodsPath, 'utf-8');
+const timelineBaseDir = path.join(GENERATE_PATH, 'timeline', 'nb');
 
-  // Read all event files and combine hashes
-  const periodsData = JSON.parse(periodsContent);
-  let combinedContent = periodsContent;
+function readAllTimelineFiles(): string {
+  let combined = '';
+  const dirs = ['events', 'world', 'books'];
+  for (const dir of dirs) {
+    const dirPath = path.join(timelineBaseDir, dir);
+    if (fs.existsSync(dirPath)) {
+      const files = fs.readdirSync(dirPath).filter(f => f.endsWith('.json')).sort();
+      for (const file of files) {
+        combined += fs.readFileSync(path.join(dirPath, file), 'utf-8');
+      }
+    }
+  }
+  return combined;
+}
 
+function importTimelineType(type: 'bible' | 'world', subDir: string) {
+  const dirPath = path.join(timelineBaseDir, subDir);
+  const periodsFile = path.join(dirPath, 'periods.json');
+  if (!fs.existsSync(periodsFile)) return { periods: 0, events: 0 };
+
+  const periodsData = JSON.parse(fs.readFileSync(periodsFile, 'utf-8'));
+  let periodOrder = 0;
+  for (const period of periodsData.periods) {
+    insertTimelinePeriod.run(
+      period.id,
+      type,
+      period.name,
+      period.color || null,
+      period.description || null,
+      periodOrder++
+    );
+  }
+
+  let totalEvents = 0;
   for (const period of periodsData.periods) {
     if (period.eventsFile) {
-      const eventsPath = path.join(timelineDir, period.eventsFile);
+      // eventsFile is like "events/creation.json" or "world/creation.json" - extract just the filename
+      const eventFileName = path.basename(period.eventsFile);
+      const eventsPath = path.join(dirPath, eventFileName);
       if (fs.existsSync(eventsPath)) {
-        combinedContent += fs.readFileSync(eventsPath, 'utf-8');
+        const eventsData = JSON.parse(fs.readFileSync(eventsPath, 'utf-8'));
+        if (eventsData.events) {
+          for (const event of eventsData.events) {
+            insertTimelineEvent.run(
+              event.id,
+              event.title,
+              event.description || null,
+              event.year || null,
+              event.year_display || null,
+              event.period || null,
+              event.importance || 'minor',
+              event.sort_order,
+              type,
+              event.region || null,
+              null,
+              null
+            );
+
+            if (event.references && event.references.length > 0) {
+              for (const ref of event.references) {
+                const verseStart = ref.verseStart ?? ref.verse ?? 1;
+                const verseEnd = ref.verseEnd ?? ref.verse ?? verseStart;
+                insertTimelineReference.run(event.id, ref.book, ref.chapter, verseStart, verseEnd);
+              }
+            }
+            totalEvents++;
+          }
+        }
       }
     }
   }
 
+  return { periods: periodsData.periods.length, events: totalEvents };
+}
+
+function importBookTimelines() {
+  const booksDir = path.join(timelineBaseDir, 'books');
+  if (!fs.existsSync(booksDir)) return { books: 0, sections: 0, events: 0 };
+
+  const bookFiles = fs.readdirSync(booksDir).filter(f => f.endsWith('.json')).sort((a, b) => {
+    return parseInt(a.replace('.json', '')) - parseInt(b.replace('.json', ''));
+  });
+
+  let totalSections = 0;
+  let totalEvents = 0;
+
+  for (const file of bookFiles) {
+    const filePath = path.join(booksDir, file);
+    const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    const bookId = data.book;
+
+    // Import sections
+    if (data.sections) {
+      let sectionOrder = 0;
+      for (const section of data.sections) {
+        insertTimelineBookSection.run(
+          section.id,
+          bookId,
+          section.title,
+          section.chapter_start,
+          section.chapter_end,
+          section.description || null,
+          sectionOrder++
+        );
+        totalSections++;
+      }
+    }
+
+    // Import events
+    if (data.events) {
+      for (const event of data.events) {
+        insertTimelineEvent.run(
+          event.id,
+          event.title,
+          event.description || null,
+          event.year || null,
+          event.year_display || null,
+          null,
+          event.importance || 'minor',
+          event.sort_order,
+          'books',
+          null,
+          bookId,
+          event.section || null
+        );
+
+        if (event.references && event.references.length > 0) {
+          for (const ref of event.references) {
+            const verseStart = ref.verseStart ?? ref.verse ?? 1;
+            const verseEnd = ref.verseEnd ?? ref.verse ?? verseStart;
+            insertTimelineReference.run(event.id, bookId, ref.chapter, verseStart, verseEnd);
+          }
+        }
+        totalEvents++;
+      }
+    }
+  }
+
+  return { books: bookFiles.length, sections: totalSections, events: totalEvents };
+}
+
+if (fs.existsSync(timelineBaseDir)) {
+  const combinedContent = readAllTimelineFiles();
   const contentHash = computeHash(combinedContent);
 
   if (isFullImport || hasContentChanged(db, 'timeline', 'data', contentHash)) {
@@ -1053,63 +1201,26 @@ if (fs.existsSync(periodsPath)) {
     deleteTimelineReferences.run();
     deleteTimelineEvents.run();
     deleteTimelinePeriods.run();
+    deleteTimelineBookSections.run();
 
-    // Import periods
-    let periodOrder = 0;
-    for (const period of periodsData.periods) {
-      insertTimelinePeriod.run(
-        period.id,
-        period.name,
-        period.color || null,
-        period.description || null,
-        periodOrder++
-      );
-    }
-    console.log(`  Importerte ${periodsData.periods.length} perioder`);
+    // Import bible timeline
+    const bible = importTimelineType('bible', 'events');
+    console.log(`  Bibel: ${bible.periods} perioder, ${bible.events} hendelser`);
 
-    // Import events from each period's event file
-    let totalEvents = 0;
-    for (const period of periodsData.periods) {
-      if (period.eventsFile) {
-        const eventsPath = path.join(timelineDir, period.eventsFile);
-        if (fs.existsSync(eventsPath)) {
-          const eventsContent = fs.readFileSync(eventsPath, 'utf-8');
-          const eventsData = JSON.parse(eventsContent);
+    // Import world timeline
+    const world = importTimelineType('world', 'world');
+    console.log(`  Verden: ${world.periods} perioder, ${world.events} hendelser`);
 
-          if (eventsData.events) {
-            for (const event of eventsData.events) {
-              insertTimelineEvent.run(
-                event.id,
-                event.title,
-                event.description || null,
-                event.year || null,
-                event.year_display || null,
-                event.period || null,
-                event.importance || 'minor',
-                event.sort_order
-              );
+    // Import book timelines
+    const bookResult = importBookTimelines();
+    console.log(`  Bøker: ${bookResult.books} bøker, ${bookResult.sections} seksjoner, ${bookResult.events} hendelser`);
 
-              if (event.references && event.references.length > 0) {
-                for (const ref of event.references) {
-                  const verseStart = ref.verseStart ?? ref.verse ?? 1;
-                  const verseEnd = ref.verseEnd ?? ref.verse ?? verseStart;
-                  insertTimelineReference.run(event.id, ref.book, ref.chapter, verseStart, verseEnd);
-                }
-              }
-              totalEvents++;
-            }
-          }
-        }
-      }
-    }
-    console.log(`  Importerte ${totalEvents} hendelser`);
-
+    const totalEvents = bible.events + world.events + bookResult.events;
     updateContentHash(db, 'timeline', 'data', contentHash);
     stats.timeline.updated = totalEvents;
   } else {
-    // Count existing events for logging
     const eventCount = db.prepare('SELECT COUNT(*) as count FROM timeline_events').get() as { count: number };
-    console.log(`  Uendret (${periodsData.periods.length} perioder, ${eventCount.count} hendelser)`);
+    console.log(`  Uendret (${eventCount.count} hendelser totalt)`);
     stats.timeline.unchanged = eventCount.count;
   }
 }
@@ -1452,6 +1563,9 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_timeline_events_period ON timeline_events(period_id);
   CREATE INDEX IF NOT EXISTS idx_timeline_events_sort ON timeline_events(sort_order);
   CREATE INDEX IF NOT EXISTS idx_timeline_references_event ON timeline_references(event_id);
+  CREATE INDEX IF NOT EXISTS idx_timeline_events_type ON timeline_events(timeline_type);
+  CREATE INDEX IF NOT EXISTS idx_timeline_events_book ON timeline_events(book_id);
+  CREATE INDEX IF NOT EXISTS idx_timeline_book_sections_book ON timeline_book_sections(book_id);
   CREATE INDEX IF NOT EXISTS idx_prophecies_category ON prophecies(category_id);
   CREATE INDEX IF NOT EXISTS idx_prophecy_fulfillments_prophecy ON prophecy_fulfillments(prophecy_id);
   CREATE INDEX IF NOT EXISTS idx_prophecy_fulfillments_book ON prophecy_fulfillments(book_id, chapter);

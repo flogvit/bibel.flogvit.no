@@ -115,6 +115,16 @@ Fullførte oppgaver flyttet fra TODO.md.
   - Fallback til nærmeste hendelse når kapitlet ikke har hendelser
   - Respekterer showTimeline toggle i innstillinger
 
+### Multi-tidslinje (bibel, verden, bøker) ✓
+- [x] Tre typer tidslinje: bibel, verden (verdenshistorie), bøker (per bok)
+- [x] Database-skjema med timeline_type, timeline_book_sections-tabell
+- [x] Import fra timeline/nb/events/, timeline/nb/world/, timeline/nb/books/
+- [x] API-endepunkt /api/timeline/multi (bakoverkompatibel /api/timeline beholdt)
+- [x] Tre-kolonne layout (verden/bibelen/bok) på desktop, tabs på mobil
+- [x] Periodefilter synkronisert på tvers av kolonner
+- [x] Bok-velger med seksjoner og hendelser
+- [x] Dark mode støtte
+
 ### Parallelle evangelietekster ✓
 - [x] JSON-data med 74 paralleller i 11 seksjoner (fødsel/barndom, forberedelse, tjeneste, etc.)
 - [x] Database-tabeller (gospel_parallel_sections, gospel_parallels, gospel_parallel_passages)
@@ -163,7 +173,9 @@ Fullførte oppgaver flyttet fra TODO.md.
 | Funksjon | Format | Skript | Mappe |
 |----------|--------|--------|-------|
 | Kapittelkontekst (historisk, kulturell, arkeologisk, geografisk) | `.md` | `chapter_context.mjs` ✅ | `chapter_context/nb/` |
-| Tidslinje for bibelske hendelser | `.json` | ✅ Manuelt | `timeline/` |
+| Tidslinje for bibelske hendelser | `.json` | ✅ Manuelt | `timeline/nb/events/` |
+| Verdenshistorisk tidslinje | `.json` | ✅ Manuelt | `timeline/nb/world/` |
+| Bok-tidslinjer | `.json` | ✅ Manuelt | `timeline/nb/books/` |
 | Profetier og oppfyllelser | `.json` | ✅ Manuelt | `prophecies/` |
 
 ## WCAG 2.2 AA Tilgjengelighet ✓

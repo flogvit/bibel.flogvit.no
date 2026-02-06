@@ -182,4 +182,5 @@ references.mjs - Kryssreferanser (mangler bøker 2-39 og 43-66)
 - [ ] Lighthouse accessibility audit
 
 ## Bugs/Forbedringer
-- (ingen kjente)
+- [ ] Tidslinjen i lesemodus: kompaktere design, kollapsbare perioder, evt. 2-kolonners layout
+- [ ] Tidslinjen generelt: vurder kompaktere event-kort, bok-kolonne bak toggle

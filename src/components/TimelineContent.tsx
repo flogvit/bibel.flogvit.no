@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { TimelineView } from '@/components/TimelineView';
+import { MultiTimelineView } from '@/components/MultiTimelineView';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
-import type { TimelinePeriod, TimelineEvent } from '@/lib/bible';
+import type { MultiTimelineData } from '@/lib/bible';
 import styles from '@/styles/pages/timeline.module.scss';
 
 export function TimelineContent() {
-  const [periods, setPeriods] = useState<TimelinePeriod[]>([]);
-  const [events, setEvents] = useState<TimelineEvent[]>([]);
+  const [data, setData] = useState<MultiTimelineData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isOffline, setIsOffline] = useState(false);
@@ -15,7 +14,7 @@ export function TimelineContent() {
   useEffect(() => {
     async function fetchTimeline() {
       try {
-        const response = await fetch('/api/timeline');
+        const response = await fetch('/api/timeline/multi');
 
         if (!response.ok) {
           if (response.status === 503) {
@@ -29,16 +28,14 @@ export function TimelineContent() {
           throw new Error(`HTTP ${response.status}`);
         }
 
-        const data = await response.json();
+        const result = await response.json();
 
-        // Check if response came from IndexedDB
         const fromIndexedDB = response.headers.get('X-From-IndexedDB') === 'true';
         if (fromIndexedDB) {
           setIsOffline(true);
         }
 
-        setPeriods(data.periods || []);
-        setEvents(data.events || []);
+        setData(result);
       } catch (err) {
         console.error('Failed to fetch timeline:', err);
         setError('Kunne ikke laste tidslinjen');
@@ -54,7 +51,7 @@ export function TimelineContent() {
   if (isLoading) {
     return (
       <div className={styles.main}>
-        <div className="reading-container">
+        <div className={styles.wideContainer}>
           <Breadcrumbs items={[
             { label: 'Hjem', href: '/' },
             { label: 'Tidslinje' }
@@ -66,10 +63,10 @@ export function TimelineContent() {
     );
   }
 
-  if (error && events.length === 0) {
+  if (error && !data) {
     return (
       <div className={styles.main}>
-        <div className="reading-container">
+        <div className={styles.wideContainer}>
           <Breadcrumbs items={[
             { label: 'Hjem', href: '/' },
             { label: 'Tidslinje' }
@@ -88,7 +85,7 @@ export function TimelineContent() {
 
   return (
     <div className={styles.main}>
-      <div className="reading-container">
+      <div className={styles.wideContainer}>
         <Breadcrumbs items={[
           { label: 'Hjem', href: '/' },
           { label: 'Tidslinje' }
@@ -96,14 +93,11 @@ export function TimelineContent() {
 
         <h1>Bibelens tidslinje</h1>
         <p className={styles.intro}>
-          En kronologisk oversikt over de viktigste hendelsene i Bibelen,
-          fra skapelsen til den tidlige kirkens tid.
+          En kronologisk oversikt over de viktigste hendelsene i Bibelen
+          og verdenshistorien, fra skapelsen til den tidlige kirkens tid.
         </p>
 
-        <TimelineView
-          periods={periods}
-          events={events}
-        />
+        {data && <MultiTimelineView data={data} />}
       </div>
     </div>
   );

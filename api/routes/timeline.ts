@@ -1,11 +1,11 @@
 import { Router, Request, Response } from 'express';
-import { getTimelinePeriods, getTimelineEvents } from '../../src/lib/bible';
+import { getTimelinePeriods, getTimelineEvents, getMultiTimeline } from '../../src/lib/bible';
 
 export const timelineRouter = Router();
 
 /**
  * GET /api/timeline
- * Returns timeline periods and events
+ * Returns bible timeline periods and events (backward compatible)
  */
 timelineRouter.get('/', (_req: Request, res: Response) => {
   try {
@@ -16,6 +16,22 @@ timelineRouter.get('/', (_req: Request, res: Response) => {
     res.json({ periods, events });
   } catch (error) {
     console.error('Error fetching timeline:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * GET /api/timeline/multi
+ * Returns all three timeline types (bible, world, books)
+ */
+timelineRouter.get('/multi', (_req: Request, res: Response) => {
+  try {
+    const data = getMultiTimeline();
+
+    res.set('Cache-Control', 'public, max-age=86400');
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching multi timeline:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

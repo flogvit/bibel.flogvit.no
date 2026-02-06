@@ -29,7 +29,9 @@ All bibeldata hentes fra `../free-bible/generate/`:
 - `important_words/nb/[bok]-[kapittel].txt` - Viktige ord/begreper i kapittelet
 - `themes/nb/[tema].json` - Tematiske oversikter med seksjoner og versreferanser
 - `prophecies/prophecies.json` - Profetier og oppfyllelser (47 profetier i 7 kategorier)
-- `timeline/timeline.json` - Bibelske hendelser (103 hendelser i 11 perioder)
+- `timeline/nb/events/periods.json` + `timeline/nb/events/*.json` - Bibelske hendelser (11 perioder)
+- `timeline/nb/world/periods.json` + `timeline/nb/world/*.json` - Verdenshistoriske hendelser (parallelt med bibelske)
+- `timeline/nb/books/[bok].json` - Bok-spesifikke tidslinjer med seksjoner
 - `reading_plans/` - Leseplaner (årlig, kronologisk, NT, etc.)
 - `chapter_insights/nb/[bok]-[kapittel].json` - Strukturerte kapittel-innsikter (ættetavler, lister, etc.)
 
@@ -87,7 +89,8 @@ bibel.flogvit.no/
 - `GET /api/verses?refs=1mo-1-1,joh-3-16` - Hent flere vers
 - `GET /api/books` - Bokliste
 - `GET /api/prophecies` - Profetier og oppfyllelser
-- `GET /api/timeline` - Tidslinjehendelser
+- `GET /api/timeline` - Tidslinjehendelser (kun bibel, bakoverkompatibel)
+- `GET /api/timeline/multi` - Alle tre tidslinjer (bibel, verden, bøker)
 
 ## Database-skjema
 **Bibeldata:**
@@ -105,9 +108,10 @@ bibel.flogvit.no/
 - `prophecy_categories` - Profetikategorier
 - `prophecies` - Profetier med GT-referanser
 - `prophecy_fulfillments` - NT-oppfyllelser
-- `timeline_periods` - Tidslinjeperioder
-- `timeline_events` - Tidslinjehendelser
+- `timeline_periods` - Tidslinjeperioder (PK: id + timeline_type, typer: bible/world)
+- `timeline_events` - Tidslinjehendelser (timeline_type: bible/world/books)
 - `timeline_references` - Referanser til hendelser
+- `timeline_book_sections` - Bok-seksjoner for bok-tidslinjer
 - `reading_plans` - Leseplaner
 
 ## Funksjoner

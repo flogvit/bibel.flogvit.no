@@ -5,6 +5,16 @@
   padding: $spacing-2xl 0;
 }
 
+.wideContainer {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 $spacing-lg;
+
+  @include mobile {
+    padding: 0 $spacing-md;
+  }
+}
+
 .backLink {
   display: inline-block;
   margin-bottom: $spacing-xl;
@@ -19,7 +29,7 @@
 .intro {
   color: $color-text-light;
   margin-bottom: $spacing-2xl;
-  max-width: 600px;
+  max-width: 700px;
 }
 
 // Dark mode

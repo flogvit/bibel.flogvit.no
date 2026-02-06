@@ -593,6 +593,7 @@ export function searchOriginalWord(word: string, limit = 50, offset = 0): Origin
 
 export interface TimelinePeriod {
   id: string;
+  timeline_type: string;
   name: string;
   color: string | null;
   description: string | null;
@@ -617,8 +618,22 @@ export interface TimelineEvent {
   period_id: string | null;
   importance: string;
   sort_order: number;
+  timeline_type: string;
+  region?: string | null;
+  book_id?: number | null;
+  section_id?: string | null;
   references?: TimelineReference[];
   period?: TimelinePeriod;
+}
+
+export interface TimelineBookSection {
+  id: string;
+  book_id: number;
+  title: string;
+  chapter_start: number;
+  chapter_end: number;
+  description: string | null;
+  sort_order: number;
 }
 
 export interface TimelineData {
@@ -626,21 +641,24 @@ export interface TimelineData {
   events: TimelineEvent[];
 }
 
-export function getTimelinePeriods(): TimelinePeriod[] {
-  const db = getDb();
-  return db.prepare('SELECT * FROM timeline_periods ORDER BY sort_order').all() as TimelinePeriod[];
+export interface MultiTimelineData {
+  bible: {
+    periods: TimelinePeriod[];
+    events: TimelineEvent[];
+  };
+  world: {
+    periods: TimelinePeriod[];
+    events: TimelineEvent[];
+  };
+  books: {
+    available: { id: number; name_no: string; short_name: string }[];
+    sections: TimelineBookSection[];
+    events: TimelineEvent[];
+  };
 }
 
-export function getTimelineEvents(): TimelineEvent[] {
+function attachReferencesToEvents(events: (TimelineEvent & { period_name?: string; period_color?: string })[]): TimelineEvent[] {
   const db = getDb();
-  const events = db.prepare(`
-    SELECT e.*, p.name as period_name, p.color as period_color
-    FROM timeline_events e
-    LEFT JOIN timeline_periods p ON e.period_id = p.id
-    ORDER BY p.sort_order, e.year IS NULL DESC, e.year, e.sort_order
-  `).all() as (TimelineEvent & { period_name?: string; period_color?: string })[];
-
-  // Get references for each event
   return events.map(event => {
     const refs = db.prepare(`
       SELECT tr.book_id, tr.chapter, tr.verse_start, tr.verse_end, b.short_name as book_short_name, b.name_no as book_name_no
@@ -654,6 +672,7 @@ export function getTimelineEvents(): TimelineEvent[] {
       references: refs,
       period: event.period_id ? {
         id: event.period_id,
+        timeline_type: event.timeline_type || 'bible',
         name: event.period_name || '',
         color: event.period_color || null,
         description: null,
@@ -663,12 +682,106 @@ export function getTimelineEvents(): TimelineEvent[] {
   });
 }
 
+export function getTimelinePeriods(): TimelinePeriod[] {
+  const db = getDb();
+  return db.prepare('SELECT * FROM timeline_periods WHERE timeline_type = ? ORDER BY sort_order').all('bible') as TimelinePeriod[];
+}
+
+export function getTimelineEvents(): TimelineEvent[] {
+  const db = getDb();
+  const events = db.prepare(`
+    SELECT e.*, p.name as period_name, p.color as period_color
+    FROM timeline_events e
+    LEFT JOIN timeline_periods p ON e.period_id = p.id AND p.timeline_type = e.timeline_type
+    WHERE e.timeline_type = 'bible'
+    ORDER BY p.sort_order, e.year IS NULL DESC, e.year, e.sort_order
+  `).all() as (TimelineEvent & { period_name?: string; period_color?: string })[];
+
+  return attachReferencesToEvents(events);
+}
+
+export function getWorldTimelinePeriods(): TimelinePeriod[] {
+  const db = getDb();
+  return db.prepare('SELECT * FROM timeline_periods WHERE timeline_type = ? ORDER BY sort_order').all('world') as TimelinePeriod[];
+}
+
+export function getWorldTimelineEvents(): TimelineEvent[] {
+  const db = getDb();
+  const events = db.prepare(`
+    SELECT e.*, p.name as period_name, p.color as period_color
+    FROM timeline_events e
+    LEFT JOIN timeline_periods p ON e.period_id = p.id AND p.timeline_type = e.timeline_type
+    WHERE e.timeline_type = 'world'
+    ORDER BY p.sort_order, e.year IS NULL DESC, e.year, e.sort_order
+  `).all() as (TimelineEvent & { period_name?: string; period_color?: string })[];
+
+  return attachReferencesToEvents(events);
+}
+
+export function getBookTimelineSections(bookId?: number): TimelineBookSection[] {
+  const db = getDb();
+  if (bookId) {
+    return db.prepare('SELECT * FROM timeline_book_sections WHERE book_id = ? ORDER BY sort_order').all(bookId) as TimelineBookSection[];
+  }
+  return db.prepare('SELECT * FROM timeline_book_sections ORDER BY book_id, sort_order').all() as TimelineBookSection[];
+}
+
+export function getBookTimelineEvents(bookId?: number): TimelineEvent[] {
+  const db = getDb();
+  let events: (TimelineEvent & { period_name?: string; period_color?: string })[];
+  if (bookId) {
+    events = db.prepare(`
+      SELECT e.*, NULL as period_name, NULL as period_color
+      FROM timeline_events e
+      WHERE e.timeline_type = 'books' AND e.book_id = ?
+      ORDER BY e.sort_order
+    `).all(bookId) as (TimelineEvent & { period_name?: string; period_color?: string })[];
+  } else {
+    events = db.prepare(`
+      SELECT e.*, NULL as period_name, NULL as period_color
+      FROM timeline_events e
+      WHERE e.timeline_type = 'books'
+      ORDER BY e.book_id, e.sort_order
+    `).all() as (TimelineEvent & { period_name?: string; period_color?: string })[];
+  }
+  return attachReferencesToEvents(events);
+}
+
+export function getMultiTimeline(): MultiTimelineData {
+  const db = getDb();
+
+  // Get books that have timeline data
+  const availableBooks = db.prepare(`
+    SELECT DISTINCT b.id, b.name_no, b.short_name
+    FROM timeline_events e
+    JOIN books b ON e.book_id = b.id
+    WHERE e.timeline_type = 'books'
+    ORDER BY b.id
+  `).all() as { id: number; name_no: string; short_name: string }[];
+
+  return {
+    bible: {
+      periods: getTimelinePeriods(),
+      events: getTimelineEvents(),
+    },
+    world: {
+      periods: getWorldTimelinePeriods(),
+      events: getWorldTimelineEvents(),
+    },
+    books: {
+      available: availableBooks,
+      sections: getBookTimelineSections(),
+      events: getBookTimelineEvents(),
+    },
+  };
+}
+
 export function getTimelineEventById(id: string): TimelineEvent | undefined {
   const db = getDb();
   const event = db.prepare(`
     SELECT e.*, p.name as period_name, p.color as period_color, p.description as period_description
     FROM timeline_events e
-    LEFT JOIN timeline_periods p ON e.period_id = p.id
+    LEFT JOIN timeline_periods p ON e.period_id = p.id AND p.timeline_type = e.timeline_type
     WHERE e.id = ?
   `).get(id) as (TimelineEvent & { period_name?: string; period_color?: string; period_description?: string }) | undefined;
 
@@ -686,6 +799,7 @@ export function getTimelineEventById(id: string): TimelineEvent | undefined {
     references: refs,
     period: event.period_id ? {
       id: event.period_id,
+      timeline_type: event.timeline_type || 'bible',
       name: event.period_name || '',
       color: event.period_color || null,
       description: event.period_description || null,
@@ -699,31 +813,12 @@ export function getTimelineEventsByPeriod(periodId: string): TimelineEvent[] {
   const events = db.prepare(`
     SELECT e.*, p.name as period_name, p.color as period_color
     FROM timeline_events e
-    LEFT JOIN timeline_periods p ON e.period_id = p.id
-    WHERE e.period_id = ?
+    LEFT JOIN timeline_periods p ON e.period_id = p.id AND p.timeline_type = e.timeline_type
+    WHERE e.period_id = ? AND e.timeline_type = 'bible'
     ORDER BY e.year IS NULL DESC, e.year, e.sort_order
   `).all(periodId) as (TimelineEvent & { period_name?: string; period_color?: string })[];
 
-  return events.map(event => {
-    const refs = db.prepare(`
-      SELECT tr.book_id, tr.chapter, tr.verse_start, tr.verse_end, b.short_name as book_short_name, b.name_no as book_name_no
-      FROM timeline_references tr
-      JOIN books b ON tr.book_id = b.id
-      WHERE tr.event_id = ?
-    `).all(event.id) as TimelineReference[];
-
-    return {
-      ...event,
-      references: refs,
-      period: event.period_id ? {
-        id: event.period_id,
-        name: event.period_name || '',
-        color: event.period_color || null,
-        description: null,
-        sort_order: 0
-      } : undefined
-    };
-  });
+  return attachReferencesToEvents(events);
 }
 
 export function getFullTimeline(): TimelineData {

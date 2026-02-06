@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useSettings } from '@/components/SettingsContext';
 import styles from './TimelinePanel.module.scss';
@@ -108,8 +108,6 @@ function findNearestEvent(
   return nearestEvent;
 }
 
-const SCROLL_STORAGE_KEY = 'timeline-scroll-position';
-
 export function TimelinePanel({ events, currentBookId, currentChapter }: TimelinePanelProps) {
   const { settings } = useSettings();
   const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
@@ -123,44 +121,20 @@ export function TimelinePanel({ events, currentBookId, currentChapter }: Timelin
     [events, currentBookId, currentChapter]
   );
 
-  // Save scroll position on every scroll
-  const handleScroll = useRef((e: Event) => {
-    const target = e.target as HTMLDivElement;
-    sessionStorage.setItem(SCROLL_STORAGE_KEY, String(target.scrollTop));
-  }).current;
-
-  // Restore scroll position immediately when container mounts
   const setContainerRef = (el: HTMLDivElement | null) => {
-    if (el && !containerRef.current) {
-      // First time mounting - restore saved position
-      const savedScroll = sessionStorage.getItem(SCROLL_STORAGE_KEY);
-      if (savedScroll) {
-        el.scrollTop = parseInt(savedScroll, 10);
-      }
-      el.addEventListener('scroll', handleScroll, { passive: true });
-    }
     containerRef.current = el;
   };
 
-  // Cleanup scroll listener
-  useEffect(() => {
-    return () => {
-      if (containerRef.current) {
-        containerRef.current.removeEventListener('scroll', handleScroll);
-      }
-    };
-  }, [handleScroll]);
-
   // Auto-scroll to current event or marker when chapter changes
   useEffect(() => {
-    if (!settings.showTimeline || !containerRef.current) return;
+    if (!settings.showTimeline || !containerRef.current || events.length === 0) return;
 
     // Find events for current chapter
     const currentEvents = events.filter(e =>
       e.references?.some(ref => ref.book_id === currentBookId && ref.chapter === currentChapter)
     );
 
-    // Small delay to ensure refs are set
+    // Small delay to ensure refs are set after render
     setTimeout(() => {
       let element: HTMLElement | null = null;
 
@@ -183,21 +157,12 @@ export function TimelinePanel({ events, currentBookId, currentChapter }: Timelin
         const elementRect = element.getBoundingClientRect();
         const targetScroll = containerRef.current.scrollTop + elementRect.top - containerRect.top - 100;
 
-        // Only scroll if target is not already in view
-        const currentScroll = containerRef.current.scrollTop;
-        const viewHeight = containerRef.current.clientHeight;
-        const elementTop = elementRect.top - containerRect.top + currentScroll;
-
-        const isInView = elementTop >= currentScroll + 50 && elementTop <= currentScroll + viewHeight - 50;
-
-        if (!isInView) {
-          containerRef.current.scrollTo({
-            top: targetScroll,
-            behavior: 'smooth'
-          });
-        }
+        containerRef.current.scrollTo({
+          top: Math.max(0, targetScroll),
+          behavior: 'smooth'
+        });
       }
-    }, 50);
+    }, 100);
   }, [currentBookId, currentChapter, events, settings.showTimeline]);
 
   // Hide in reading mode
