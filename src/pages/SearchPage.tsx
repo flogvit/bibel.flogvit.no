@@ -26,6 +26,12 @@ export function SearchPage() {
   const bibleQuery = bible !== 'osnb2' ? `?bible=${bible}` : '';
 
   const [query, setQuery] = useState(initialQuery);
+
+  // Sync query state when URL params change (e.g. header search)
+  useEffect(() => {
+    setQuery(initialQuery);
+  }, [initialQuery]);
+
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);

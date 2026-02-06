@@ -51,6 +51,12 @@ export function ReferenceInput({
   initialValue = ''
 }: Props) {
   const [query, setQuery] = useState(initialValue);
+
+  // Sync query state when initialValue prop changes (e.g. header search navigates to new ?q=)
+  useEffect(() => {
+    setQuery(initialValue);
+  }, [initialValue]);
+
   const [suggestions, setSuggestions] = useState<BookSuggestion[]>([]);
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [verseCount, setVerseCount] = useState<number | null>(null);
