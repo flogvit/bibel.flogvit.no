@@ -300,3 +300,73 @@ Data i `../free-bible/generate/chapter_insights/nb/[bok]-[kapittel].json` (96 ka
 - [x] Dom 2-3 - Dommersyklusen
 - [x] 1 Kong 17-19 - Elia-syklusen
 - [x] 2 Kong 2, 4 - Elisas mirakler
+
+## Fase 7: Migrering til Vite + React SPA ✓
+
+- [x] Opprett ny Vite + React + TypeScript konfigurasjon
+- [x] Konfigurer Vite for SCSS modules
+- [x] Konfigurer path aliases (@/)
+- [x] Sett opp React Router
+- [x] Migrer alle komponenter, hooks, lib, styles
+- [x] Opprett route-komponenter i pages/
+- [x] Sett opp App.tsx med React Router routes
+- [x] Express API-server med alle routes
+- [x] SQLite-tilkobling
+- [x] Service worker og offline-støtte
+- [x] Fjern Next.js avhengigheter
+
+## IndexedDB og brukerdata ✓
+
+- [x] IndexedDB oppsett (idb-keyval)
+- [x] Migrere fra localStorage til IndexedDB
+- [x] Universell tagging - tagge alle typer innhold (vers, notater, profetier, tidslinje, personer, leseplaner, temaer)
+- [x] Eksport/import av all brukerdata fra IndexedDB (v2-format)
+- [x] Bakoverkompatibel import av v1-format
+
+## Notater ✓
+
+- [x] Notat-funksjonalitet i versdetaljer
+- [x] Notatside (/notater) med oversikt
+- [x] Emnetagging av notater
+- [x] Redigering og sletting av notater
+- [x] Eksport/import av notater
+
+## Bibelske personer ✓
+
+- [x] Personside (/personer) med oversikt
+- [x] Enkeltpersonside (/personer/:id) med biografi og referanser
+- [x] API-endepunkter (/api/persons, /api/persons/:id)
+- [x] Navigasjonslenke i header
+
+## Statistikk ✓
+
+- [x] Statistikkside (/statistikk) med leseoversikt
+- [x] Navigasjonslenke i header
+
+## Bruker-oversettelser ✓
+
+- [x] Oversettelsesside (/oversettelser) for opplasting av egne bibeloversettelser
+- [x] Lagring i IndexedDB
+- [x] Integrert i bibelvelger i header
+- [x] Eksport/import av bruker-bibler (v2-format)
+
+## Verslister ✓
+
+- [x] Versliste-side (/lister) med to-panel layout
+- [x] Opprett, rediger, slett navngitte verslister
+- [x] Referanseinput med norsk format (Joh 3,16) via /api/reference
+- [x] Visning av vers med full tekst (VerseDisplay)
+- [x] Endre rekkefølge (flytt opp/ned)
+- [x] Kopier lenke til /tekst-visning
+- [x] Lagring i IndexedDB med localStorage-fallback
+- [x] Eksport/import med merge-støtte (v2-format)
+- [x] Navigasjonslenke i header (Ressurser-meny)
+- [x] Dark mode støtte
+
+## Hurtigtaster oppdatert ✓
+
+- [x] Alt+Shift+V → Verslister
+- [x] Alt+Shift+A → Paralleller
+- [x] Alt+Shift+I → Statistikk
+- [x] Oppdatert hurtigtasthjelp-modal (?-tasten)
+- [x] Oppdatert Om-side med alle funksjoner og hurtigtaster
