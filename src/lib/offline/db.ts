@@ -1,7 +1,7 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 
 // Database version - increment when schema changes
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const DB_NAME = 'bibel-offline';
 const DELETE_FLAG_KEY = 'bibel-offline-delete-pending';
 
@@ -50,6 +50,8 @@ export interface StoredVerse {
   verse: number;
   text: string;
   bible: string;
+  srcChapter?: number;
+  srcVerse?: number;
   versions?: {
     text: string;
     explanation: string;
@@ -236,6 +238,15 @@ export interface StoredPersonData {
   keyEvents: StoredPersonKeyEvent[];
 }
 
+// User-uploaded bible translations
+export interface StoredUserBible {
+  id: string; // 'user:{uuid}'
+  name: string;
+  mappingId: string;
+  uploadedAt: number;
+  verseCounts?: { books: number; chapters: number; verses: number };
+}
+
 // Sync state for incremental updates
 export interface SyncState {
   syncVersion: number;
@@ -296,6 +307,11 @@ interface BibelDBSchema extends DBSchema {
   syncState: {
     key: 'state';
     value: SyncState;
+  };
+  // Version 4: User-uploaded bible translations
+  userBibles: {
+    key: string;
+    value: StoredUserBible;
   };
 }
 
@@ -420,8 +436,10 @@ async function openDatabaseWithRetry(retryCount = 0): Promise<IDBPDatabase<Bibel
         db.createObjectStore('syncState');
       }
 
-      // Future migrations would go here:
-      // if (oldVersion < 4) { ... }
+      // Version 4: User-uploaded bible translations
+      if (oldVersion < 4) {
+        db.createObjectStore('userBibles', { keyPath: 'id' });
+      }
     },
     blocked() {
       console.warn('[DB] Database blocked - another connection has an older version');

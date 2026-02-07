@@ -16,7 +16,7 @@ export {
 } from './offline/userData';
 
 // Bible version options
-export const bibleVersions: { value: 'osnb2' | 'osnn1'; label: string }[] = [
+export const bibleVersions: { value: string; label: string }[] = [
   { value: 'osnb2', label: 'Bokmål' },
   { value: 'osnn1', label: 'Nynorsk' },
 ];

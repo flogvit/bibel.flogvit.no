@@ -222,7 +222,7 @@ export async function saveTopics(data: TopicsData): Promise<void> {
 // ============================================
 
 export type FontSize = 'small' | 'medium' | 'large';
-export type BibleVersion = 'osnb2' | 'osnn1';
+export type BibleVersion = 'osnb2' | 'osnn1' | (string & {});
 
 export interface BibleSettings {
   showBookSummary: boolean;
