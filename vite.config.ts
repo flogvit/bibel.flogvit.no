@@ -62,7 +62,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000,
+    port: 3020,
     proxy: {
       // Proxy API calls to Express backend during development
       '/api': {
