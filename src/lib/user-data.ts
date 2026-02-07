@@ -1,20 +1,35 @@
 // Export/import user data functionality
-import type { BibleSettings } from './settings';
-import type { FavoriteVerse, Topic, VerseTopic, Note, ReadingPosition, VerseVersionChoices } from './offline/userData';
+// Reads/writes via IndexedDB (primary) with localStorage sync
+import type { StoredUserBible, StoredChapter } from './offline/db';
+import {
+  getFavorites, saveFavorites,
+  getNotes, saveNotes,
+  getTopics, saveTopics,
+  getSettings, saveSettings,
+  getActivePlanId, setActivePlanId,
+  getAllPlanProgress, savePlanProgress,
+  getReadingPosition, saveReadingPosition,
+  getVerseVersions, saveVerseVersions,
+  type FavoriteVerse, type Topic, type VerseTopic, type ItemTopic,
+  type Note, type ReadingPosition, type VerseVersionChoices,
+  type TopicsData, type BibleSettings,
+} from './offline/userData';
 import type { ReadingPlanProgress } from './reading-plan';
+import { getUserBibles, addUserBible, storeUserBibleChapters } from './offline/userBibles';
+import { getAllCachedChapters } from './offline/storage';
 
-export interface TopicsData {
-  topics: Topic[];
-  verseTopics: VerseTopic[];
-}
+// ============================================
+// Export format types
+// ============================================
 
-export interface UserDataExport {
+// Version 1: Original localStorage-only format
+interface UserDataV1 {
   version: 1;
   exportedAt: string;
   data: {
     settings?: BibleSettings;
     favorites?: FavoriteVerse[];
-    topics?: TopicsData;
+    topics?: { topics: Topic[]; verseTopics: VerseTopic[] };
     notes?: Note[];
     readingPlanProgress?: Record<string, ReadingPlanProgress>;
     activeReadingPlan?: string | null;
@@ -23,136 +38,172 @@ export interface UserDataExport {
   };
 }
 
-const STORAGE_KEYS = {
-  settings: 'bible-settings',
-  favorites: 'bible-favorites',
-  topics: 'bible-topics',
-  notes: 'bible-notes',
-  readingPlanProgress: 'readingPlanProgress',
-  activeReadingPlan: 'activeReadingPlan',
-  readingPosition: 'bible-reading-position',
-  verseVersions: 'bible-verse-versions',
-} as const;
+// Version 2: Full IndexedDB support + user bibles + itemTopics
+interface UserDataV2 {
+  version: 2;
+  exportedAt: string;
+  data: {
+    settings?: BibleSettings;
+    favorites?: FavoriteVerse[];
+    topics?: { topics: Topic[]; verseTopics: VerseTopic[]; itemTopics: ItemTopic[] };
+    notes?: Note[];
+    readingPlanProgress?: Record<string, ReadingPlanProgress>;
+    activeReadingPlan?: string | null;
+    readingPosition?: ReadingPosition | null;
+    verseVersions?: VerseVersionChoices;
+    userBibles?: ExportedUserBible[];
+  };
+}
+
+interface ExportedUserBible {
+  meta: StoredUserBible;
+  chapters: StoredChapter[];
+}
+
+// Union type for all supported versions
+export type UserDataExport = UserDataV1 | UserDataV2;
+
+// Current export version
+const CURRENT_VERSION = 2;
+
+// ============================================
+// Export
+// ============================================
 
 /**
- * Export all user data from localStorage
+ * Export all user data from IndexedDB
  */
-export function exportUserData(): UserDataExport {
+export async function exportUserData(): Promise<UserDataV2> {
   if (typeof window === 'undefined') {
-    return { version: 1, exportedAt: new Date().toISOString(), data: {} };
+    return { version: CURRENT_VERSION, exportedAt: new Date().toISOString(), data: {} };
   }
 
-  const data: UserDataExport['data'] = {};
+  const data: UserDataV2['data'] = {};
 
   try {
-    // Settings
-    const settingsStr = localStorage.getItem(STORAGE_KEYS.settings);
-    if (settingsStr) {
-      data.settings = JSON.parse(settingsStr);
+    const settings = await getSettings();
+    // Only include if different from defaults (settings always returns merged with defaults)
+    data.settings = settings;
+
+    const favorites = await getFavorites();
+    if (favorites.length > 0) data.favorites = favorites;
+
+    const topicsData = await getTopics();
+    if (topicsData.topics.length > 0 || topicsData.verseTopics.length > 0 || topicsData.itemTopics.length > 0) {
+      data.topics = topicsData;
     }
 
-    // Favorites
-    const favoritesStr = localStorage.getItem(STORAGE_KEYS.favorites);
-    if (favoritesStr) {
-      data.favorites = JSON.parse(favoritesStr);
-    }
+    const notes = await getNotes();
+    if (notes.length > 0) data.notes = notes;
 
-    // Topics
-    const topicsStr = localStorage.getItem(STORAGE_KEYS.topics);
-    if (topicsStr) {
-      data.topics = JSON.parse(topicsStr);
-    }
+    const planProgress = await getAllPlanProgress();
+    if (Object.keys(planProgress).length > 0) data.readingPlanProgress = planProgress;
 
-    // Notes
-    const notesStr = localStorage.getItem(STORAGE_KEYS.notes);
-    if (notesStr) {
-      data.notes = JSON.parse(notesStr);
-    }
+    const activePlan = await getActivePlanId();
+    if (activePlan) data.activeReadingPlan = activePlan;
 
-    // Reading plan progress
-    const progressStr = localStorage.getItem(STORAGE_KEYS.readingPlanProgress);
-    if (progressStr) {
-      data.readingPlanProgress = JSON.parse(progressStr);
-    }
+    const readingPos = await getReadingPosition();
+    if (readingPos) data.readingPosition = readingPos;
 
-    // Active reading plan (stored as JSON string)
-    const activePlanStr = localStorage.getItem(STORAGE_KEYS.activeReadingPlan);
-    if (activePlanStr) {
-      data.activeReadingPlan = JSON.parse(activePlanStr);
-    }
+    const verseVersions = await getVerseVersions();
+    if (Object.keys(verseVersions).length > 0) data.verseVersions = verseVersions;
 
-    // Reading position
-    const readingPositionStr = localStorage.getItem(STORAGE_KEYS.readingPosition);
-    if (readingPositionStr) {
-      data.readingPosition = JSON.parse(readingPositionStr);
-    }
-
-    // Verse versions
-    const verseVersionsStr = localStorage.getItem(STORAGE_KEYS.verseVersions);
-    if (verseVersionsStr) {
-      data.verseVersions = JSON.parse(verseVersionsStr);
+    // User-uploaded bibles (metadata + all chapters)
+    const userBibles = await getUserBibles();
+    if (userBibles.length > 0) {
+      const exportedBibles: ExportedUserBible[] = [];
+      for (const bible of userBibles) {
+        const chapters = await getAllCachedChapters(bible.id);
+        exportedBibles.push({ meta: bible, chapters });
+      }
+      data.userBibles = exportedBibles;
     }
   } catch (e) {
     console.error('Failed to export user data:', e);
   }
 
   return {
-    version: 1,
+    version: CURRENT_VERSION,
     exportedAt: new Date().toISOString(),
     data,
   };
 }
 
+// ============================================
+// Import
+// ============================================
+
 /**
- * Import user data into localStorage
- * @param data The exported data to import
- * @param merge If true, merge with existing data instead of overwriting
+ * Import user data into IndexedDB + localStorage
+ * Supports version 1 and 2 formats
  */
-export function importUserData(data: UserDataExport, merge = false): void {
+export async function importUserData(data: UserDataExport, merge = false): Promise<void> {
   if (typeof window === 'undefined') return;
 
-  // Validate version
-  if (data.version !== 1) {
-    throw new Error(`Ukjent dataversjon: ${data.version}`);
+  if (data.version === 1) {
+    await importV1(data, merge);
+  } else if (data.version === 2) {
+    await importV2(data, merge);
+  } else {
+    throw new Error(`Ukjent dataversjon: ${(data as { version: number }).version}`);
   }
+}
 
+/**
+ * Import version 1 format (convert to v2 internally)
+ */
+async function importV1(data: UserDataV1, merge: boolean): Promise<void> {
+  // Convert v1 topics to v2 format (add empty itemTopics)
+  const v2Topics = data.data.topics
+    ? { ...data.data.topics, itemTopics: [] as ItemTopic[] }
+    : undefined;
+
+  const v2Data: UserDataV2 = {
+    version: 2,
+    exportedAt: data.exportedAt,
+    data: {
+      ...data.data,
+      topics: v2Topics,
+    },
+  };
+
+  await importV2(v2Data, merge);
+}
+
+/**
+ * Import version 2 format
+ */
+async function importV2(data: UserDataV2, merge: boolean): Promise<void> {
   try {
-    // Settings - always overwrite (merge doesn't make sense for settings)
+    // Settings - always overwrite
     if (data.data.settings) {
-      localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(data.data.settings));
+      await saveSettings(data.data.settings);
     }
 
     // Favorites
     if (data.data.favorites) {
       if (merge) {
-        const existingStr = localStorage.getItem(STORAGE_KEYS.favorites);
-        const existing: FavoriteVerse[] = existingStr ? JSON.parse(existingStr) : [];
+        const existing = await getFavorites();
         const merged = [...existing];
-
         for (const fav of data.data.favorites) {
           const exists = merged.some(
             f => f.bookId === fav.bookId && f.chapter === fav.chapter && f.verse === fav.verse
           );
-          if (!exists) {
-            merged.push(fav);
-          }
+          if (!exists) merged.push(fav);
         }
-        localStorage.setItem(STORAGE_KEYS.favorites, JSON.stringify(merged));
+        await saveFavorites(merged);
       } else {
-        localStorage.setItem(STORAGE_KEYS.favorites, JSON.stringify(data.data.favorites));
+        await saveFavorites(data.data.favorites);
       }
     }
 
     // Topics
     if (data.data.topics) {
       if (merge) {
-        const existingStr = localStorage.getItem(STORAGE_KEYS.topics);
-        const existing: TopicsData = existingStr
-          ? JSON.parse(existingStr)
-          : { topics: [], verseTopics: [] };
+        const existing = await getTopics();
 
-        // Merge topics (by ID)
-        const topicIdMap = new Map<string, string>(); // old ID -> new/existing ID
+        // Merge topic definitions (by name)
+        const topicIdMap = new Map<string, string>();
         for (const topic of data.data.topics.topics) {
           const existingTopic = existing.topics.find(t => t.name.toLowerCase() === topic.name.toLowerCase());
           if (existingTopic) {
@@ -163,8 +214,8 @@ export function importUserData(data: UserDataExport, merge = false): void {
           }
         }
 
-        // Merge verseTopics with mapped topic IDs
-        for (const vt of data.data.topics.verseTopics) {
+        // Merge legacy verseTopics
+        for (const vt of data.data.topics.verseTopics || []) {
           const mappedTopicId = topicIdMap.get(vt.topicId) || vt.topicId;
           const exists = existing.verseTopics.some(
             evt => evt.bookId === vt.bookId && evt.chapter === vt.chapter &&
@@ -175,81 +226,102 @@ export function importUserData(data: UserDataExport, merge = false): void {
           }
         }
 
-        localStorage.setItem(STORAGE_KEYS.topics, JSON.stringify(existing));
+        // Merge itemTopics
+        for (const it of data.data.topics.itemTopics || []) {
+          const mappedTopicId = topicIdMap.get(it.topicId) || it.topicId;
+          const exists = existing.itemTopics.some(
+            eit => eit.itemType === it.itemType && eit.itemId === it.itemId && eit.topicId === mappedTopicId
+          );
+          if (!exists) {
+            existing.itemTopics.push({ ...it, topicId: mappedTopicId });
+          }
+        }
+
+        await saveTopics(existing);
       } else {
-        localStorage.setItem(STORAGE_KEYS.topics, JSON.stringify(data.data.topics));
+        await saveTopics({
+          topics: data.data.topics.topics || [],
+          verseTopics: data.data.topics.verseTopics || [],
+          itemTopics: data.data.topics.itemTopics || [],
+        });
       }
     }
 
     // Notes
     if (data.data.notes) {
       if (merge) {
-        const existingStr = localStorage.getItem(STORAGE_KEYS.notes);
-        const existing: Note[] = existingStr ? JSON.parse(existingStr) : [];
-
-        // Merge notes by ID - imported notes with same ID overwrite existing
+        const existing = await getNotes();
         const existingIds = new Set(existing.map(n => n.id));
         const merged = [...existing];
 
         for (const note of data.data.notes) {
           if (existingIds.has(note.id)) {
-            // Update existing note if imported is newer
-            const existingIndex = merged.findIndex(n => n.id === note.id);
-            if (existingIndex !== -1 && note.updatedAt > merged[existingIndex].updatedAt) {
-              merged[existingIndex] = note;
+            const idx = merged.findIndex(n => n.id === note.id);
+            if (idx !== -1 && note.updatedAt > merged[idx].updatedAt) {
+              merged[idx] = note;
             }
           } else {
             merged.push(note);
           }
         }
-
-        localStorage.setItem(STORAGE_KEYS.notes, JSON.stringify(merged));
+        await saveNotes(merged);
       } else {
-        localStorage.setItem(STORAGE_KEYS.notes, JSON.stringify(data.data.notes));
+        await saveNotes(data.data.notes);
       }
     }
 
     // Reading plan progress
     if (data.data.readingPlanProgress) {
       if (merge) {
-        const existingStr = localStorage.getItem(STORAGE_KEYS.readingPlanProgress);
-        const existing: Record<string, ReadingPlanProgress> = existingStr ? JSON.parse(existingStr) : {};
-        // Merge: imported data overwrites existing for same plan
-        const merged = { ...existing, ...data.data.readingPlanProgress };
-        localStorage.setItem(STORAGE_KEYS.readingPlanProgress, JSON.stringify(merged));
+        const existing = await getAllPlanProgress();
+        await savePlanProgress({ ...existing, ...data.data.readingPlanProgress });
       } else {
-        localStorage.setItem(STORAGE_KEYS.readingPlanProgress, JSON.stringify(data.data.readingPlanProgress));
+        await savePlanProgress(data.data.readingPlanProgress);
       }
     }
 
-    // Active reading plan (store as JSON string for consistency)
+    // Active reading plan
     if (data.data.activeReadingPlan !== undefined) {
       if (data.data.activeReadingPlan) {
-        localStorage.setItem(STORAGE_KEYS.activeReadingPlan, JSON.stringify(data.data.activeReadingPlan));
+        await setActivePlanId(data.data.activeReadingPlan);
       } else if (!merge) {
-        localStorage.removeItem(STORAGE_KEYS.activeReadingPlan);
+        await setActivePlanId(null);
       }
     }
 
-    // Reading position - always overwrite (only one position makes sense)
+    // Reading position
     if (data.data.readingPosition !== undefined) {
       if (data.data.readingPosition) {
-        localStorage.setItem(STORAGE_KEYS.readingPosition, JSON.stringify(data.data.readingPosition));
+        await saveReadingPosition(data.data.readingPosition);
       } else if (!merge) {
-        localStorage.removeItem(STORAGE_KEYS.readingPosition);
+        await saveReadingPosition(null);
       }
     }
 
     // Verse versions
     if (data.data.verseVersions) {
       if (merge) {
-        const existingStr = localStorage.getItem(STORAGE_KEYS.verseVersions);
-        const existing: VerseVersionChoices = existingStr ? JSON.parse(existingStr) : {};
-        // Merge: imported data overwrites existing for same verse
-        const merged = { ...existing, ...data.data.verseVersions };
-        localStorage.setItem(STORAGE_KEYS.verseVersions, JSON.stringify(merged));
+        const existing = await getVerseVersions();
+        await saveVerseVersions({ ...existing, ...data.data.verseVersions });
       } else {
-        localStorage.setItem(STORAGE_KEYS.verseVersions, JSON.stringify(data.data.verseVersions));
+        await saveVerseVersions(data.data.verseVersions);
+      }
+    }
+
+    // User bibles (v2 only)
+    if (data.data.userBibles) {
+      const existingBibles = await getUserBibles();
+      const existingIds = new Set(existingBibles.map(b => b.id));
+
+      for (const ub of data.data.userBibles) {
+        if (merge && existingIds.has(ub.meta.id)) {
+          // Skip existing bibles when merging
+          continue;
+        }
+        await addUserBible(ub.meta);
+        if (ub.chapters.length > 0) {
+          await storeUserBibleChapters(ub.meta.id, ub.chapters);
+        }
       }
     }
   } catch (e) {
@@ -258,11 +330,15 @@ export function importUserData(data: UserDataExport, merge = false): void {
   }
 }
 
+// ============================================
+// Download
+// ============================================
+
 /**
  * Download user data as a JSON file
  */
-export function downloadUserData(): void {
-  const data = exportUserData();
+export async function downloadUserData(): Promise<void> {
+  const data = await exportUserData();
   const jsonString = JSON.stringify(data, null, 2);
   const blob = new Blob([jsonString], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -279,20 +355,28 @@ export function downloadUserData(): void {
   URL.revokeObjectURL(url);
 }
 
+// ============================================
+// Validation
+// ============================================
+
 /**
- * Validate that data is a valid UserDataExport
+ * Validate that data is a valid UserDataExport (any supported version)
  */
 export function validateUserDataExport(data: unknown): data is UserDataExport {
   if (typeof data !== 'object' || data === null) return false;
 
   const obj = data as Record<string, unknown>;
 
-  if (obj.version !== 1) return false;
+  if (obj.version !== 1 && obj.version !== 2) return false;
   if (typeof obj.exportedAt !== 'string') return false;
   if (typeof obj.data !== 'object' || obj.data === null) return false;
 
   return true;
 }
+
+// ============================================
+// Import summary
+// ============================================
 
 /**
  * Get a summary of what data will be imported
@@ -311,8 +395,10 @@ export function getImportSummary(data: UserDataExport): string[] {
   if (data.data.topics) {
     const topicCount = data.data.topics.topics?.length || 0;
     const verseCount = data.data.topics.verseTopics?.length || 0;
-    if (topicCount > 0 || verseCount > 0) {
-      summary.push(`${topicCount} emner med ${verseCount} vers-tilknytninger`);
+    const itemCount = ('itemTopics' in data.data.topics ? data.data.topics.itemTopics?.length : 0) || 0;
+    const tagCount = verseCount + itemCount;
+    if (topicCount > 0 || tagCount > 0) {
+      summary.push(`${topicCount} emner med ${tagCount} tilknytninger`);
     }
   }
 
@@ -340,6 +426,11 @@ export function getImportSummary(data: UserDataExport): string[] {
     if (versionCount > 0) {
       summary.push(`${versionCount} versvalg`);
     }
+  }
+
+  if (data.version === 2 && data.data.userBibles && data.data.userBibles.length > 0) {
+    const names = data.data.userBibles.map(ub => ub.meta.name).join(', ');
+    summary.push(`${data.data.userBibles.length} bibel${data.data.userBibles.length > 1 ? 'oversettelser' : 'oversettelse'}: ${names}`);
   }
 
   return summary;
