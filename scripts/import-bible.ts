@@ -37,6 +37,7 @@ interface ImportStats {
   dailyVerses: { updated: number; unchanged: number };
   readingPlans: { updated: number; unchanged: number };
   gospelParallels: { updated: number; unchanged: number };
+  verseMappings: { updated: number; unchanged: number };
 }
 
 const stats: ImportStats = {
@@ -58,6 +59,7 @@ const stats: ImportStats = {
   dailyVerses: { updated: 0, unchanged: 0 },
   readingPlans: { updated: 0, unchanged: 0 },
   gospelParallels: { updated: 0, unchanged: 0 },
+  verseMappings: { updated: 0, unchanged: 0 },
 };
 
 // Sørg for at data-mappen eksisterer
@@ -428,6 +430,15 @@ db.exec(`
     reference TEXT NOT NULL,
     FOREIGN KEY (parallel_id) REFERENCES gospel_parallels(id),
     FOREIGN KEY (book_id) REFERENCES books(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS verse_mappings (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    book_names TEXT NOT NULL,
+    verse_map TEXT NOT NULL,
+    unmapped TEXT
   );
 `);
 
@@ -1560,6 +1571,49 @@ if (fs.existsSync(gospelParallelsPath)) {
   }
 }
 
+// Importer vers-mappinger
+console.log('Importerer vers-mappinger...');
+const insertMapping = db.prepare(`
+  INSERT OR REPLACE INTO verse_mappings (id, name, description, book_names, verse_map, unmapped)
+  VALUES (?, ?, ?, ?, ?, ?)
+`);
+
+const mappingsPath = path.join(GENERATE_PATH, 'mappings');
+if (fs.existsSync(mappingsPath)) {
+  const files = fs.readdirSync(mappingsPath).filter(f => f.endsWith('.json'));
+
+  for (const file of files) {
+    const filePath = path.join(mappingsPath, file);
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const contentHash = computeHash(content);
+    const mappingId = file.replace('.json', '');
+
+    if (!isFullImport && !hasContentChanged(db, 'verse_mapping', mappingId, contentHash)) {
+      stats.verseMappings.unchanged++;
+      continue;
+    }
+
+    try {
+      const data = JSON.parse(content);
+      insertMapping.run(
+        data.id || mappingId,
+        data.name || mappingId,
+        data.description || null,
+        JSON.stringify(data.bookNames),
+        JSON.stringify(data.verseMap),
+        data.unmapped ? JSON.stringify(data.unmapped) : null
+      );
+      updateContentHash(db, 'verse_mapping', mappingId, contentHash);
+      stats.verseMappings.updated++;
+    } catch (e) {
+      console.error(`Ugyldig JSON i ${file}:`, e);
+    }
+  }
+  console.log(`  Importerte ${stats.verseMappings.updated} vers-mappinger`);
+} else {
+  console.log('  Ingen mappinger-mappe funnet');
+}
+
 // Opprett indekser
 console.log('Oppretter indekser...');
 db.exec(`
@@ -1631,6 +1685,7 @@ console.log(`Kapittel-innsikter    ${String(stats.chapterInsights.updated).padSt
 console.log(`Dagens vers           ${String(stats.dailyVerses.updated).padStart(9)}  ${String(stats.dailyVerses.unchanged).padStart(7)}`);
 console.log(`Leseplaner            ${String(stats.readingPlans.updated).padStart(9)}  ${String(stats.readingPlans.unchanged).padStart(7)}`);
 console.log(`Evangelieparalleller  ${String(stats.gospelParallels.updated).padStart(9)}  ${String(stats.gospelParallels.unchanged).padStart(7)}`);
+console.log(`Vers-mappinger        ${String(stats.verseMappings.updated).padStart(9)}  ${String(stats.verseMappings.unchanged).padStart(7)}`);
 console.log('----------------------------------------');
 console.log(`Totalt                ${String(totalUpdated).padStart(9)}  ${String(totalUnchanged).padStart(7)}`);
 console.log('\nFerdig!');

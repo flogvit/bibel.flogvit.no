@@ -1657,3 +1657,24 @@ export function getTopOriginalWords(language: 'hebrew' | 'greek', limit = 100): 
     .slice(0, limit)
     .map(([word, count]) => ({ word, count }));
 }
+
+// --- Verse mappings ---
+
+export interface VerseMapping {
+  id: string;
+  name: string;
+  description: string | null;
+  book_names: string;
+  verse_map: string;
+  unmapped: string | null;
+}
+
+export function getAllVerseMappings(): { id: string; name: string; description: string | null }[] {
+  const db = getDb();
+  return db.prepare('SELECT id, name, description FROM verse_mappings ORDER BY name').all() as { id: string; name: string; description: string | null }[];
+}
+
+export function getVerseMappingById(id: string): VerseMapping | undefined {
+  const db = getDb();
+  return db.prepare('SELECT * FROM verse_mappings WHERE id = ?').get(id) as VerseMapping | undefined;
+}
