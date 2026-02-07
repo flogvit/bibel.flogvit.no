@@ -40,9 +40,32 @@ function getChapterSortOrder(bookId: number, chapter: number): number {
     if (bookId === 44) {
       return 150 + Math.floor((chapter / 28) * 10);
     }
-    // Epistles and Revelation (sort_order 155-170)
-    // These were written during the early church period
-    return 155 + (bookId - 45); // roughly maps 45-66 to 155-176
+    // Epistles and Revelation - map to their actual early church timeline positions
+    const epistleSortOrders: Record<number, number> = {
+      45: 209,  // Romans
+      46: 208,  // 1 Corinthians
+      47: 208,  // 2 Corinthians
+      48: 206,  // Galatians
+      49: 204,  // Ephesians (prison epistle)
+      50: 204,  // Philippians (prison epistle)
+      51: 204,  // Colossians (prison epistle)
+      52: 207,  // 1 Thessalonians
+      53: 207,  // 2 Thessalonians
+      54: 212,  // 1 Timothy (pastoral)
+      55: 212,  // 2 Timothy (pastoral)
+      56: 212,  // Titus (pastoral)
+      57: 204,  // Philemon (prison epistle)
+      58: 210,  // Hebrews
+      59: 205,  // James
+      60: 211,  // 1 Peter
+      61: 211,  // 2 Peter
+      62: 214,  // 1 John
+      63: 214,  // 2 John
+      64: 214,  // 3 John
+      65: 213,  // Jude
+      66: 216,  // Revelation
+    };
+    return epistleSortOrders[bookId] ?? 204;
   }
 
   // OT books - use existing book_id based approach but scale to match sort_order
