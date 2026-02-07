@@ -196,14 +196,25 @@ export function getOriginalWord4Word(bookId: number, chapter: number, verse: num
   return getWord4Word(bookId, chapter, verse, bible);
 }
 
-export function getReferences(bookId: number, chapter: number, verse: number): Reference[] {
+export function getReferences(bookId: number, chapter: number, verse: number, lang = 'nb'): Reference[] {
   const db = getDb();
   const refs = db.prepare(`
     SELECT r.*, b.short_name as book_short_name
     FROM references_ r
     JOIN books b ON r.to_book_id = b.id
-    WHERE r.from_book_id = ? AND r.from_chapter = ? AND r.from_verse = ?
-  `).all(bookId, chapter, verse) as Reference[];
+    WHERE r.from_book_id = ? AND r.from_chapter = ? AND r.from_verse = ? AND r.language = ?
+  `).all(bookId, chapter, verse, lang) as Reference[];
+
+  // Fallback to 'nb' if no results for the requested language
+  if (refs.length === 0 && lang !== 'nb') {
+    return db.prepare(`
+      SELECT r.*, b.short_name as book_short_name
+      FROM references_ r
+      JOIN books b ON r.to_book_id = b.id
+      WHERE r.from_book_id = ? AND r.from_chapter = ? AND r.from_verse = ? AND r.language = 'nb'
+    `).all(bookId, chapter, verse) as Reference[];
+  }
+
   return refs;
 }
 

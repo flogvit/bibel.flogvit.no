@@ -78,7 +78,7 @@ chapterRouter.get('/', (req: Request, res: Response) => {
     // Get references for each verse
     const references: Record<number, unknown[]> = {};
     for (const verse of verses) {
-      const refs = getReferences(bookId, chapter, verse.verse);
+      const refs = getReferences(bookId, chapter, verse.verse, lang);
       if (refs.length > 0) {
         references[verse.verse] = refs;
       }

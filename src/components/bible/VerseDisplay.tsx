@@ -155,7 +155,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, in
         fetchTypes.push('word4word');
       }
       if (!initialReferences) {
-        fetches.push(fetch(`/api/references?bookId=${bookId}&chapter=${verse.chapter}&verse=${verse.verse}`));
+        fetches.push(fetch(`/api/references?bookId=${bookId}&chapter=${verse.chapter}&verse=${verse.verse}&lang=${lang}`));
         fetchTypes.push('references');
       }
       fetches.push(fetch(`/api/prophecies?book=${bookId}&chapter=${verse.chapter}&verse=${verse.verse}`));

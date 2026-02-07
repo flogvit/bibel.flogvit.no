@@ -202,6 +202,7 @@ db.exec(`
     to_verse_start INTEGER NOT NULL,
     to_verse_end INTEGER NOT NULL,
     description TEXT,
+    language TEXT NOT NULL DEFAULT 'nb',
     FOREIGN KEY (from_book_id) REFERENCES books(id),
     FOREIGN KEY (to_book_id) REFERENCES books(id)
   );
@@ -590,15 +591,21 @@ for (const original of originals) {
 // Importer referanser
 console.log('Importerer referanser...');
 const insertReference = db.prepare(`
-  INSERT INTO references_ (from_book_id, from_chapter, from_verse, to_book_id, to_chapter, to_verse_start, to_verse_end, description)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  INSERT INTO references_ (from_book_id, from_chapter, from_verse, to_book_id, to_chapter, to_verse_start, to_verse_end, description, language)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 const deleteVerseReferences = db.prepare(`
-  DELETE FROM references_ WHERE from_book_id = ? AND from_chapter = ? AND from_verse = ?
+  DELETE FROM references_ WHERE from_book_id = ? AND from_chapter = ? AND from_verse = ? AND language = ?
 `);
 
-const refsPath = path.join(GENERATE_PATH, 'references');
-if (fs.existsSync(refsPath)) {
+for (const lang of languages) {
+  const refsPath = path.join(GENERATE_PATH, 'references', lang);
+  if (!fs.existsSync(refsPath)) {
+    console.log(`  Hopper over referanser for ${lang} (ikke funnet)`);
+    continue;
+  }
+
+  console.log(`  Importerer referanser for ${lang}...`);
   const bookDirs = fs.readdirSync(refsPath).filter(f => !f.startsWith('.'));
 
   for (const bookDir of bookDirs) {
@@ -622,7 +629,7 @@ if (fs.existsSync(refsPath)) {
         const versePath = path.join(chapterPath, verseFile);
         const content = fs.readFileSync(versePath, 'utf-8');
         const contentHash = computeHash(content);
-        const contentKey = `${bookId}-${chapterId}-${verseId}`;
+        const contentKey = `ref-${lang}-${bookId}-${chapterId}-${verseId}`;
 
         // Check if content has changed
         if (!isFullImport && !hasContentChanged(db, 'reference', contentKey, contentHash)) {
@@ -632,7 +639,7 @@ if (fs.existsSync(refsPath)) {
 
         // Content changed - update
         const data = JSON.parse(content);
-        deleteVerseReferences.run(bookId, chapterId, verseId);
+        deleteVerseReferences.run(bookId, chapterId, verseId, lang);
 
         if (data.references) {
           for (const ref of data.references) {
@@ -649,7 +656,8 @@ if (fs.existsSync(refsPath)) {
                 bookId, chapterId, verseId,
                 ref.bookId, ref.chapterId,
                 fromVerse, toVerse,
-                ref.text || null
+                ref.text || null,
+                lang
               );
             } catch (e) {
               console.error(`Error importing reference from ${versePath}:`, JSON.stringify(ref), e);
@@ -1558,7 +1566,7 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_verses_book_chapter ON verses(book_id, chapter);
   CREATE INDEX IF NOT EXISTS idx_verses_bible ON verses(bible);
   CREATE INDEX IF NOT EXISTS idx_word4word_verse ON word4word(book_id, chapter, verse, bible);
-  CREATE INDEX IF NOT EXISTS idx_references_from ON references_(from_book_id, from_chapter, from_verse);
+  CREATE INDEX IF NOT EXISTS idx_references_from ON references_(from_book_id, from_chapter, from_verse, language);
   CREATE INDEX IF NOT EXISTS idx_important_words_chapter ON important_words(book_id, chapter);
   CREATE INDEX IF NOT EXISTS idx_timeline_events_period ON timeline_events(period_id);
   CREATE INDEX IF NOT EXISTS idx_timeline_events_sort ON timeline_events(sort_order);
