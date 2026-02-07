@@ -221,6 +221,9 @@ export function Header() {
               <Link to="/notater" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Notater
               </Link>
+              <Link to="/lister" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
+                Verslister
+              </Link>
               <Link to="/leseplan" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Leseplan
               </Link>
@@ -261,6 +264,9 @@ export function Header() {
             </Link>
             <Link to="/notater" className={styles.navLink} onClick={handleNavClick}>
               Notater
+            </Link>
+            <Link to="/lister" className={styles.navLink} onClick={handleNavClick}>
+              Verslister
             </Link>
             <Link to="/leseplan" className={styles.navLink} onClick={handleNavClick}>
               Leseplan

@@ -19,6 +19,7 @@ const STORAGE_KEYS = {
   planProgress: 'readingPlanProgress',
   readingPosition: 'bible-reading-position',
   verseVersions: 'bible-verse-versions',
+  verseLists: 'bible-verse-lists',
 } as const;
 
 type StorageKey = keyof typeof STORAGE_KEYS;
@@ -364,6 +365,27 @@ export async function saveVerseVersions(choices: VerseVersionChoices): Promise<v
 }
 
 // ============================================
+// Verse Lists
+// ============================================
+
+export interface VerseList {
+  id: string;
+  name: string;
+  description?: string;
+  refs: string[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+export async function getVerseLists(): Promise<VerseList[]> {
+  return getData<VerseList[]>('verseLists', []);
+}
+
+export async function saveVerseLists(lists: VerseList[]): Promise<void> {
+  return saveData('verseLists', lists);
+}
+
+// ============================================
 // Migration Check
 // ============================================
 
@@ -432,6 +454,11 @@ export async function migrateToIndexedDB(): Promise<void> {
     const verseVersions = getFromLocalStorage<VerseVersionChoices>(STORAGE_KEYS.verseVersions);
     if (verseVersions) {
       await setUserData('verseVersions', verseVersions);
+    }
+
+    const verseLists = getFromLocalStorage<VerseList[]>(STORAGE_KEYS.verseLists);
+    if (verseLists) {
+      await setUserData('verseLists', verseLists);
     }
 
     markMigrationComplete();

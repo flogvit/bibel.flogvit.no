@@ -10,9 +10,10 @@ import {
   getAllPlanProgress, savePlanProgress,
   getReadingPosition, saveReadingPosition,
   getVerseVersions, saveVerseVersions,
+  getVerseLists, saveVerseLists,
   type FavoriteVerse, type Topic, type VerseTopic, type ItemTopic,
   type Note, type ReadingPosition, type VerseVersionChoices,
-  type TopicsData, type BibleSettings,
+  type TopicsData, type BibleSettings, type VerseList,
 } from './offline/userData';
 import type { ReadingPlanProgress } from './reading-plan';
 import { getUserBibles, addUserBible, storeUserBibleChapters } from './offline/userBibles';
@@ -51,6 +52,7 @@ interface UserDataV2 {
     activeReadingPlan?: string | null;
     readingPosition?: ReadingPosition | null;
     verseVersions?: VerseVersionChoices;
+    verseLists?: VerseList[];
     userBibles?: ExportedUserBible[];
   };
 }
@@ -107,6 +109,9 @@ export async function exportUserData(): Promise<UserDataV2> {
 
     const verseVersions = await getVerseVersions();
     if (Object.keys(verseVersions).length > 0) data.verseVersions = verseVersions;
+
+    const verseLists = await getVerseLists();
+    if (verseLists.length > 0) data.verseLists = verseLists;
 
     // User-uploaded bibles (metadata + all chapters)
     const userBibles = await getUserBibles();
@@ -308,6 +313,29 @@ async function importV2(data: UserDataV2, merge: boolean): Promise<void> {
       }
     }
 
+    // Verse lists
+    if (data.data.verseLists) {
+      if (merge) {
+        const existing = await getVerseLists();
+        const existingIds = new Set(existing.map(l => l.id));
+        const merged = [...existing];
+
+        for (const list of data.data.verseLists) {
+          if (existingIds.has(list.id)) {
+            const idx = merged.findIndex(l => l.id === list.id);
+            if (idx !== -1 && list.updatedAt > merged[idx].updatedAt) {
+              merged[idx] = list;
+            }
+          } else {
+            merged.push(list);
+          }
+        }
+        await saveVerseLists(merged);
+      } else {
+        await saveVerseLists(data.data.verseLists);
+      }
+    }
+
     // User bibles (v2 only)
     if (data.data.userBibles) {
       const existingBibles = await getUserBibles();
@@ -426,6 +454,10 @@ export function getImportSummary(data: UserDataExport): string[] {
     if (versionCount > 0) {
       summary.push(`${versionCount} versvalg`);
     }
+  }
+
+  if (data.version === 2 && data.data.verseLists && data.data.verseLists.length > 0) {
+    summary.push(`${data.data.verseLists.length} versliste${data.data.verseLists.length > 1 ? 'r' : ''}`);
   }
 
   if (data.version === 2 && data.data.userBibles && data.data.userBibles.length > 0) {

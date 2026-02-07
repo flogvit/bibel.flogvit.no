@@ -27,6 +27,7 @@ const OfflinePage = lazy(() => import('./pages/OfflinePage').then(m => ({ defaul
 const AboutPage = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })));
 const AccessibilityPage = lazy(() => import('./pages/AccessibilityPage').then(m => ({ default: m.AccessibilityPage })));
 const StatisticsPage = lazy(() => import('./pages/StatisticsPage').then(m => ({ default: m.StatisticsPage })));
+const VerseListsPage = lazy(() => import('./pages/VerseListsPage').then(m => ({ default: m.VerseListsPage })));
 const TranslationsPage = lazy(() => import('./pages/TranslationsPage').then(m => ({ default: m.TranslationsPage })));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 
@@ -70,6 +71,7 @@ export function App() {
             <Route path="/kjente-vers" element={<FamousVersesPage />} />
             <Route path="/emner" element={<TopicsPage />} />
             <Route path="/notater" element={<NotesPage />} />
+            <Route path="/lister" element={<VerseListsPage />} />
             <Route path="/tekst" element={<TextPage />} />
 
             {/* Utility */}
