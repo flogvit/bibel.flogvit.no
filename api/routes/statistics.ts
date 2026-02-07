@@ -7,9 +7,10 @@ export const statisticsRouter = Router();
  * GET /api/statistics
  * Returns overall Bible statistics
  */
-statisticsRouter.get('/', (_req: Request, res: Response) => {
+statisticsRouter.get('/', (req: Request, res: Response) => {
   try {
-    const stats = getBibleStatistics();
+    const bible = (req.query.bible as string) || 'osnb2';
+    const stats = getBibleStatistics(bible);
     res.set('Cache-Control', 'no-cache');
     res.json(stats);
   } catch (error) {
@@ -29,7 +30,8 @@ statisticsRouter.get('/top-words', (req: Request, res: Response) => {
   try {
     const limit = Math.min(parseInt(req.query.limit as string) || 100, 500);
     const includeStopWords = req.query.all === 'true';
-    const words = getTopWords('osnb2', limit, includeStopWords);
+    const bible = (req.query.bible as string) || 'osnb2';
+    const words = getTopWords(bible, limit, includeStopWords);
     res.set('Cache-Control', 'no-cache');
     res.json({ words });
   } catch (error) {
