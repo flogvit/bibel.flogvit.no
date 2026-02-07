@@ -82,9 +82,14 @@ export function AboutPage() {
             <li><strong>Profetier</strong> - Profetier og deres oppfyllelser</li>
             <li><strong>Temaer</strong> - Tematiske oversikter med relevante bibelvers</li>
             <li><strong>Leseplaner</strong> - Ulike planer for systematisk bibellesing</li>
+            <li><strong>Paralleller</strong> - Synoptiske paralleller mellom evangeliene</li>
+            <li><strong>Personer</strong> - Bibelske personer med referanser</li>
             <li><strong>Favoritter</strong> - Lagre dine favorittvers</li>
             <li><strong>Emner</strong> - Tag vers med egne emner</li>
             <li><strong>Notater</strong> - Skriv egne notater til vers</li>
+            <li><strong>Verslister</strong> - Samle bibelvers i navngitte lister for andakter og studier</li>
+            <li><strong>Statistikk</strong> - Oversikt over lesing og bruk</li>
+            <li><strong>Oversettelser</strong> - Last opp og bruk egne bibeloversettelser</li>
           </ul>
         </section>
 
@@ -105,9 +110,10 @@ export function AboutPage() {
           <p>Trykk <kbd>?</kbd> på en hvilken som helst side for å se alle tilgjengelige hurtigtaster.</p>
           <ul>
             <li><kbd>/</kbd> eller <kbd>Ctrl</kbd>+<kbd>K</kbd> - Fokuser søkefeltet</li>
+            <li><kbd>R</kbd> - Lesemodus på/av</li>
             <li><kbd>←</kbd> / <kbd>→</kbd> - Forrige/neste kapittel</li>
             <li><kbd>1-9</kbd> - Hopp til vers 1-9</li>
-            <li><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>H</kbd> - Gå til forsiden</li>
+            <li><kbd>Alt</kbd>+<kbd>Shift</kbd>+bokstav - Hurtignavigasjon (H=Hjem, S=Søk, L=Leseplan, T=Tidslinje, P=Profetier, F=Favoritter, E=Emner, N=Notater, K=Kjente vers, O=Personer, V=Verslister, A=Paralleller, I=Statistikk)</li>
           </ul>
 
           <h3>Versinteraksjon</h3>
@@ -120,6 +126,14 @@ export function AboutPage() {
             <li><strong>Notater</strong> - Skriv egne notater til verset</li>
             <li><strong>Versjoner</strong> - Sammenlign med andre bibeloversettelser</li>
           </ul>
+
+          <h3>Verslister</h3>
+          <p>
+            Under <a href="/lister">Verslister</a> kan du samle bibelvers i navngitte lister
+            for andakter, bibeltimer eller studier. Skriv inn referanser som
+            &quot;Joh 3,16&quot; eller &quot;Sal 23,1-6&quot; for å legge til vers.
+            Du kan endre rekkefølge og kopiere en lenke som viser alle versene.
+          </p>
 
           <h3>Hjelpemidler-panelet</h3>
           <p>
