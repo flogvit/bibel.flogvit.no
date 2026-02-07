@@ -23,7 +23,9 @@
 
 .links {
   display: flex;
-  gap: $spacing-lg;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: $spacing-sm $spacing-lg;
 
   a {
     color: rgba(255, 255, 255, 0.8);
