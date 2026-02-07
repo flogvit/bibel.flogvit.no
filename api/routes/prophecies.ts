@@ -1,14 +1,24 @@
 import { Router, Request, Response } from 'express';
-import { getProphecyCategories, getProphecies } from '../../src/lib/bible';
+import { getProphecyCategories, getProphecies, getPropheciesForVerse } from '../../src/lib/bible';
 
 export const propheciesRouter = Router();
 
 /**
  * GET /api/prophecies
  * Returns prophecy categories and prophecies
+ * Optional query params: book, chapter, verse - filters to prophecies for that verse
  */
-propheciesRouter.get('/', (_req: Request, res: Response) => {
+propheciesRouter.get('/', (req: Request, res: Response) => {
   try {
+    const { book, chapter, verse } = req.query;
+
+    if (book && chapter && verse) {
+      const prophecies = getPropheciesForVerse(Number(book), Number(chapter), Number(verse));
+      res.set('Cache-Control', 'no-cache');
+      res.json({ prophecies });
+      return;
+    }
+
     const categories = getProphecyCategories();
     const prophecies = getProphecies();
 
