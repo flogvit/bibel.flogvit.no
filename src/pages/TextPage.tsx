@@ -54,7 +54,8 @@ export function TextPage() {
         // First, fetch books to resolve slugs to book IDs
         const booksResponse = await fetch('/api/books');
         if (!booksResponse.ok) throw new Error('Failed to fetch books');
-        const booksData: Book[] = await booksResponse.json();
+        const booksJson = await booksResponse.json();
+        const booksData: Book[] = booksJson.books;
         setBooks(booksData);
 
         // Convert parsed refs to VerseRef format
