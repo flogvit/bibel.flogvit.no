@@ -17,7 +17,7 @@ booksRouter.get('/', (_req: Request, res: Response) => {
       summary: getBookSummary(book.id),
     }));
 
-    res.set('Cache-Control', 'public, max-age=86400');
+    res.set('Cache-Control', 'no-cache');
     res.json({ books: booksWithSummaries });
   } catch (error) {
     console.error('Error fetching books:', error);

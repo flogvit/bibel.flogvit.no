@@ -65,7 +65,7 @@ dailyVerseRouter.get('/', (_req: Request, res: Response) => {
       ? `${dailyVerse.verse_start}`
       : `${dailyVerse.verse_start}-${dailyVerse.verse_end}`;
 
-    res.set('Cache-Control', 'public, max-age=3600'); // 1 hour cache
+    res.set('Cache-Control', 'no-cache');
     res.json({
       date: dateStr,
       reference: {
@@ -133,7 +133,7 @@ dailyVerseRouter.get('/:date', (req: Request, res: Response) => {
       ? `${dailyVerse.verse_start}`
       : `${dailyVerse.verse_start}-${dailyVerse.verse_end}`;
 
-    res.set('Cache-Control', 'public, max-age=86400'); // 24 hour cache for past dates
+    res.set('Cache-Control', 'no-cache');
     res.json({
       date,
       reference: {

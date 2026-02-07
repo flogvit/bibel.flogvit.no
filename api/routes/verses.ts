@@ -18,7 +18,7 @@ versesRouter.post('/', (req: Request, res: Response) => {
   try {
     const verses = getVersesWithOriginal(refs as VerseRef[], bible);
 
-    res.set('Cache-Control', 'public, max-age=86400');
+    res.set('Cache-Control', 'no-cache');
     res.json(verses);
   } catch (error) {
     console.error('Error fetching verses:', error);

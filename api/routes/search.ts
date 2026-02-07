@@ -21,7 +21,7 @@ searchRouter.get('/', (req: Request, res: Response) => {
   try {
     const { results, total, hasMore } = searchVerses(query, limit, offset, bible);
 
-    res.set('Cache-Control', 'public, max-age=3600');
+    res.set('Cache-Control', 'no-cache');
     res.json({ results, total, hasMore });
   } catch (error) {
     console.error('Error searching verses:', error);
@@ -47,7 +47,7 @@ searchRouter.get('/original', (req: Request, res: Response) => {
   try {
     const result = searchOriginalWord(query, limit, offset);
 
-    res.set('Cache-Control', 'public, max-age=3600');
+    res.set('Cache-Control', 'no-cache');
     res.json(result);
   } catch (error) {
     console.error('Error searching original text:', error);

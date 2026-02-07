@@ -24,7 +24,7 @@ readingPlansRouter.get('/', (_req: Request, res: Response) => {
       SELECT id, name, description, category, days FROM reading_plans ORDER BY days
     `).all() as Omit<ReadingPlanRow, 'content'>[];
 
-    res.set('Cache-Control', 'public, max-age=86400');
+    res.set('Cache-Control', 'no-cache');
     res.json(plans);
   } catch (error) {
     console.error('Error fetching reading plans:', error);
@@ -54,7 +54,7 @@ readingPlansRouter.get('/:id', (req: Request, res: Response) => {
     // Return the full plan content (which includes readings)
     const fullPlan = JSON.parse(plan.content);
 
-    res.set('Cache-Control', 'public, max-age=86400');
+    res.set('Cache-Control', 'no-cache');
     res.json(fullPlan);
   } catch (error) {
     console.error('Error fetching reading plan:', error);

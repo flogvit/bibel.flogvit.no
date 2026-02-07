@@ -18,7 +18,7 @@ parallelsRouter.get('/', (_req: Request, res: Response) => {
     const sections = getGospelParallelSections();
     const parallels = getGospelParallels();
 
-    res.set('Cache-Control', 'public, max-age=86400');
+    res.set('Cache-Control', 'no-cache');
     res.json({ sections, parallels });
   } catch (error) {
     console.error('Error fetching gospel parallels:', error);
@@ -42,7 +42,7 @@ parallelsRouter.get('/chapter/:bookId/:chapter', (req: Request, res: Response) =
   try {
     const parallels = getGospelParallelsForChapter(bookId, chapter);
 
-    res.set('Cache-Control', 'public, max-age=86400');
+    res.set('Cache-Control', 'no-cache');
     res.json({ parallels });
   } catch (error) {
     console.error('Error fetching chapter parallels:', error);
@@ -65,7 +65,7 @@ parallelsRouter.get('/:id', (req: Request, res: Response) => {
       return;
     }
 
-    res.set('Cache-Control', 'public, max-age=86400');
+    res.set('Cache-Control', 'no-cache');
     res.json(parallel);
   } catch (error) {
     console.error('Error fetching gospel parallel:', error);
@@ -113,7 +113,7 @@ parallelsRouter.post('/:id/verses', (req: Request, res: Response) => {
       verses[gospel] = filteredVerses;
     }
 
-    res.set('Cache-Control', 'public, max-age=86400');
+    res.set('Cache-Control', 'no-cache');
     res.json({ verses });
   } catch (error) {
     console.error('Error fetching parallel verses:', error);

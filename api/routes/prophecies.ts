@@ -12,7 +12,7 @@ propheciesRouter.get('/', (_req: Request, res: Response) => {
     const categories = getProphecyCategories();
     const prophecies = getProphecies();
 
-    res.set('Cache-Control', 'public, max-age=86400');
+    res.set('Cache-Control', 'no-cache');
     res.json({ categories, prophecies });
   } catch (error) {
     console.error('Error fetching prophecies:', error);

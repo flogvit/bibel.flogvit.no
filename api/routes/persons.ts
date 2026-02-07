@@ -22,7 +22,7 @@ personsRouter.get('/', (req: Request, res: Response) => {
       persons = getAllPersonsData();
     }
 
-    res.set('Cache-Control', 'public, max-age=86400');
+    res.set('Cache-Control', 'no-cache');
     res.json(persons);
   } catch (error) {
     console.error('Error fetching persons:', error);
@@ -45,7 +45,7 @@ personsRouter.get('/:id', (req: Request, res: Response) => {
       return;
     }
 
-    res.set('Cache-Control', 'public, max-age=86400');
+    res.set('Cache-Control', 'no-cache');
     res.json(person);
   } catch (error) {
     console.error('Error fetching person:', error);

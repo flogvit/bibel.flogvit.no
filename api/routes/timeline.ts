@@ -12,7 +12,7 @@ timelineRouter.get('/', (_req: Request, res: Response) => {
     const periods = getTimelinePeriods();
     const events = getTimelineEvents();
 
-    res.set('Cache-Control', 'public, max-age=86400');
+    res.set('Cache-Control', 'no-cache');
     res.json({ periods, events });
   } catch (error) {
     console.error('Error fetching timeline:', error);
@@ -28,7 +28,7 @@ timelineRouter.get('/multi', (_req: Request, res: Response) => {
   try {
     const data = getMultiTimeline();
 
-    res.set('Cache-Control', 'public, max-age=86400');
+    res.set('Cache-Control', 'no-cache');
     res.json(data);
   } catch (error) {
     console.error('Error fetching multi timeline:', error);

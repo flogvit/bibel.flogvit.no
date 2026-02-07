@@ -10,7 +10,7 @@ export const statisticsRouter = Router();
 statisticsRouter.get('/', (_req: Request, res: Response) => {
   try {
     const stats = getBibleStatistics();
-    res.set('Cache-Control', 'public, max-age=86400');
+    res.set('Cache-Control', 'no-cache');
     res.json(stats);
   } catch (error) {
     console.error('Error fetching statistics:', error);
@@ -30,7 +30,7 @@ statisticsRouter.get('/top-words', (req: Request, res: Response) => {
     const limit = Math.min(parseInt(req.query.limit as string) || 100, 500);
     const includeStopWords = req.query.all === 'true';
     const words = getTopWords('osnb2', limit, includeStopWords);
-    res.set('Cache-Control', 'public, max-age=86400');
+    res.set('Cache-Control', 'no-cache');
     res.json({ words });
   } catch (error) {
     console.error('Error fetching top words:', error);
@@ -46,7 +46,7 @@ statisticsRouter.get('/top-words/hebrew', (req: Request, res: Response) => {
   try {
     const limit = Math.min(parseInt(req.query.limit as string) || 100, 500);
     const words = getTopOriginalWords('hebrew', limit);
-    res.set('Cache-Control', 'public, max-age=86400');
+    res.set('Cache-Control', 'no-cache');
     res.json({ words, language: 'hebrew' });
   } catch (error) {
     console.error('Error fetching Hebrew top words:', error);
@@ -62,7 +62,7 @@ statisticsRouter.get('/top-words/greek', (req: Request, res: Response) => {
   try {
     const limit = Math.min(parseInt(req.query.limit as string) || 100, 500);
     const words = getTopOriginalWords('greek', limit);
-    res.set('Cache-Control', 'public, max-age=86400');
+    res.set('Cache-Control', 'no-cache');
     res.json({ words, language: 'greek' });
   } catch (error) {
     console.error('Error fetching Greek top words:', error);

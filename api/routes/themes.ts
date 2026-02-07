@@ -11,7 +11,7 @@ themesRouter.get('/', (_req: Request, res: Response) => {
   try {
     const themes = getAllThemes();
 
-    res.set('Cache-Control', 'public, max-age=86400');
+    res.set('Cache-Control', 'no-cache');
     res.json({ themes });
   } catch (error) {
     console.error('Error fetching themes:', error);
@@ -34,7 +34,7 @@ themesRouter.get('/:id', (req: Request, res: Response) => {
       return;
     }
 
-    res.set('Cache-Control', 'public, max-age=86400');
+    res.set('Cache-Control', 'no-cache');
     res.json(theme);
   } catch (error) {
     console.error('Error fetching theme:', error);

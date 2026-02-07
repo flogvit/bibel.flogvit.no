@@ -10,7 +10,7 @@ export const wellknownVersesRouter = Router();
 wellknownVersesRouter.get('/', (_req: Request, res: Response) => {
   try {
     const verses = getAllWellKnownVerses();
-    res.set('Cache-Control', 'public, max-age=86400');
+    res.set('Cache-Control', 'no-cache');
     res.json(verses);
   } catch (error) {
     console.error('Failed to get well-known verses:', error);

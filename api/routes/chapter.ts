@@ -106,7 +106,7 @@ chapterRouter.get('/', (req: Request, res: Response) => {
     };
 
     // Set cache headers
-    res.set('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
+    res.set('Cache-Control', 'no-cache');
     res.json(response);
   } catch (error) {
     console.error('Error fetching chapter:', error);

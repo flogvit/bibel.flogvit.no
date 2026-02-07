@@ -19,7 +19,7 @@ importantWordsRouter.get('/', (req: Request, res: Response) => {
 
     const words = getImportantWords(bookId, chapter);
 
-    res.set('Cache-Control', 'public, max-age=86400');
+    res.set('Cache-Control', 'no-cache');
     res.json(words);
   } catch (error) {
     console.error('Error fetching important words:', error);
