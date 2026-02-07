@@ -149,6 +149,18 @@ export function KeyboardShortcuts({
             e.preventDefault();
             navigate('/personer');
             break;
+          case 'KeyV':
+            e.preventDefault();
+            navigate('/lister');
+            break;
+          case 'KeyA':
+            e.preventDefault();
+            navigate('/paralleller');
+            break;
+          case 'KeyI':
+            e.preventDefault();
+            navigate('/statistikk');
+            break;
         }
       }
     }
@@ -271,6 +283,18 @@ export function KeyboardShortcuts({
               <div className={styles.shortcut}>
                 <dt>{isMac ? <><kbd>⌥</kbd>+<kbd>⇧</kbd>+<kbd>O</kbd></> : <><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>O</kbd></>}</dt>
                 <dd>Personer</dd>
+              </div>
+              <div className={styles.shortcut}>
+                <dt>{isMac ? <><kbd>⌥</kbd>+<kbd>⇧</kbd>+<kbd>V</kbd></> : <><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd></>}</dt>
+                <dd>Verslister</dd>
+              </div>
+              <div className={styles.shortcut}>
+                <dt>{isMac ? <><kbd>⌥</kbd>+<kbd>⇧</kbd>+<kbd>A</kbd></> : <><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>A</kbd></>}</dt>
+                <dd>Paralleller</dd>
+              </div>
+              <div className={styles.shortcut}>
+                <dt>{isMac ? <><kbd>⌥</kbd>+<kbd>⇧</kbd>+<kbd>I</kbd></> : <><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>I</kbd></>}</dt>
+                <dd>Statistikk</dd>
               </div>
             </dl>
           </section>
