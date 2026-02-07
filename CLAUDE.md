@@ -23,7 +23,7 @@ All bibeldata hentes fra `../free-bible/generate/`:
 ### Tilleggsdata
 - `word4word/sblgnt/{nb|nn}/[bok]/[kapittel]/[vers].json` - Ord-for-ord NT (gresk → norsk)
 - `word4word/tanach/{nb|nn}/[bok]/[kapittel]/[vers].json` - Ord-for-ord GT (hebraisk → norsk)
-- `references/[bok]/[kapittel]/[vers].json` - Kryssreferanser mellom bibeltekster
+- `references/nb/[bok]/[kapittel]/[vers].json` - Kryssreferanser mellom bibeltekster
 - `book_summaries/nb/[bok].txt` - Sammendrag av hver bok
 - `chapter_summaries/nb/[bok]-[kapittel].txt` - Sammendrag av hvert kapittel
 - `important_words/nb/[bok]-[kapittel].txt` - Viktige ord/begreper i kapittelet
