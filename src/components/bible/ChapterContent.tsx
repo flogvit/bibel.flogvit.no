@@ -222,7 +222,7 @@ export function ChapterContent({
           <section className={styles.verses}>
             {verses.map(verse => (
               <VerseDisplay
-                key={verse.id}
+                key={`${verse.bible}-${verse.verse}`}
                 verse={verse}
                 bookId={bookId}
                 originalText={originalVersesMap.get(verse.verse)}

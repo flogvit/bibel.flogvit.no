@@ -3,6 +3,7 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { ReferenceInput } from '@/components/ReferenceInput';
 import { useSettings } from '@/components/SettingsContext';
 import { toUrlSlug } from '@/lib/url-utils';
+import { searchUserBible } from '@/lib/offline/userBibles';
 import styles from '@/styles/pages/search.module.scss';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 
@@ -55,8 +56,15 @@ export function SearchPage() {
     }
 
     try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}&limit=${RESULTS_PER_PAGE}&offset=${offset}&bible=${bible}`);
-      const data = await res.json();
+      let data: { results: SearchResult[]; total: number; hasMore: boolean };
+
+      if (bible.startsWith('user:')) {
+        data = await searchUserBible(bible, searchQuery, RESULTS_PER_PAGE, offset);
+      } else {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}&limit=${RESULTS_PER_PAGE}&offset=${offset}&bible=${bible}`);
+        data = await res.json();
+      }
+
       if (append) {
         setResults(prev => [...prev, ...(data.results || [])]);
       } else {

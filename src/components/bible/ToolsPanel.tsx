@@ -1,8 +1,9 @@
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSettings } from '@/components/SettingsContext';
 import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import type { FontSize, BibleVersion } from '@/lib/settings';
 import { bibleVersions } from '@/lib/settings';
+import { getUserBibles } from '@/lib/offline/userBibles';
 import {
   downloadUserData,
   importUserData,
@@ -28,26 +29,33 @@ export function ToolsPanel({ onClose, hasParallels = false }: ToolsPanelProps) {
   const [importData, setImportData] = useState<UserDataExport | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState(false);
+  const [allVersions, setAllVersions] = useState(bibleVersions);
+
+  useEffect(() => {
+    getUserBibles().then(userBibles => {
+      if (userBibles.length > 0) {
+        setAllVersions([
+          ...bibleVersions,
+          ...userBibles.map(ub => ({ value: ub.id, label: ub.name })),
+        ]);
+      }
+    });
+  }, []);
 
   const currentBible = (searchParams.get('bible') as BibleVersion) || settings.bible || 'osnb2';
 
   function handleBibleChange(bible: BibleVersion) {
     const params = new URLSearchParams(searchParams.toString());
-    if (bible === 'osnb2') {
-      params.delete('bible');
-    } else {
-      params.set('bible', bible);
-    }
+    params.set('bible', bible);
     updateSetting('bible', bible);
     const queryString = params.toString();
     // Preserve the current hash (e.g., #v5) when changing bible
     const hash = typeof window !== 'undefined' ? window.location.hash : '';
-    const newUrl = queryString ? `${pathname}?${queryString}${hash}` : `${pathname}${hash}`;
-    navigate(newUrl);
+    navigate(`${pathname}?${queryString}${hash}`);
   }
 
-  function handleExport() {
-    downloadUserData();
+  async function handleExport() {
+    await downloadUserData();
   }
 
   function handleFileSelect(event: React.ChangeEvent<HTMLInputElement>) {
@@ -81,11 +89,11 @@ export function ToolsPanel({ onClose, hasParallels = false }: ToolsPanelProps) {
     event.target.value = '';
   }
 
-  function handleImport(merge: boolean) {
+  async function handleImport(merge: boolean) {
     if (!importData) return;
 
     try {
-      importUserData(importData, merge);
+      await importUserData(importData, merge);
       setImportSuccess(true);
       setImportData(null);
       // Reload page to apply changes
@@ -135,10 +143,10 @@ export function ToolsPanel({ onClose, hasParallels = false }: ToolsPanelProps) {
       <div className={styles.section}>
         <span className={styles.sectionTitle}>Oversettelse</span>
         <div className={styles.bibleVersions}>
-          {bibleVersions.map(version => (
+          {allVersions.map(version => (
             <button
               key={version.value}
-              className={`${styles.bibleVersionButton} ${currentBible === version.value ? styles.active : ''}`}
+              className={`${styles.bibleVersionButton} ${currentBible === version.value ? styles.active : ''}${version.value.startsWith('user:') ? ` ${styles.userBible}` : ''}`}
               onClick={() => handleBibleChange(version.value)}
             >
               {version.label}

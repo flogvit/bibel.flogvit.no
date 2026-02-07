@@ -200,6 +200,39 @@
   }
 }
 
+.bibleSelect {
+  padding: $spacing-xs $spacing-md $spacing-xs $spacing-sm;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  font-family: $font-sans;
+  font-size: $font-size-sm;
+  color: $color-secondary;
+  font-weight: 500;
+  background: $color-paper;
+  cursor: pointer;
+  margin-right: $spacing-sm;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b5a45' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  padding-right: 24px;
+  transition: border-color $transition-fast, box-shadow $transition-fast;
+
+  &:hover {
+    border-color: $color-secondary;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $color-secondary;
+    box-shadow: 0 0 0 2px rgba($color-secondary, 0.15);
+  }
+
+  @include mobile {
+    display: none;
+  }
+}
+
 .readingModeButton {
   display: flex;
   align-items: center;
@@ -345,6 +378,22 @@
 
     &:hover {
       background: $dark-color-border;
+    }
+  }
+
+  .bibleSelect {
+    background: $dark-color-paper;
+    border-color: $dark-color-border;
+    color: $dark-color-secondary;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23c9a959' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+
+    &:hover {
+      border-color: $dark-color-secondary;
+    }
+
+    &:focus {
+      border-color: $dark-color-secondary;
+      box-shadow: 0 0 0 2px rgba($dark-color-secondary, 0.2);
     }
   }
 
