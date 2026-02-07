@@ -208,7 +208,8 @@ async function networkFirst(request, cacheName) {
 // Network-first strategy specifically for API chapter endpoint
 async function networkFirstApi(request) {
   try {
-    const response = await fetch(request);
+    // Always bypass browser HTTP cache to get fresh data from server
+    const response = await fetch(request, { cache: 'no-store' });
     if (response.ok) {
       const cache = await caches.open(API_CACHE);
       cache.put(request, response.clone());
