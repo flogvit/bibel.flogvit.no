@@ -241,6 +241,8 @@ export interface BibleSettings {
   fontSize: FontSize;
   darkMode: boolean;
   bible: BibleVersion;
+  secondaryBible: string;
+  hiddenBibles: string[];
 }
 
 export const defaultSettings: BibleSettings = {
@@ -259,6 +261,8 @@ export const defaultSettings: BibleSettings = {
   fontSize: 'medium',
   darkMode: false,
   bible: 'osnb2',
+  secondaryBible: 'original',
+  hiddenBibles: [],
 };
 
 export async function getSettings(): Promise<BibleSettings> {

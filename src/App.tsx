@@ -29,6 +29,7 @@ const AccessibilityPage = lazy(() => import('./pages/AccessibilityPage').then(m 
 const StatisticsPage = lazy(() => import('./pages/StatisticsPage').then(m => ({ default: m.StatisticsPage })));
 const VerseListsPage = lazy(() => import('./pages/VerseListsPage').then(m => ({ default: m.VerseListsPage })));
 const TranslationsPage = lazy(() => import('./pages/TranslationsPage').then(m => ({ default: m.TranslationsPage })));
+const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 
 // Loading fallback
@@ -76,6 +77,7 @@ export function App() {
 
             {/* Utility */}
             <Route path="/oversettelser" element={<TranslationsPage />} />
+            <Route path="/innstillinger" element={<SettingsPage />} />
             <Route path="/offline" element={<OfflinePage />} />
             <Route path="/om" element={<AboutPage />} />
             <Route path="/tilgjengelighet" element={<AccessibilityPage />} />

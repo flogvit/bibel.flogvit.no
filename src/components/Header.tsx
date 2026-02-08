@@ -163,9 +163,11 @@ export function Header() {
           onChange={(e) => handleBibleChange(e.target.value)}
           aria-label="Velg bibeloversettelse"
         >
-          {allVersions.map(v => (
-            <option key={v.value} value={v.value}>{v.label}</option>
-          ))}
+          {allVersions
+            .filter(v => !(settings.hiddenBibles || []).includes(v.value) || v.value === currentBible)
+            .map(v => (
+              <option key={v.value} value={v.value}>{v.label}</option>
+            ))}
         </select>
 
         <button
@@ -294,9 +296,6 @@ export function Header() {
             </Link>
           </div>
 
-          <Link to="/om" className={styles.navLink} onClick={handleNavClick}>
-            Om
-          </Link>
         </nav>
       </div>
     </header>

@@ -1,24 +1,16 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useSettings } from '@/components/SettingsContext';
-import { useSearchParams, useLocation, useNavigate, Link } from 'react-router-dom';
-import type { FontSize, BibleVersion } from '@/lib/settings';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { bibleVersions } from '@/lib/settings';
 import { getUserBibles } from '@/lib/offline/userBibles';
 import { useDataImportExport } from '@/hooks/useDataImportExport';
-import styles from './ToolsPanel.module.scss';
+import type { FontSize } from '@/lib/settings';
+import styles from '@/styles/pages/settings.module.scss';
 
-interface ToolsPanelProps {
-  onClose?: () => void;
-  hasParallels?: boolean;
-}
-
-export function ToolsPanel({ onClose, hasParallels = false }: ToolsPanelProps) {
+export function SettingsPage() {
   const { settings, toggleSetting, updateSetting } = useSettings();
-  const [searchParams] = useSearchParams();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const pathname = location.pathname;
-
+  const [allVersions, setAllVersions] = useState(bibleVersions);
   const {
     fileInputRef,
     importData,
@@ -32,8 +24,6 @@ export function ToolsPanel({ onClose, hasParallels = false }: ToolsPanelProps) {
     getImportSummary,
   } = useDataImportExport();
 
-  const [allVersions, setAllVersions] = useState(bibleVersions);
-
   useEffect(() => {
     getUserBibles().then(userBibles => {
       if (userBibles.length > 0) {
@@ -45,26 +35,20 @@ export function ToolsPanel({ onClose, hasParallels = false }: ToolsPanelProps) {
     });
   }, []);
 
-  const currentBible = (searchParams.get('bible') as BibleVersion) || settings.bible || 'osnb2';
+  useEffect(() => {
+    document.title = 'Innstillinger | bibel.flogvit.no';
+  }, []);
+
   const hidden = settings.hiddenBibles || [];
 
-  // Filter hidden bibles (always keep active bible visible)
-  const visibleVersions = allVersions.filter(
-    v => !hidden.includes(v.value) || v.value === currentBible
-  );
+  function toggleBibleVisibility(bibleValue: string) {
+    // Can't hide the active bible
+    if (bibleValue === settings.bible) return;
 
-  function handleBibleChange(bible: BibleVersion) {
-    // Swap: if switching to the same as secondary, set secondary to what primary was
-    if (settings.secondaryBible && bible === settings.secondaryBible) {
-      updateSetting('secondaryBible', currentBible);
-    }
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('bible', bible);
-    updateSetting('bible', bible);
-    const queryString = params.toString();
-    // Preserve the current hash (e.g., #v5) when changing bible
-    const hash = typeof window !== 'undefined' ? window.location.hash : '';
-    navigate(`${pathname}?${queryString}${hash}`);
+    const newHidden = hidden.includes(bibleValue)
+      ? hidden.filter(v => v !== bibleValue)
+      : [...hidden, bibleValue];
+    updateSetting('hiddenBibles', newHidden);
   }
 
   const tools = [
@@ -76,13 +60,13 @@ export function ToolsPanel({ onClose, hasParallels = false }: ToolsPanelProps) {
     { key: 'showVerseDetails' as const, label: 'Versdetaljer' },
     { key: 'showVerseIndicators' as const, label: 'Versindikatorer' },
     { key: 'showTimeline' as const, label: 'Tidslinje' },
-    ...(hasParallels ? [{ key: 'showParallels' as const, label: 'Parallelle tekster' }] : []),
+    { key: 'showParallels' as const, label: 'Parallelle tekster' },
   ];
 
-  // Build secondary bible options (exclude current primary bible, filter hidden)
+  // Build secondary bible options (exclude current primary)
   const secondaryOptions = [
     { value: 'original', label: 'Grunntekst' },
-    ...visibleVersions.filter(v => v.value !== currentBible),
+    ...allVersions.filter(v => v.value !== settings.bible),
   ];
 
   const fontSizes: { value: FontSize; label: string }[] = [
@@ -92,33 +76,54 @@ export function ToolsPanel({ onClose, hasParallels = false }: ToolsPanelProps) {
   ];
 
   return (
-    <div className={styles.panel} role="region" aria-label="Hjelpemidler">
-      <div className={styles.header}>
-        <span className={styles.title}>Hjelpemidler</span>
-        {onClose && (
-          <button className={styles.closeButton} onClick={onClose} aria-label="Lukk hjelpemidler">
-            ✕
-          </button>
-        )}
-      </div>
+    <main className={styles.main}>
+      <div className="reading-container">
+      <Breadcrumbs items={[
+        { label: 'Hjem', href: '/' },
+        { label: 'Innstillinger' },
+      ]} />
 
+      <h1>Innstillinger</h1>
+
+      {/* Section 1: Translations */}
       <div className={styles.section}>
-        <span className={styles.sectionTitle}>Oversettelse</span>
-        <div className={styles.bibleVersions}>
-          {visibleVersions.map(version => (
-            <button
-              key={version.value}
-              className={`${styles.bibleVersionButton} ${currentBible === version.value ? styles.active : ''}${version.value.startsWith('user:') ? ` ${styles.userBible}` : ''}`}
-              onClick={() => handleBibleChange(version.value)}
-            >
-              {version.label}
-            </button>
-          ))}
+        <h2>Oversettelser</h2>
+        <p>Velg hvilke bibeloversettelser som vises i hurtigpanelet og bibelvelgeren.</p>
+        <div className={styles.bibleList}>
+          {allVersions.map(version => {
+            const isActive = version.value === settings.bible;
+            const isHidden = hidden.includes(version.value);
+            const isUser = version.value.startsWith('user:');
+
+            return (
+              <div key={version.value} className={styles.bibleItem}>
+                <div className={styles.bibleInfo}>
+                  <span className={styles.bibleName}>{version.label}</span>
+                  {isActive && <span className={styles.activeBadge}>Aktiv</span>}
+                  {isUser && <span className={styles.userBadge}>Egen</span>}
+                </div>
+                <label className={styles.toggle}>
+                  <input
+                    type="checkbox"
+                    checked={!isHidden}
+                    disabled={isActive}
+                    onChange={() => toggleBibleVisibility(version.value)}
+                  />
+                  <span className={styles.toggleTrack}></span>
+                </label>
+              </div>
+            );
+          })}
         </div>
+        <Link to="/oversettelser" className={styles.translationsLink}>
+          Last opp egne oversettelser →
+        </Link>
       </div>
 
+      {/* Section 2: Display */}
       <div className={styles.section}>
-        <span className={styles.sectionTitle}>Vis/skjul</span>
+        <h2>Visning</h2>
+        <p>Velg hva som vises ved bibellesing.</p>
         <div className={styles.tools}>
           {tools.map(tool => (
             <label key={tool.key} className={styles.tool}>
@@ -154,11 +159,23 @@ export function ToolsPanel({ onClose, hasParallels = false }: ToolsPanelProps) {
               </select>
             </div>
           </div>
+
+          <label className={styles.tool}>
+            <input
+              type="checkbox"
+              checked={settings.readingMode ?? false}
+              onChange={() => toggleSetting('readingMode')}
+            />
+            <span className={styles.checkmark}></span>
+            <span className={styles.label}>Lesemodus</span>
+          </label>
         </div>
       </div>
 
+      {/* Section 3: Appearance */}
       <div className={styles.section}>
-        <span className={styles.sectionTitle}>Skriftstørrelse</span>
+        <h2>Utseende</h2>
+        <h3 style={{ fontSize: '1rem', margin: '0 0 0.5rem 0' }}>Skriftstørrelse</h3>
         <div className={styles.fontSizes}>
           {fontSizes.map(size => (
             <button
@@ -170,10 +187,6 @@ export function ToolsPanel({ onClose, hasParallels = false }: ToolsPanelProps) {
             </button>
           ))}
         </div>
-      </div>
-
-      <div className={styles.section}>
-        <span className={styles.sectionTitle}>Utseende</span>
         <label className={styles.tool}>
           <input
             type="checkbox"
@@ -185,16 +198,15 @@ export function ToolsPanel({ onClose, hasParallels = false }: ToolsPanelProps) {
         </label>
       </div>
 
+      {/* Section 4: Data */}
       <div className={styles.section}>
-        <span className={styles.sectionTitle}>Data</span>
+        <h2>Data</h2>
+        <p>Eksporter eller importer favoritter, notater, emner og andre data.</p>
         <div className={styles.dataActions}>
           <button className={styles.dataButton} onClick={handleExport}>
             Eksporter data
           </button>
-          <button
-            className={styles.dataButton}
-            onClick={triggerFileSelect}
-          >
+          <button className={styles.dataButton} onClick={triggerFileSelect}>
             Importer data
           </button>
           <input
@@ -250,12 +262,7 @@ export function ToolsPanel({ onClose, hasParallels = false }: ToolsPanelProps) {
           </div>
         )}
       </div>
-
-      <div className={styles.section}>
-        <Link to="/innstillinger" className={styles.settingsLink}>
-          Alle innstillinger →
-        </Link>
       </div>
-    </div>
+    </main>
   );
 }
