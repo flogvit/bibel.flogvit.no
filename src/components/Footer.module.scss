@@ -39,12 +39,6 @@
   }
 }
 
-.copyright {
-  font-size: $font-size-sm;
-  color: rgba(255, 255, 255, 0.6);
-  margin: 0;
-}
-
 // Dark mode
 :global(html.dark) {
   .footer {
