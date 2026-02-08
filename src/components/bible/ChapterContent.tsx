@@ -1,8 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useChapter } from '@/hooks/useChapter';
 import { useTimeline } from '@/hooks/useTimeline';
 import { useChapterParallels } from '@/hooks/useChapterParallels';
+import { getStoredChapter } from '@/lib/offline/storage';
 import { VerseDisplay } from '@/components/bible/VerseDisplay';
 import { Summary } from '@/components/bible/Summary';
 import { ImportantWords } from '@/components/bible/ImportantWords';
@@ -59,11 +60,14 @@ export function ChapterContent({
   const bibleQuery = bible !== 'osnb2' ? `?bible=${bible}` : '';
   const { settings } = useSettings();
 
+  const secondaryBible = settings.showOriginalText ? settings.secondaryBible : undefined;
+
   // Use client-side data fetching
   const { data, isLoading, error, isOffline } = useChapter({
     bookId,
     chapter,
     bible,
+    secondaryBible,
   });
 
   // Fetch timeline events (shared between desktop sidebar and mobile toolbar)
@@ -86,6 +90,31 @@ export function ChapterContent({
   const originalVersesMap = useMemo(
     () => new Map(originalVerses.map(v => [v.verse, v.text])),
     [originalVerses]
+  );
+
+  // Fetch user bible secondary verses from IndexedDB
+  const [userSecondaryVerses, setUserSecondaryVerses] = useState<{ verse: number; text: string }[]>([]);
+  useEffect(() => {
+    if (!secondaryBible || !secondaryBible.startsWith('user:')) {
+      setUserSecondaryVerses([]);
+      return;
+    }
+    getStoredChapter(bookId, chapter, secondaryBible).then(cached => {
+      if (cached?.verses) {
+        setUserSecondaryVerses(cached.verses.map(v => ({ verse: v.verse, text: v.text })));
+      } else {
+        setUserSecondaryVerses([]);
+      }
+    });
+  }, [bookId, chapter, secondaryBible]);
+
+  // Create a map of secondary verses by verse number
+  const secondaryVersesData = secondaryBible?.startsWith('user:')
+    ? userSecondaryVerses
+    : (data?.secondaryVerses || []);
+  const secondaryVersesMap = useMemo(
+    () => new Map(secondaryVersesData.map(v => [v.verse, v.text])),
+    [secondaryVersesData]
   );
 
   // Determine original language based on book
@@ -227,6 +256,11 @@ export function ChapterContent({
                 bookId={bookId}
                 originalText={originalVersesMap.get(verse.verse)}
                 originalLanguage={originalLanguage}
+                secondaryText={
+                  settings.secondaryBible === 'original'
+                    ? undefined
+                    : secondaryVersesMap.get(verse.verse)
+                }
                 initialWord4Word={word4word[verse.verse]}
                 initialReferences={references[verse.verse]}
               />

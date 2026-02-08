@@ -14,6 +14,7 @@ interface VerseDisplayProps {
   bookId: number;
   originalText?: string;
   originalLanguage: 'hebrew' | 'greek';
+  secondaryText?: string;
   initialWord4Word?: Word4WordData[];
   initialReferences?: ReferenceData[];
 }
@@ -56,7 +57,7 @@ function useIsMobile(breakpoint = 600) {
   return isMobile;
 }
 
-export function VerseDisplay({ verse, bookId, originalText, originalLanguage, initialWord4Word, initialReferences }: VerseDisplayProps) {
+export function VerseDisplay({ verse, bookId, originalText, originalLanguage, secondaryText, initialWord4Word, initialReferences }: VerseDisplayProps) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { settings } = useSettings();
@@ -407,13 +408,19 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, in
         </div>
       )}
 
-      {settings.showOriginalText && originalText && (
+      {settings.showOriginalText && settings.secondaryBible === 'original' && originalText && (
         <div
           className={`${styles.originalVerse} ${originalLanguage === 'hebrew' ? styles.hebrew : styles.greek}`}
           dir={originalLanguage === 'hebrew' ? 'rtl' : 'ltr'}
           lang={originalLanguage === 'hebrew' ? 'he' : 'el'}
         >
           {originalText}
+        </div>
+      )}
+
+      {settings.showOriginalText && settings.secondaryBible !== 'original' && secondaryText && (
+        <div className={styles.secondaryVerse}>
+          {secondaryText}
         </div>
       )}
 

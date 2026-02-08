@@ -6,6 +6,7 @@ export interface ChapterAPIResponse {
   bible: string;
   verses: Verse[];
   originalVerses: { verse: number; text: string }[];
+  secondaryVerses?: { verse: number; text: string }[];
   word4word: Record<number, Word4Word[]>;
   references: Record<number, Reference[]>;
   bookSummary: string | null;

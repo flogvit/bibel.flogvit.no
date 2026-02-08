@@ -8,6 +8,7 @@ interface UseChapterOptions {
   bookId: number;
   chapter: number;
   bible?: string;
+  secondaryBible?: string;
 }
 
 interface UseChapterResult {
@@ -18,7 +19,7 @@ interface UseChapterResult {
   refetch: () => Promise<void>;
 }
 
-export function useChapter({ bookId, chapter, bible = 'osnb2' }: UseChapterOptions): UseChapterResult {
+export function useChapter({ bookId, chapter, bible = 'osnb2', secondaryBible }: UseChapterOptions): UseChapterResult {
   const [data, setData] = useState<ChapterAPIResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,12 +52,21 @@ export function useChapter({ bookId, chapter, bible = 'osnb2' }: UseChapterOptio
         // Fetch osnb2 chapter data for study tools (summary, references, etc.)
         let studyData: Partial<ChapterAPIResponse> = {};
         try {
-          const res = await fetch(`/api/chapter?book=${bookId}&chapter=${chapter}&bible=osnb2`);
+          const needsServerSecondary = secondaryBible && secondaryBible !== 'original' && !secondaryBible.startsWith('user:');
+          const secondaryParam = needsServerSecondary && secondaryBible !== 'osnb2' ? `&secondary=${secondaryBible}` : '';
+          const res = await fetch(`/api/chapter?book=${bookId}&chapter=${chapter}&bible=osnb2${secondaryParam}`);
           if (isStale()) return;
           if (res.ok) {
             const d = await res.json();
+            // If secondary is osnb2, the osnb2 verses themselves are the secondary text
+            const secondaryVerses = needsServerSecondary
+              ? (secondaryBible === 'osnb2'
+                ? d.verses.map((v: { verse: number; text: string }) => ({ verse: v.verse, text: v.text }))
+                : d.secondaryVerses)
+              : undefined;
             studyData = {
               originalVerses: d.originalVerses,
+              secondaryVerses,
               word4word: d.word4word,
               references: d.references,
               bookSummary: d.bookSummary,
@@ -90,6 +100,7 @@ export function useChapter({ bookId, chapter, bible = 'osnb2' }: UseChapterOptio
           bible: cached.bible,
           verses: cached.verses as ChapterAPIResponse['verses'],
           originalVerses: studyData.originalVerses || [],
+          ...(studyData.secondaryVerses && { secondaryVerses: studyData.secondaryVerses }),
           word4word: (studyData.word4word || {}) as ChapterAPIResponse['word4word'],
           references: (studyData.references || {}) as ChapterAPIResponse['references'],
           bookSummary: studyData.bookSummary || null,
@@ -109,7 +120,8 @@ export function useChapter({ bookId, chapter, bible = 'osnb2' }: UseChapterOptio
     }
 
     try {
-      const response = await fetch(`/api/chapter?book=${bookId}&chapter=${chapter}&bible=${bible}`);
+      const secondaryParam = secondaryBible && secondaryBible !== 'original' && !secondaryBible.startsWith('user:') ? `&secondary=${secondaryBible}` : '';
+      const response = await fetch(`/api/chapter?book=${bookId}&chapter=${chapter}&bible=${bible}${secondaryParam}`);
       if (isStale()) return;
 
       if (!response.ok) {
@@ -194,7 +206,7 @@ export function useChapter({ bookId, chapter, bible = 'osnb2' }: UseChapterOptio
     } finally {
       if (!isStale()) setIsLoading(false);
     }
-  }, [bookId, chapter, bible]);
+  }, [bookId, chapter, bible, secondaryBible]);
 
   useEffect(() => {
     fetchChapter();

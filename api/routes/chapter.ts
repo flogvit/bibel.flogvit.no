@@ -64,6 +64,19 @@ chapterRouter.get('/', (req: Request, res: Response) => {
       text: v.text,
     }));
 
+    // Get secondary bible verses if requested (and different from primary)
+    const secondary = req.query.secondary as string | undefined;
+    let secondaryVerses: { verse: number; text: string }[] | undefined;
+    if (secondary && secondary !== 'original' && secondary !== bible) {
+      const secondaryRaw = getVerses(bookId, chapter, secondary);
+      if (secondaryRaw.length > 0) {
+        secondaryVerses = secondaryRaw.map(v => ({
+          verse: v.verse,
+          text: v.text,
+        }));
+      }
+    }
+
     // Get word4word for each verse
     const lang = bible === 'osnn1' ? 'nn' : 'nb';
     const word4word: Record<number, unknown[]> = {};
@@ -96,6 +109,7 @@ chapterRouter.get('/', (req: Request, res: Response) => {
       bible,
       verses,
       originalVerses,
+      ...(secondaryVerses && { secondaryVerses }),
       word4word,
       references,
       bookSummary,
