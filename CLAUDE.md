@@ -175,6 +175,21 @@ $color-border: #e5e0d8;       // Varm grå - kantlinjer
 - God whitespace/spacing
 - Myk hover-effekt på interaktive elementer
 
+### Sidestruktur
+Alle sider (`src/pages/`) skal pakkes inn i en container. Standard mønster:
+```tsx
+<main className={styles.main}>
+  <div className="reading-container">
+    <Breadcrumbs items={[{ label: 'Hjem', href: '/' }, { label: 'Sidenavn' }]} />
+    <h1>Sidenavn</h1>
+    {/* innhold */}
+  </div>
+</main>
+```
+- `"reading-container"` er en global CSS-klasse (max-width 720px, sentrert) - brukes for teksttunge sider
+- `"container"` er en global CSS-klasse (max-width 1200px, sentrert) - brukes for bredere sider
+- Alltid bruk `<Breadcrumbs>` for navigasjon tilbake
+
 ## Viktige regler
 - Bruk alltid `tsx` for TypeScript, ikke `ts-node`
 - Aldri overskrive filer med cp/mv uten å spørre
