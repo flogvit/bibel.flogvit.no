@@ -69,6 +69,7 @@ export function KeyboardShortcuts({
         if (!e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey) {
           e.preventDefault();
           toggleSetting('readingMode');
+          (document.activeElement as HTMLElement)?.blur();
           return;
         }
       }
@@ -160,6 +161,14 @@ export function KeyboardShortcuts({
           case 'KeyI':
             e.preventDefault();
             navigate('/statistikk');
+            break;
+          case 'KeyM':
+            e.preventDefault();
+            navigate('/manuskripter');
+            break;
+          case 'KeyC':
+            e.preventDefault();
+            navigate('/temaer');
             break;
         }
       }
@@ -295,6 +304,14 @@ export function KeyboardShortcuts({
               <div className={styles.shortcut}>
                 <dt>{isMac ? <><kbd>⌥</kbd>+<kbd>⇧</kbd>+<kbd>I</kbd></> : <><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>I</kbd></>}</dt>
                 <dd>Statistikk</dd>
+              </div>
+              <div className={styles.shortcut}>
+                <dt>{isMac ? <><kbd>⌥</kbd>+<kbd>⇧</kbd>+<kbd>M</kbd></> : <><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd></>}</dt>
+                <dd>Manuskripter</dd>
+              </div>
+              <div className={styles.shortcut}>
+                <dt>{isMac ? <><kbd>⌥</kbd>+<kbd>⇧</kbd>+<kbd>C</kbd></> : <><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd></>}</dt>
+                <dd>Temaer</dd>
               </div>
             </dl>
           </section>

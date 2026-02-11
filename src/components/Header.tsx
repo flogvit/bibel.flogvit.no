@@ -9,10 +9,15 @@ export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isMac, setIsMac] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { settings, toggleSetting } = useSettings();
+
+  useEffect(() => {
+    setIsMac(navigator.platform.toUpperCase().indexOf('MAC') >= 0);
+  }, []);
 
   // Keyboard shortcut: "/" or Ctrl+K / Cmd+K to focus search
   useEffect(() => {
@@ -98,6 +103,12 @@ export function Header() {
     setDropdownOpen(false);
   }
 
+  const mod = isMac ? '⌥⇧' : 'Alt+Shift+';
+
+  function shortcut(key: string) {
+    return <span className={styles.shortcutHint}>{mod}{key}</span>;
+  }
+
   return (
     <header className={styles.header}>
       <div className={styles.container}>
@@ -159,40 +170,43 @@ export function Header() {
             </button>
             <div id="resources-menu" className={`${styles.dropdownMenu} ${dropdownOpen ? styles.open : ''}`} role="menu">
               <Link to="/kjente-vers" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
-                Kjente vers
+                Kjente vers {shortcut('K')}
               </Link>
               <Link to="/favoritter" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
-                Favoritter
+                Favoritter {shortcut('F')}
               </Link>
               <Link to="/emner" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
-                Emner
+                Emner {shortcut('E')}
               </Link>
               <Link to="/notater" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
-                Notater
+                Notater {shortcut('N')}
+              </Link>
+              <Link to="/manuskripter" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
+                Manuskripter {shortcut('M')}
               </Link>
               <Link to="/lister" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
-                Verslister
+                Verslister {shortcut('V')}
               </Link>
               <Link to="/leseplan" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
-                Leseplan
+                Leseplan {shortcut('L')}
               </Link>
               <Link to="/temaer" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
-                Temaer
+                Temaer {shortcut('C')}
               </Link>
               <Link to="/tidslinje" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
-                Tidslinje
+                Tidslinje {shortcut('T')}
               </Link>
               <Link to="/profetier" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
-                Profetier
+                Profetier {shortcut('P')}
               </Link>
               <Link to="/paralleller" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
-                Paralleller
+                Paralleller {shortcut('A')}
               </Link>
               <Link to="/personer" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
-                Personer
+                Personer {shortcut('O')}
               </Link>
               <Link to="/statistikk" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
-                Statistikk
+                Statistikk {shortcut('I')}
               </Link>
               <Link to="/oversettelser" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Oversettelser
@@ -213,6 +227,9 @@ export function Header() {
             </Link>
             <Link to="/notater" className={styles.navLink} onClick={handleNavClick}>
               Notater
+            </Link>
+            <Link to="/manuskripter" className={styles.navLink} onClick={handleNavClick}>
+              Andakter
             </Link>
             <Link to="/lister" className={styles.navLink} onClick={handleNavClick}>
               Verslister

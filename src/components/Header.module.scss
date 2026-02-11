@@ -151,7 +151,7 @@
   position: absolute;
   top: 100%;
   left: 0;
-  min-width: 180px;
+  min-width: 260px;
   background: $color-paper;
   border: 1px solid $color-border;
   border-radius: $radius-sm;
@@ -170,7 +170,9 @@
 }
 
 .dropdownLink {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: $spacing-sm $spacing-md;
   color: $color-text;
   text-decoration: none;
@@ -189,6 +191,18 @@
     background: $color-background;
     color: $color-secondary;
   }
+}
+
+.shortcutHint {
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  background: $color-background;
+  border: 1px solid $color-border;
+  border-radius: 3px;
+  padding: 0 4px;
+  line-height: 1.4;
+  font-family: $font-sans;
+  margin-left: $spacing-md;
 }
 
 // Mobile: show items inline instead of dropdown
@@ -315,6 +329,12 @@
       background: $dark-color-background;
       color: $dark-color-secondary;
     }
+  }
+
+  .shortcutHint {
+    color: $dark-color-text-muted;
+    background: $dark-color-background;
+    border-color: $dark-color-border;
   }
 
   .hamburger {

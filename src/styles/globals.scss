@@ -7,6 +7,11 @@
   padding: 0;
 }
 
+// Remove default focus outline - use focus-visible instead
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
 html {
   font-size: 16px;
   // WCAG 2.4.11: Ensure focused elements are not hidden behind sticky header
