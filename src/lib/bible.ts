@@ -1678,3 +1678,90 @@ export function getVerseMappingById(id: string): VerseMapping | undefined {
   const db = getDb();
   return db.prepare('SELECT * FROM verse_mappings WHERE id = ?').get(id) as VerseMapping | undefined;
 }
+
+// === Stories (Bibelhistorier) ===
+
+export interface StoryReference {
+  bookId: number;
+  startChapter: number;
+  startVerse: number;
+  endChapter: number;
+  endVerse: number;
+}
+
+export interface StoryData {
+  slug: string;
+  title: string;
+  keywords: string[];
+  description: string;
+  category: string;
+  references: StoryReference[];
+}
+
+export interface Story {
+  id: number;
+  slug: string;
+  title: string;
+  keywords: string;
+  description: string | null;
+  category: string;
+  content: string;
+}
+
+export function getAllStories(): Story[] {
+  const db = getDb();
+  return db.prepare('SELECT * FROM stories ORDER BY category, title').all() as Story[];
+}
+
+export function getStoryBySlug(slug: string): Story | undefined {
+  const db = getDb();
+  return db.prepare('SELECT * FROM stories WHERE slug = ?').get(slug) as Story | undefined;
+}
+
+export function searchStories(query: string): Story[] {
+  if (!query || query.length < 2) return [];
+  const db = getDb();
+
+  // Split into words and require all significant words to match (in title, keywords, or description)
+  const words = query.toLowerCase().split(/\s+/).filter(w => w.length >= 2);
+  if (words.length === 0) return [];
+
+  const conditions = words.map(() =>
+    '(LOWER(title) LIKE ? OR LOWER(keywords) LIKE ? OR LOWER(description) LIKE ?)'
+  ).join(' AND ');
+
+  const params = words.flatMap(w => {
+    const p = `%${w}%`;
+    return [p, p, p];
+  });
+
+  return db.prepare(
+    `SELECT * FROM stories WHERE ${conditions} ORDER BY title`
+  ).all(...params) as Story[];
+}
+
+export function searchThemes(query: string): Theme[] {
+  if (!query || query.length < 2) return [];
+  const db = getDb();
+
+  const words = query.toLowerCase().split(/\s+/).filter(w => w.length >= 2);
+  if (words.length === 0) return [];
+
+  const conditions = words.map(() =>
+    '(LOWER(name) LIKE ? OR LOWER(content) LIKE ?)'
+  ).join(' AND ');
+
+  const params = words.flatMap(w => {
+    const p = `%${w}%`;
+    return [p, p];
+  });
+
+  return db.prepare(
+    `SELECT * FROM themes WHERE ${conditions} ORDER BY name`
+  ).all(...params) as Theme[];
+}
+
+export function getStoriesByCategory(category: string): Story[] {
+  const db = getDb();
+  return db.prepare('SELECT * FROM stories WHERE category = ? ORDER BY title').all(category) as Story[];
+}

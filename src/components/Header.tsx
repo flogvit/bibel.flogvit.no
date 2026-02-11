@@ -193,6 +193,9 @@ export function Header() {
               <Link to="/temaer" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Temaer {shortcut('C')}
               </Link>
+              <Link to="/historier" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
+                Bibelhistorier {shortcut('B')}
+              </Link>
               <Link to="/tidslinje" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Tidslinje {shortcut('T')}
               </Link>
@@ -239,6 +242,9 @@ export function Header() {
             </Link>
             <Link to="/temaer" className={styles.navLink} onClick={handleNavClick}>
               Temaer
+            </Link>
+            <Link to="/historier" className={styles.navLink} onClick={handleNavClick}>
+              Bibelhistorier
             </Link>
             <Link to="/tidslinje" className={styles.navLink} onClick={handleNavClick}>
               Tidslinje

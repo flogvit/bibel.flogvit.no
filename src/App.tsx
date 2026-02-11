@@ -16,6 +16,8 @@ const PersonPage = lazy(() => import('./pages/PersonPage').then(m => ({ default:
 const ReadingPlanPage = lazy(() => import('./pages/ReadingPlanPage').then(m => ({ default: m.ReadingPlanPage })));
 const ThemesPage = lazy(() => import('./pages/ThemesPage').then(m => ({ default: m.ThemesPage })));
 const ThemePage = lazy(() => import('./pages/ThemePage').then(m => ({ default: m.ThemePage })));
+const StoriesPage = lazy(() => import('./pages/StoriesPage').then(m => ({ default: m.StoriesPage })));
+const StoryPage = lazy(() => import('./pages/StoryPage').then(m => ({ default: m.StoryPage })));
 const SearchPage = lazy(() => import('./pages/SearchPage').then(m => ({ default: m.SearchPage })));
 const OriginalSearchPage = lazy(() => import('./pages/OriginalSearchPage').then(m => ({ default: m.OriginalSearchPage })));
 const FavoritesPage = lazy(() => import('./pages/FavoritesPage').then(m => ({ default: m.FavoritesPage })));
@@ -64,6 +66,8 @@ export function App() {
             <Route path="/personer/:personId" element={<PersonPage />} />
             <Route path="/temaer" element={<ThemesPage />} />
             <Route path="/temaer/:tema" element={<ThemePage />} />
+            <Route path="/historier" element={<StoriesPage />} />
+            <Route path="/historier/:slug" element={<StoryPage />} />
             <Route path="/leseplan" element={<ReadingPlanPage />} />
 
             {/* Search */}
