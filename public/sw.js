@@ -3,7 +3,7 @@
  *
  * Handles caching of:
  * - Static assets (JS/CSS/fonts) - Cache-first
- * - HTML pages - Stale-while-revalidate
+ * - HTML pages - Network-first with offline fallback
  * - API /api/chapter - Network-first with cache fallback
  * - Other API - Network-first
  *
@@ -12,7 +12,7 @@
  * - Cache invalidation when database is updated
  */
 
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const STATIC_CACHE = `bibel-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `bibel-dynamic-${CACHE_VERSION}`;
 const API_CACHE = `bibel-api-${CACHE_VERSION}`;
@@ -74,9 +74,9 @@ function getCacheStrategy(request) {
     return 'cache-first';
   }
 
-  // HTML pages - stale-while-revalidate
+  // HTML pages - network-first (always try to get fresh HTML to avoid stale bundle references)
   if (request.headers.get('accept')?.includes('text/html')) {
-    return 'stale-while-revalidate';
+    return 'network-first';
   }
 
   // Default - network-first
@@ -148,10 +148,6 @@ self.addEventListener('fetch', (event) => {
 
     case 'network-first-api':
       event.respondWith(networkFirstApi(event.request));
-      break;
-
-    case 'stale-while-revalidate':
-      event.respondWith(staleWhileRevalidate(event.request));
       break;
 
     case 'network-only':
@@ -256,33 +252,6 @@ async function networkFirstApi(request) {
       }
     );
   }
-}
-
-// Stale-while-revalidate strategy
-async function staleWhileRevalidate(request) {
-  const cached = await caches.match(request);
-
-  // Fetch in background
-  const fetchPromise = fetch(request)
-    .then((response) => {
-      if (response.ok) {
-        const cache = caches.open(DYNAMIC_CACHE);
-        cache.then((c) => c.put(request, response.clone()));
-      }
-      return response;
-    })
-    .catch((error) => {
-      console.log('[SW] SWR fetch failed:', error);
-      // If we have a cached version, return it
-      if (cached) {
-        return cached;
-      }
-      // Otherwise redirect to offline fallback
-      return redirectToOfflineFallback(request);
-    });
-
-  // Return cached response immediately, or wait for network
-  return cached || fetchPromise;
 }
 
 // Helper: Redirect to offline fallback page with original path
