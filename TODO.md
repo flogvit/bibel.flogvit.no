@@ -56,7 +56,7 @@ Se DONE.md for fullførte oppgaver.
 | Bilder og illustrasjoner | Public domain bilder, eller lisensiert |
 
 ### Frontend-funksjoner
-- [ ] Dagens vers (verse of the day) på forsiden
+- [x] Dagens vers (verse of the day) på forsiden
 - [ ] Bibelvers-memorering med repetisjon (spaced repetition)
 - [ ] Kart for bibelske reiser (Leaflet-komponent med koordinater fra places/)
 

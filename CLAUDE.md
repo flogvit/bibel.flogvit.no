@@ -41,8 +41,14 @@ All bibeldata hentes fra `../free-bible/generate/`:
 
 ## Kommandoer
 ```bash
-# Utvikling
+# Utvikling - starter begge servere
+npm run dev:all
+
+# Kun frontend (Vite) - port 3020
 npm run dev
+
+# Kun API-server (Express) - port 3018
+npm run dev:api
 
 # Bygg
 npm run build
@@ -53,6 +59,12 @@ npm run import-bible
 # TypeScript (bruk alltid tsx)
 npx tsx scripts/import.ts
 ```
+
+## Utviklingsserver
+- **Frontend (Vite)**: http://localhost:3020
+- **API (Express)**: http://localhost:3018
+- Vite proxyer `/api/*` til Express-backenden i utvikling
+- Produksjon: Express serverer alt på port 3018
 
 ## Mappestruktur
 ```
