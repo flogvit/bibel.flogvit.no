@@ -22,6 +22,9 @@ const FavoritesPage = lazy(() => import('./pages/FavoritesPage').then(m => ({ de
 const FamousVersesPage = lazy(() => import('./pages/FamousVersesPage').then(m => ({ default: m.FamousVersesPage })));
 const TopicsPage = lazy(() => import('./pages/TopicsPage').then(m => ({ default: m.TopicsPage })));
 const NotesPage = lazy(() => import('./pages/NotesPage').then(m => ({ default: m.NotesPage })));
+const DevotionalsPage = lazy(() => import('./pages/DevotionalsPage').then(m => ({ default: m.DevotionalsPage })));
+const DevotionalViewPage = lazy(() => import('./pages/DevotionalViewPage').then(m => ({ default: m.DevotionalViewPage })));
+const DevotionalEditorPage = lazy(() => import('./pages/DevotionalEditorPage').then(m => ({ default: m.DevotionalEditorPage })));
 const TextPage = lazy(() => import('./pages/TextPage').then(m => ({ default: m.TextPage })));
 const OfflinePage = lazy(() => import('./pages/OfflinePage').then(m => ({ default: m.OfflinePage })));
 const AboutPage = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })));
@@ -72,6 +75,10 @@ export function App() {
             <Route path="/kjente-vers" element={<FamousVersesPage />} />
             <Route path="/emner" element={<TopicsPage />} />
             <Route path="/notater" element={<NotesPage />} />
+            <Route path="/manuskripter" element={<DevotionalsPage />} />
+            <Route path="/manuskripter/ny" element={<DevotionalEditorPage />} />
+            <Route path="/manuskripter/:slug/rediger" element={<DevotionalEditorPage />} />
+            <Route path="/manuskripter/:slug" element={<DevotionalViewPage />} />
             <Route path="/lister" element={<VerseListsPage />} />
             <Route path="/tekst" element={<TextPage />} />
 

@@ -20,6 +20,7 @@ const STORAGE_KEYS = {
   readingPosition: 'bible-reading-position',
   verseVersions: 'bible-verse-versions',
   verseLists: 'bible-verse-lists',
+  devotionals: 'bible-devotionals',
 } as const;
 
 type StorageKey = keyof typeof STORAGE_KEYS;
@@ -396,6 +397,21 @@ export async function saveVerseLists(lists: VerseList[]): Promise<void> {
 }
 
 // ============================================
+// Devotionals
+// ============================================
+
+import type { Devotional } from '@/types/devotional';
+export type { Devotional };
+
+export async function getDevotionals(): Promise<Devotional[]> {
+  return getData<Devotional[]>('devotionals', []);
+}
+
+export async function saveDevotionals(devotionals: Devotional[]): Promise<void> {
+  return saveData('devotionals', devotionals);
+}
+
+// ============================================
 // Migration Check
 // ============================================
 
@@ -469,6 +485,11 @@ export async function migrateToIndexedDB(): Promise<void> {
     const verseLists = getFromLocalStorage<VerseList[]>(STORAGE_KEYS.verseLists);
     if (verseLists) {
       await setUserData('verseLists', verseLists);
+    }
+
+    const devotionals = getFromLocalStorage<Devotional[]>(STORAGE_KEYS.devotionals);
+    if (devotionals) {
+      await setUserData('devotionals', devotionals);
     }
 
     markMigrationComplete();

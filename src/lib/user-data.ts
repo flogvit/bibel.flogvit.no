@@ -11,10 +11,12 @@ import {
   getReadingPosition, saveReadingPosition,
   getVerseVersions, saveVerseVersions,
   getVerseLists, saveVerseLists,
+  getDevotionals, saveDevotionals,
   type FavoriteVerse, type Topic, type VerseTopic, type ItemTopic,
   type Note, type ReadingPosition, type VerseVersionChoices,
   type TopicsData, type BibleSettings, type VerseList,
 } from './offline/userData';
+import type { Devotional } from '@/types/devotional';
 import type { ReadingPlanProgress } from './reading-plan';
 import { getUserBibles, addUserBible, storeUserBibleChapters } from './offline/userBibles';
 import { getAllCachedChapters } from './offline/storage';
@@ -53,6 +55,7 @@ interface UserDataV2 {
     readingPosition?: ReadingPosition | null;
     verseVersions?: VerseVersionChoices;
     verseLists?: VerseList[];
+    devotionals?: Devotional[];
     userBibles?: ExportedUserBible[];
   };
 }
@@ -112,6 +115,9 @@ export async function exportUserData(): Promise<UserDataV2> {
 
     const verseLists = await getVerseLists();
     if (verseLists.length > 0) data.verseLists = verseLists;
+
+    const devotionals = await getDevotionals();
+    if (devotionals.length > 0) data.devotionals = devotionals;
 
     // User-uploaded bibles (metadata + all chapters)
     const userBibles = await getUserBibles();
@@ -336,6 +342,29 @@ async function importV2(data: UserDataV2, merge: boolean): Promise<void> {
       }
     }
 
+    // Devotionals
+    if (data.data.devotionals) {
+      if (merge) {
+        const existing = await getDevotionals();
+        const existingIds = new Set(existing.map(d => d.id));
+        const merged = [...existing];
+
+        for (const dev of data.data.devotionals) {
+          if (existingIds.has(dev.id)) {
+            const idx = merged.findIndex(d => d.id === dev.id);
+            if (idx !== -1 && dev.updatedAt > merged[idx].updatedAt) {
+              merged[idx] = dev;
+            }
+          } else {
+            merged.push(dev);
+          }
+        }
+        await saveDevotionals(merged);
+      } else {
+        await saveDevotionals(data.data.devotionals);
+      }
+    }
+
     // User bibles (v2 only)
     if (data.data.userBibles) {
       const existingBibles = await getUserBibles();
@@ -458,6 +487,10 @@ export function getImportSummary(data: UserDataExport): string[] {
 
   if (data.version === 2 && data.data.verseLists && data.data.verseLists.length > 0) {
     summary.push(`${data.data.verseLists.length} versliste${data.data.verseLists.length > 1 ? 'r' : ''}`);
+  }
+
+  if (data.version === 2 && data.data.devotionals && data.data.devotionals.length > 0) {
+    summary.push(`${data.data.devotionals.length} manuskript${data.data.devotionals.length > 1 ? 'er' : ''}`);
   }
 
   if (data.version === 2 && data.data.userBibles && data.data.userBibles.length > 0) {

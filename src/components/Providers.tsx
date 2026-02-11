@@ -6,6 +6,7 @@ import { FavoritesProvider } from './FavoritesContext';
 import { ReadingPlanProvider } from './ReadingPlanContext';
 import { TopicsProvider } from './TopicsContext';
 import { NotesProvider } from './NotesContext';
+import { DevotionalsProvider } from './DevotionalsContext';
 import { VerseVersionsProvider } from './VerseVersionsContext';
 import { ReadingPositionProvider } from './ReadingPositionContext';
 import { ServiceWorkerProvider } from './ServiceWorkerProvider';
@@ -18,6 +19,7 @@ export function Providers({ children }: { children: ReactNode }) {
       <FavoritesProvider>
         <TopicsProvider>
           <NotesProvider>
+            <DevotionalsProvider>
             <VerseVersionsProvider>
               <ReadingPositionProvider>
                 <ReadingPlanProvider>
@@ -28,6 +30,7 @@ export function Providers({ children }: { children: ReactNode }) {
                 </ReadingPlanProvider>
               </ReadingPositionProvider>
             </VerseVersionsProvider>
+            </DevotionalsProvider>
           </NotesProvider>
         </TopicsProvider>
       </FavoritesProvider>

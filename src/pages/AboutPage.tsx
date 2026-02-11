@@ -87,7 +87,8 @@ export function AboutPage() {
             <li><strong>Favoritter</strong> - Lagre dine favorittvers</li>
             <li><strong>Emner</strong> - Tag vers med egne emner</li>
             <li><strong>Notater</strong> - Skriv egne notater til vers</li>
-            <li><strong>Verslister</strong> - Samle bibelvers i navngitte lister for andakter og studier</li>
+            <li><strong>Verslister</strong> - Samle bibelvers i navngitte lister for manuskripter og studier</li>
+            <li><strong>Manuskripter</strong> - Skriv andakter, prekener og bibeltimer med versreferanser</li>
             <li><strong>Statistikk</strong> - Oversikt over lesing og bruk</li>
             <li><strong>Oversettelser</strong> - Last opp og bruk egne bibeloversettelser</li>
           </ul>
@@ -113,7 +114,7 @@ export function AboutPage() {
             <li><kbd>R</kbd> - Lesemodus på/av</li>
             <li><kbd>←</kbd> / <kbd>→</kbd> - Forrige/neste kapittel</li>
             <li><kbd>1-9</kbd> - Hopp til vers 1-9</li>
-            <li><kbd>Alt</kbd>+<kbd>Shift</kbd>+bokstav - Hurtignavigasjon (H=Hjem, S=Søk, L=Leseplan, T=Tidslinje, P=Profetier, F=Favoritter, E=Emner, N=Notater, K=Kjente vers, O=Personer, V=Verslister, A=Paralleller, I=Statistikk)</li>
+            <li><kbd>Alt</kbd>+<kbd>Shift</kbd>+bokstav - Hurtignavigasjon (H=Hjem, S=Søk, L=Leseplan, T=Tidslinje, P=Profetier, F=Favoritter, E=Emner, N=Notater, K=Kjente vers, O=Personer, V=Verslister, A=Paralleller, I=Statistikk, M=Manuskripter, C=Temaer)</li>
           </ul>
 
           <h3>Versinteraksjon</h3>
@@ -130,10 +131,23 @@ export function AboutPage() {
           <h3>Verslister</h3>
           <p>
             Under <a href="/lister">Verslister</a> kan du samle bibelvers i navngitte lister
-            for andakter, bibeltimer eller studier. Skriv inn referanser som
+            for manuskripter, bibeltimer eller studier. Skriv inn referanser som
             &quot;Joh 3,16&quot; eller &quot;Sal 23,1-6&quot; for å legge til vers.
             Du kan endre rekkefølge og kopiere en lenke som viser alle versene.
           </p>
+
+          <h3>Manuskripter</h3>
+          <p>
+            Under <a href="/manuskripter">Manuskripter</a> kan du skrive andakter, prekener,
+            bibeltimer og andre tekster. Bruk <code>[ref:Joh 3,16]</code> for å sette inn
+            versreferanser. Sidepanelet gir deg tilgang til:
+          </p>
+          <ul>
+            <li><strong>Bibel</strong> - Slå opp og sett inn vers direkte i teksten</li>
+            <li><strong>Manuskripter</strong> - Søk i andre manuskripter</li>
+            <li><strong>Kontekst</strong> - Automatisk sammendrag og historisk kontekst for refererte kapitler</li>
+            <li><strong>Tidslinje</strong> - Tidslinjehendelser knyttet til refererte kapitler</li>
+          </ul>
 
           <h3>Hjelpemidler-panelet</h3>
           <p>

@@ -25,7 +25,7 @@ import { dailyVerseRouter } from './routes/daily-verse';
 import { parallelsRouter } from './routes/parallels';
 import { statisticsRouter } from './routes/statistics';
 import { mappingsRouter } from './routes/mappings';
-import { numberingRouter } from './routes/numbering';
+import { chapterContextRouter } from './routes/chapter-context';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -60,7 +60,7 @@ app.use('/api/daily-verse', dailyVerseRouter);
 app.use('/api/parallels', parallelsRouter);
 app.use('/api/statistics', statisticsRouter);
 app.use('/api/mappings', mappingsRouter);
-app.use('/api/numbering-systems', numberingRouter);
+app.use('/api/chapter-context', chapterContextRouter);
 
 // Serve static files from Vite build
 const distPath = path.join(__dirname, '..', 'dist');

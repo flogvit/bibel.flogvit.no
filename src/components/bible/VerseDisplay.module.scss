@@ -930,6 +930,60 @@
   color: $color-secondary;
 }
 
+// Devotionals
+.devotionalsContent {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.devotionalsList {
+  display: flex;
+  flex-direction: column;
+}
+
+.devotionalItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-sm 0;
+  border-bottom: 1px solid $color-border;
+  text-decoration: none;
+  transition: background $transition-fast;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: $color-background;
+  }
+}
+
+.devotionalTitle {
+  color: $color-secondary;
+  font-weight: 500;
+  font-size: $font-size-sm;
+}
+
+.devotionalDate {
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  white-space: nowrap;
+}
+
+.writeDevotionalLink {
+  display: inline-block;
+  font-size: $font-size-sm;
+  color: $color-verse-number;
+  text-decoration: none;
+  margin-top: $spacing-xs;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 // Dark mode
 :global(html.dark) {
   .verseNumber,
@@ -1333,5 +1387,25 @@
 
   .accordionContent {
     background: $dark-color-paper;
+  }
+
+  .devotionalItem {
+    border-bottom-color: $dark-color-border;
+
+    &:hover {
+      background: $dark-color-background;
+    }
+  }
+
+  .devotionalTitle {
+    color: $dark-color-secondary;
+  }
+
+  .devotionalDate {
+    color: $dark-color-text-muted;
+  }
+
+  .writeDevotionalLink {
+    color: $dark-color-verse-number;
   }
 }

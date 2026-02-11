@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import styles from './VerseDisplay.module.scss';
 import type { Verse, Prophecy, VerseVersion } from '@/lib/bible';
 import { toUrlSlug } from '@/lib/url-utils';
@@ -8,6 +8,8 @@ import { useFavorites } from '@/components/FavoritesContext';
 import { useTopics, Topic, ItemType } from '@/components/TopicsContext';
 import { useNotes, Note } from '@/components/NotesContext';
 import { useVerseVersions } from '@/components/VerseVersionsContext';
+import { useDevotionals } from '@/components/DevotionalsContext';
+import { getBookInfoById } from '@/lib/books-data';
 
 interface VerseDisplayProps {
   verse: Verse;
@@ -17,7 +19,6 @@ interface VerseDisplayProps {
   secondaryText?: string;
   initialWord4Word?: Word4WordData[];
   initialReferences?: ReferenceData[];
-  displayVerse?: number;
 }
 
 interface Word4WordData {
@@ -42,7 +43,7 @@ interface VerseExtras {
   sermon: string | null;
 }
 
-type TabType = 'original' | 'references' | 'prophecies' | 'prayer' | 'sermon' | 'topics' | 'notes' | 'versions';
+type TabType = 'original' | 'references' | 'prophecies' | 'prayer' | 'sermon' | 'topics' | 'notes' | 'versions' | 'devotionals';
 
 // Hook to detect mobile
 function useIsMobile(breakpoint = 600) {
@@ -58,7 +59,7 @@ function useIsMobile(breakpoint = 600) {
   return isMobile;
 }
 
-export function VerseDisplay({ verse, bookId, originalText, originalLanguage, secondaryText, initialWord4Word, initialReferences, displayVerse }: VerseDisplayProps) {
+export function VerseDisplay({ verse, bookId, originalText, originalLanguage, secondaryText, initialWord4Word, initialReferences }: VerseDisplayProps) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { settings } = useSettings();
@@ -66,6 +67,16 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, se
   const { topics, addTopic, addTopicToVerse, removeTopicFromVerse, getTopicsForVerse, searchTopics, addTopicToItem, removeTopicFromItem, getTopicsForItem } = useTopics();
   const { addNote, updateNote, deleteNote, getNotesForVerse } = useNotes();
   const { getSelectedVersion, setSelectedVersion, clearSelectedVersion } = useVerseVersions();
+  const { getDevotionalsForVerse } = useDevotionals();
+
+  // Build verse ref for devotional lookup
+  const bookInfo = getBookInfoById(bookId);
+  const verseRef = bookInfo
+    ? `${bookInfo.short_name.toLowerCase()}-${verse.chapter}-${verse.verse}`
+    : '';
+  const verseDevotionals = getDevotionalsForVerse(verseRef);
+  const hasDevotionals = verseDevotionals.length > 0;
+
   const [expanded, setExpanded] = useState(false);
   const isMobile = useIsMobile();
   const [openSections, setOpenSections] = useState<Set<TabType>>(new Set(['original']));
@@ -326,10 +337,8 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, se
     setShowNoteTopicSuggestions(null);
   }
 
-  const shownVerse = displayVerse ?? verse.verse;
-
   return (
-    <div id={`v${shownVerse}`} className={styles.verse} data-verse-num={shownVerse}>
+    <div id={`v${verse.verse}`} className={styles.verse} data-verse-num={verse.verse}>
       {settings.showVerseDetails ? (
         <span
           className={styles.verseNumber}
@@ -343,17 +352,17 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, se
           tabIndex={0}
           role="button"
           aria-expanded={expanded}
-          aria-label={`Vers ${shownVerse}. Klikk for å se original tekst og referanser`}
+          aria-label={`Vers ${verse.verse}. Klikk for å se original tekst og referanser`}
         >
           {settings.showVerseIndicators && favorited && <span className={styles.favoriteIndicator} aria-label="Favoritt">★</span>}
           {settings.showVerseIndicators && hasTopics && <span className={styles.topicIndicator} aria-label={`${verseTopics.length} emne${verseTopics.length > 1 ? 'r' : ''}`} />}
           {settings.showVerseIndicators && hasNotes && <span className={styles.noteIndicator} aria-label={`${verseNotes.length} notat${verseNotes.length > 1 ? 'er' : ''}`} />}
-          {shownVerse}
+          {verse.verse}
         </span>
       ) : (
         <span className={styles.verseNumberStatic}>
           {settings.showVerseIndicators && favorited && <span className={styles.favoriteIndicator} aria-label="Favoritt">★</span>}
-          {shownVerse}
+          {verse.verse}
         </span>
       )}
 
@@ -477,6 +486,12 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, se
                       onClick={() => setActiveTab('notes')}
                     >
                       Notater {verseNotes.length > 0 && `(${verseNotes.length})`}
+                    </button>
+                    <button
+                      className={`${styles.tab} ${activeTab === 'devotionals' ? styles.active : ''}`}
+                      onClick={() => setActiveTab('devotionals')}
+                    >
+                      Manuskripter {hasDevotionals && `(${verseDevotionals.length})`}
                     </button>
                     {hasVersions && (
                       <button
@@ -857,6 +872,35 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, se
                         Legg til notat
                       </button>
                     </div>
+                  </div>
+                )}
+
+                {activeTab === 'devotionals' && (
+                  <div className={styles.devotionalsContent}>
+                    {verseDevotionals.length > 0 ? (
+                      <div className={styles.devotionalsList}>
+                        {verseDevotionals.map(d => (
+                          <Link key={d.id} to={`/manuskripter/${d.slug}`} className={styles.devotionalItem}>
+                            <span className={styles.devotionalTitle}>{d.title}</span>
+                            <span className={styles.devotionalDate}>
+                              {new Date(d.date + 'T00:00:00').toLocaleDateString('nb-NO', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                              })}
+                            </span>
+                          </Link>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-muted">Ingen manuskripter for dette verset</p>
+                    )}
+                    <Link
+                      to={`/manuskripter/ny?vers=${verseRef}`}
+                      className={styles.writeDevotionalLink}
+                    >
+                      Skriv manuskript om dette verset
+                    </Link>
                   </div>
                 )}
 
@@ -1241,6 +1285,47 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, se
                               Legg til
                             </button>
                           </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Manuskripter */}
+                  <div className={styles.accordionItem}>
+                    <button
+                      className={`${styles.accordionHeader} ${openSections.has('devotionals') ? styles.open : ''}`}
+                      onClick={() => toggleSection('devotionals')}
+                      aria-expanded={openSections.has('devotionals')}
+                    >
+                      <span>Manuskripter {hasDevotionals && `(${verseDevotionals.length})`}</span>
+                      <span className={styles.accordionIcon}>{openSections.has('devotionals') ? '−' : '+'}</span>
+                    </button>
+                    {openSections.has('devotionals') && (
+                      <div className={styles.accordionContent}>
+                        <div className={styles.devotionalsContent}>
+                          {verseDevotionals.length > 0 ? (
+                            <div className={styles.devotionalsList}>
+                              {verseDevotionals.map(d => (
+                                <Link key={d.id} to={`/manuskripter/${d.slug}`} className={styles.devotionalItem}>
+                                  <span className={styles.devotionalTitle}>{d.title}</span>
+                                  <span className={styles.devotionalDate}>
+                                    {new Date(d.date + 'T00:00:00').toLocaleDateString('nb-NO', {
+                                      day: 'numeric',
+                                      month: 'short',
+                                    })}
+                                  </span>
+                                </Link>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-muted">Ingen manuskripter</p>
+                          )}
+                          <Link
+                            to={`/manuskripter/ny?vers=${verseRef}`}
+                            className={styles.writeDevotionalLink}
+                          >
+                            Skriv manuskript
+                          </Link>
                         </div>
                       </div>
                     )}

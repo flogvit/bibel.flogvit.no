@@ -62,15 +62,12 @@ export function ChapterContent({
 
   const secondaryBible = settings.showOriginalText ? settings.secondaryBible : undefined;
 
-  const numberingSystem = settings.numberingSystem || 'osnb2';
-
   // Use client-side data fetching
   const { data, isLoading, error, isOffline } = useChapter({
     bookId,
     chapter,
     bible,
     secondaryBible,
-    numberingSystem,
   });
 
   // Fetch timeline events (shared between desktop sidebar and mobile toolbar)
@@ -327,10 +324,7 @@ export function ChapterContent({
           )}
 
           <section className={styles.verses} ref={versesRef}>
-            {verses.map(verse => {
-              const displayInfo = data?.displayMap?.[verse.id];
-              const displayVerse = displayInfo?.verse;
-              return (
+            {verses.map(verse => (
               <VerseDisplay
                 key={`${verse.bible}-${verse.verse}`}
                 verse={verse}
@@ -344,10 +338,8 @@ export function ChapterContent({
                 }
                 initialWord4Word={word4word[verse.verse]}
                 initialReferences={references[verse.verse]}
-                displayVerse={displayVerse}
               />
-              );
-            })}
+            ))}
           </section>
 
           <footer className={styles.footer}>

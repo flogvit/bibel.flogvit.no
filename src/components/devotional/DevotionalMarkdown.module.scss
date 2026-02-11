@@ -1,0 +1,234 @@
+@use "sass:color";
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.markdown {
+  line-height: $line-height-base;
+  color: $color-text;
+  font-family: $font-sans;
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: $font-serif;
+    font-weight: 400;
+    line-height: $line-height-heading;
+    color: $color-primary;
+    margin: $spacing-xl 0 $spacing-md;
+  }
+
+  h1 { font-size: $font-size-2xl; }
+  h2 { font-size: $font-size-xl; }
+  h3 { font-size: $font-size-lg; }
+
+  p {
+    margin: 0 0 $spacing-md;
+  }
+
+  ul, ol {
+    margin: 0 0 $spacing-md;
+    padding-left: $spacing-xl;
+  }
+
+  li {
+    margin-bottom: $spacing-xs;
+  }
+
+  blockquote {
+    margin: 0 0 $spacing-md;
+    padding: $spacing-md $spacing-lg;
+    border-left: 3px solid $color-accent;
+    background: $color-background;
+    border-radius: 0 $radius-sm $radius-sm 0;
+    color: $color-text-light;
+    font-style: italic;
+  }
+
+  code {
+    background: $color-background;
+    padding: 2px 6px;
+    border-radius: $radius-sm;
+    font-size: $font-size-sm;
+  }
+
+  pre {
+    background: $color-background;
+    padding: $spacing-md;
+    border-radius: $radius-md;
+    overflow-x: auto;
+    margin: 0 0 $spacing-md;
+
+    code {
+      background: none;
+      padding: 0;
+    }
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid $color-border;
+    margin: $spacing-xl 0;
+  }
+
+  strong {
+    font-weight: 600;
+  }
+
+  a {
+    color: $color-verse-number;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+
+    &:hover {
+      color: $color-secondary;
+    }
+  }
+}
+
+.verseRefWrapper {
+  display: inline;
+}
+
+.verseRef {
+  color: $color-verse-number;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  font-weight: 500;
+
+  &:hover {
+    color: $color-secondary;
+  }
+}
+
+.verseLoading {
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+.verseBlock {
+  display: block;
+  margin: $spacing-sm 0 $spacing-md;
+}
+
+.verseInline {
+  display: block;
+  margin: $spacing-sm 0;
+  padding: $spacing-sm $spacing-md;
+  background: $color-verse-highlight;
+  border-left: 3px solid $color-accent;
+  border-radius: 0 $radius-sm $radius-sm 0;
+  font-size: $font-size-sm;
+}
+
+.verseInlineText {
+  display: block;
+  color: $color-text;
+  line-height: $line-height-base;
+  font-style: italic;
+}
+
+.verseNum {
+  color: $color-verse-number;
+  font-size: $font-size-xs;
+  font-weight: 600;
+  margin-right: 2px;
+  vertical-align: super;
+}
+
+.verseInlineLink {
+  display: inline-block;
+  margin-top: $spacing-xs;
+  font-size: $font-size-xs;
+  color: $color-verse-number;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.devotionalRef {
+  color: $color-secondary;
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-underline-offset: 2px;
+  cursor: pointer;
+
+  &:hover {
+    color: $color-primary;
+    text-decoration-style: solid;
+  }
+}
+
+// Dark mode
+:global(html.dark) {
+  .markdown {
+    color: $dark-color-text;
+
+    h1, h2, h3, h4, h5, h6 {
+      color: $dark-color-primary;
+    }
+
+    blockquote {
+      background: $dark-color-paper;
+      border-left-color: $dark-color-accent;
+      color: $dark-color-text-light;
+    }
+
+    code {
+      background: $dark-color-paper;
+    }
+
+    pre {
+      background: $dark-color-paper;
+    }
+
+    hr {
+      border-top-color: $dark-color-border;
+    }
+
+    a {
+      color: $dark-color-verse-number;
+
+      &:hover {
+        color: $dark-color-secondary;
+      }
+    }
+  }
+
+  .verseRef {
+    color: $dark-color-verse-number;
+
+    &:hover {
+      color: $dark-color-secondary;
+    }
+  }
+
+  .verseLoading {
+    color: $dark-color-text-muted;
+  }
+
+  .verseInline {
+    background: $dark-color-verse-highlight;
+    border-left-color: $dark-color-accent;
+  }
+
+  .verseInlineText {
+    color: $dark-color-text;
+  }
+
+  .verseNum {
+    color: $dark-color-verse-number;
+  }
+
+  .verseInlineLink {
+    color: $dark-color-verse-number;
+  }
+
+  .devotionalRef {
+    color: $dark-color-secondary;
+
+    &:hover {
+      color: $dark-color-primary;
+    }
+  }
+}

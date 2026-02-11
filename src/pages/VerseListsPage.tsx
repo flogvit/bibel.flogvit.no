@@ -311,7 +311,7 @@ export function VerseListsPage() {
         <header className={styles.header}>
           <h1>Mine verslister</h1>
           <p className={styles.intro}>
-            Samle bibelvers i navngitte lister for andakter, bibeltimer eller studier.
+            Samle bibelvers i navngitte lister for manuskripter, bibeltimer eller studier.
           </p>
         </header>
 
