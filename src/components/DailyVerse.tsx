@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useSettings } from '@/components/SettingsContext';
 import { toUrlSlug } from '@/lib/url-utils';
 import styles from './DailyVerse.module.scss';
 
@@ -19,14 +20,17 @@ interface DailyVerseData {
 }
 
 export function DailyVerse() {
+  const { settings } = useSettings();
   const [verse, setVerse] = useState<DailyVerseData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const bible = settings.bible?.startsWith('user:') ? 'osnb2' : (settings.bible || 'osnb2');
+
   useEffect(() => {
     async function fetchDailyVerse() {
       try {
-        const response = await fetch('/api/daily-verse');
+        const response = await fetch(`/api/daily-verse?bible=${encodeURIComponent(bible)}`);
         if (!response.ok) {
           if (response.status === 404) {
             setError('Ingen vers for i dag');
@@ -46,7 +50,7 @@ export function DailyVerse() {
     }
 
     fetchDailyVerse();
-  }, []);
+  }, [bible]);
 
   if (loading) {
     return (

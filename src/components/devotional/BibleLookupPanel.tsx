@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { useSettings } from '@/components/SettingsContext';
 import { parseStandardRef, refSegmentsToVerseRefs } from '@/lib/standard-ref-parser';
 import { getBookShortNameById } from '@/lib/books-data';
 import type { RefSegment } from '@/lib/standard-ref-parser';
@@ -167,6 +168,7 @@ function LookupVerseItem({
 }
 
 export function BibleLookupPanel({ onInsert }: BibleLookupPanelProps) {
+  const { settings } = useSettings();
   const [query, setQuery] = useState('');
   const [refResults, setRefResults] = useState<VerseWithOriginal[]>([]);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -175,6 +177,8 @@ export function BibleLookupPanel({ onInsert }: BibleLookupPanelProps) {
   const [mode, setMode] = useState<'none' | 'ref' | 'search'>('none');
   const [history, setHistory] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const bible = settings.bible?.startsWith('user:') ? 'osnb2' : (settings.bible || 'osnb2');
 
   const addToHistory = useCallback((q: string) => {
     setHistory(prev => {
@@ -199,7 +203,7 @@ export function BibleLookupPanel({ onInsert }: BibleLookupPanelProps) {
         const res = await fetch('/api/verses', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refs }),
+          body: JSON.stringify({ refs, bible }),
         });
         const data = await res.json();
         setRefResults(Array.isArray(data) ? data : []);
@@ -212,7 +216,7 @@ export function BibleLookupPanel({ onInsert }: BibleLookupPanelProps) {
     } else {
       // Full-text search
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(trimmed)}&limit=20`);
+        const res = await fetch(`/api/search?q=${encodeURIComponent(trimmed)}&bible=${encodeURIComponent(bible)}&limit=20`);
         const data = await res.json();
         setSearchResults(data.results || []);
         setRefResults([]);
@@ -224,7 +228,7 @@ export function BibleLookupPanel({ onInsert }: BibleLookupPanelProps) {
       }
     }
     setIsLoading(false);
-  }, [addToHistory]);
+  }, [addToHistory, bible]);
 
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === 'Enter') {

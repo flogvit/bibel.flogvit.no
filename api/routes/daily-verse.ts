@@ -27,10 +27,11 @@ interface VerseRow {
  * GET /api/daily-verse
  * Returns today's verse with full text
  */
-dailyVerseRouter.get('/', (_req: Request, res: Response) => {
+dailyVerseRouter.get('/', (req: Request, res: Response) => {
   try {
     const today = new Date();
     const dateStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+    const bible = (req.query.bible as string) || 'osnb2';
 
     const db = getDb();
 
@@ -55,9 +56,9 @@ dailyVerseRouter.get('/', (_req: Request, res: Response) => {
 
     const verses = db.prepare(`
       SELECT verse, text FROM verses
-      WHERE book_id = ? AND chapter = ? AND verse >= ? AND verse <= ? AND bible = 'osnb2'
+      WHERE book_id = ? AND chapter = ? AND verse >= ? AND verse <= ? AND bible = ?
       ORDER BY verse
-    `).all(dailyVerse.book_id, dailyVerse.chapter, dailyVerse.verse_start, dailyVerse.verse_end) as VerseRow[];
+    `).all(dailyVerse.book_id, dailyVerse.chapter, dailyVerse.verse_start, dailyVerse.verse_end, bible) as VerseRow[];
 
     const verseText = verses.map(v => v.text).join(' ');
 
@@ -100,6 +101,7 @@ dailyVerseRouter.get('/:date', (req: Request, res: Response) => {
       return;
     }
 
+    const bible = (req.query.bible as string) || 'osnb2';
     const db = getDb();
 
     const dailyVerse = db.prepare(`
@@ -123,9 +125,9 @@ dailyVerseRouter.get('/:date', (req: Request, res: Response) => {
 
     const verses = db.prepare(`
       SELECT verse, text FROM verses
-      WHERE book_id = ? AND chapter = ? AND verse >= ? AND verse <= ? AND bible = 'osnb2'
+      WHERE book_id = ? AND chapter = ? AND verse >= ? AND verse <= ? AND bible = ?
       ORDER BY verse
-    `).all(dailyVerse.book_id, dailyVerse.chapter, dailyVerse.verse_start, dailyVerse.verse_end) as VerseRow[];
+    `).all(dailyVerse.book_id, dailyVerse.chapter, dailyVerse.verse_start, dailyVerse.verse_end, bible) as VerseRow[];
 
     const verseText = verses.map(v => v.text).join(' ');
 
