@@ -55,6 +55,7 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "tsx": "^4.19.3",
     "typescript": "^5",
-    "vite": "^6.1.8"
+    "vite": "^6.1.8",
+    "vitest": "^4.0.18"
   }
 }
