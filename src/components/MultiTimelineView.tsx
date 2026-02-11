@@ -11,6 +11,7 @@ import type {
   VerseRef,
 } from '@/lib/bible';
 import { toUrlSlug } from '@/lib/url-utils';
+import { useSettings } from '@/components/SettingsContext';
 import { VerseDisplay } from './bible/VerseDisplay';
 import { ItemTagging } from './ItemTagging';
 
@@ -39,9 +40,10 @@ interface EventCardProps {
   event: TimelineEvent;
   compact?: boolean;
   showRegion?: boolean;
+  bible?: string;
 }
 
-function EventCard({ event, compact, showRegion }: EventCardProps) {
+function EventCard({ event, compact, showRegion, bible }: EventCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [showVerses, setShowVerses] = useState(false);
   const [loadedVerses, setLoadedVerses] = useState<VerseWithOriginal[] | null>(null);
@@ -57,7 +59,7 @@ function EventCard({ event, compact, showRegion }: EventCardProps) {
       const response = await fetch('/api/verses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refs }),
+        body: JSON.stringify({ refs, bible }),
       });
       if (!response.ok) throw new Error('Failed to fetch verses');
       const verses: VerseWithOriginal[] = await response.json();
@@ -151,6 +153,7 @@ interface MultiTimelineViewProps {
 }
 
 export function MultiTimelineView({ data }: MultiTimelineViewProps) {
+  const { settings } = useSettings();
   const [selectedPeriod, setSelectedPeriod] = useState<string | null>(null);
   const [selectedBookId, setSelectedBookId] = useState<number | null>(
     data.books.available.length > 0 ? data.books.available[0].id : null
@@ -385,6 +388,7 @@ export function MultiTimelineView({ data }: MultiTimelineViewProps) {
                       event={event}
                       compact={!selectedPeriod}
                       showRegion
+                      bible={settings.bible}
                     />
                   ))}
                   {worldDisplay.length === 0 && (
@@ -401,6 +405,7 @@ export function MultiTimelineView({ data }: MultiTimelineViewProps) {
                       key={event.id}
                       event={event}
                       compact={!selectedPeriod}
+                      bible={settings.bible}
                     />
                   ))}
                   {bibleDisplay.length === 0 && (
@@ -426,7 +431,7 @@ export function MultiTimelineView({ data }: MultiTimelineViewProps) {
                           </div>
                           <div className={styles.eventList}>
                             {sectionEvents.map(event => (
-                              <EventCard key={event.id} event={event} compact />
+                              <EventCard key={event.id} event={event} compact bible={settings.bible} />
                             ))}
                           </div>
                         </div>
@@ -438,7 +443,7 @@ export function MultiTimelineView({ data }: MultiTimelineViewProps) {
                         {bookData.events
                           .filter(e => !e.section_id || !bookData.sections.find(s => s.id === e.section_id))
                           .map(event => (
-                            <EventCard key={event.id} event={event} compact />
+                            <EventCard key={event.id} event={event} compact bible={settings.bible} />
                           ))}
                       </div>
                     )}

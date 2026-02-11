@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import styles from './TimelineView.module.scss';
 import type { TimelinePeriod, TimelineEvent, TimelineReference, VerseWithOriginal, VerseRef } from '@/lib/bible';
 import { toUrlSlug } from '@/lib/url-utils';
+import { useSettings } from '@/components/SettingsContext';
 import { VerseDisplay } from './bible/VerseDisplay';
 import { ItemTagging } from './ItemTagging';
 
@@ -42,6 +43,7 @@ interface LoadedVerses {
 }
 
 export function TimelineView({ periods, events }: TimelineViewProps) {
+  const { settings } = useSettings();
   const [selectedPeriod, setSelectedPeriod] = useState<string | null>(null);
   const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
   const [showVerses, setShowVerses] = useState<{ [eventId: string]: boolean }>({});
@@ -76,7 +78,7 @@ export function TimelineView({ periods, events }: TimelineViewProps) {
       const response = await fetch('/api/verses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refs }),
+        body: JSON.stringify({ refs, bible: settings.bible }),
       });
 
       if (!response.ok) throw new Error('Failed to fetch verses');

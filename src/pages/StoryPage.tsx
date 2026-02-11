@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { VerseDisplay } from '@/components/bible/VerseDisplay';
+import { useSettings } from '@/components/SettingsContext';
 import { getBookInfoById } from '@/lib/books-data';
 import { toUrlSlug } from '@/lib/url-utils';
 import type { StoryData, VerseWithOriginal } from '@/lib/bible';
@@ -36,6 +37,7 @@ interface ReferenceVerses {
 export function StoryPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const { settings } = useSettings();
   const [storyData, setStoryData] = useState<StoryData | null>(null);
   const [referenceVerses, setReferenceVerses] = useState<ReferenceVerses[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -85,7 +87,7 @@ export function StoryPage() {
             const versesResponse = await fetch('/api/verses', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ refs: verseRefs }),
+              body: JSON.stringify({ refs: verseRefs, bible: settings.bible }),
             });
 
             if (versesResponse.ok) {
@@ -123,7 +125,7 @@ export function StoryPage() {
     }
 
     fetchStory();
-  }, [slug, navigate]);
+  }, [slug, navigate, settings.bible]);
 
   if (isLoading) {
     return (

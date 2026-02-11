@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import styles from '@/styles/pages/text.module.scss';
 import { VerseDisplay } from '@/components/bible/VerseDisplay';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { useSettings } from '@/components/SettingsContext';
 import type { VerseWithOriginal, VerseRef, Book } from '@/lib/bible';
 import { toUrlSlug } from '@/lib/url-utils';
 
@@ -37,6 +38,7 @@ export function TextPage() {
   const [searchParams] = useSearchParams();
   const refsParam = searchParams.get('refs');
   const parsedRefs = parseRefs(refsParam);
+  const { settings } = useSettings();
 
   const [verses, setVerses] = useState<VerseWithOriginal[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
@@ -89,7 +91,7 @@ export function TextPage() {
         const versesResponse = await fetch('/api/verses', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refs: verseRefs }),
+          body: JSON.stringify({ refs: verseRefs, bible: settings.bible }),
         });
 
         if (!versesResponse.ok) throw new Error('Failed to fetch verses');
@@ -104,7 +106,7 @@ export function TextPage() {
     }
 
     loadData();
-  }, [refsParam]);
+  }, [refsParam, settings.bible]);
 
   // Group verses by book/chapter
   const groupedVerses: { key: string; bookShortName: string; chapter: number; verses: VerseWithOriginal[] }[] = [];

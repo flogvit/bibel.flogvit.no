@@ -4,6 +4,7 @@ import { VerseDisplay } from './bible/VerseDisplay';
 import type { PersonKeyEvent, PersonVerseRef } from '@/lib/bible';
 import type { VerseWithOriginal } from '@/lib/bible';
 import { toUrlSlug } from '@/lib/url-utils';
+import { useSettings } from '@/components/SettingsContext';
 import styles from '@/styles/pages/person.module.scss';
 
 interface PersonVerseDisplayProps {
@@ -15,6 +16,7 @@ interface EventWithVerses extends PersonKeyEvent {
 }
 
 export function PersonVerseDisplay({ keyEvents }: PersonVerseDisplayProps) {
+  const { settings } = useSettings();
   const [events, setEvents] = useState<EventWithVerses[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -30,7 +32,7 @@ export function PersonVerseDisplay({ keyEvents }: PersonVerseDisplayProps) {
         const response = await fetch('/api/verses', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refs: allRefs }),
+          body: JSON.stringify({ refs: allRefs, bible: settings.bible }),
         });
 
         if (!response.ok) throw new Error('Failed to fetch verses');
@@ -67,7 +69,7 @@ export function PersonVerseDisplay({ keyEvents }: PersonVerseDisplayProps) {
     }
 
     loadVerses();
-  }, [keyEvents]);
+  }, [keyEvents, settings.bible]);
 
   if (loading) {
     return <p>Laster bibelvers...</p>;

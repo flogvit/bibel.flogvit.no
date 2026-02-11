@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { getVerseLists, saveVerseLists, type VerseList } from '@/lib/offline/userData';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { VerseDisplay } from '@/components/bible/VerseDisplay';
+import { useSettings } from '@/components/SettingsContext';
 import { toUrlSlug } from '@/lib/url-utils';
 import type { VerseWithOriginal, Book } from '@/lib/bible';
 import styles from '@/styles/pages/verselists.module.scss';
@@ -54,6 +55,7 @@ export function VerseListsPage() {
   const newNameRef = useRef<HTMLInputElement>(null);
   const refInputRef = useRef<HTMLTextAreaElement>(null);
 
+  const { settings } = useSettings();
   const selectedList = lists.find(l => l.id === selectedListId) || null;
 
   // Load lists on mount
@@ -70,7 +72,7 @@ export function VerseListsPage() {
     }
 
     loadVerses(selectedList.refs);
-  }, [selectedListId, selectedList?.refs.join(',')]);
+  }, [selectedListId, selectedList?.refs.join(','), settings.bible]);
 
   async function loadVerses(refs: string[]) {
     if (books.length === 0) return;
@@ -106,7 +108,7 @@ export function VerseListsPage() {
       const response = await fetch('/api/verses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refs: verseRefs }),
+        body: JSON.stringify({ refs: verseRefs, bible: settings.bible }),
       });
 
       if (!response.ok) throw new Error('Failed to fetch verses');

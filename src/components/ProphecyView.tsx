@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import styles from './ProphecyView.module.scss';
 import type { ProphecyCategory, Prophecy, ProphecyReference, VerseWithOriginal, VerseRef } from '@/lib/bible';
 import { toUrlSlug } from '@/lib/url-utils';
+import { useSettings } from '@/components/SettingsContext';
 import { VerseDisplay } from './bible/VerseDisplay';
 import { ItemTagging } from './ItemTagging';
 
@@ -32,6 +33,7 @@ interface LoadedVerses {
 }
 
 export function ProphecyView({ categories, prophecies }: ProphecyViewProps) {
+  const { settings } = useSettings();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [expandedProphecy, setExpandedProphecy] = useState<string | null>(null);
   const [showVerses, setShowVerses] = useState<{ [prophecyId: string]: boolean }>({});
@@ -63,7 +65,7 @@ export function ProphecyView({ categories, prophecies }: ProphecyViewProps) {
       const response = await fetch('/api/verses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refs }),
+        body: JSON.stringify({ refs, bible: settings.bible }),
       });
 
       if (!response.ok) throw new Error('Failed to fetch verses');

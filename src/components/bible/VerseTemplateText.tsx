@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { parseVerseTemplate, type VerseTemplate } from '@/lib/verse-template';
+import { useSettings } from '@/components/SettingsContext';
 import styles from './VerseTemplateText.module.scss';
 
 interface VerseResult {
@@ -16,6 +17,7 @@ interface VerseTemplateTextProps {
 }
 
 export function VerseTemplateText({ text, className }: VerseTemplateTextProps) {
+  const { settings } = useSettings();
   const [verses, setVerses] = useState<Record<string, VerseResult>>({});
   const [loading, setLoading] = useState(false);
 
@@ -35,7 +37,7 @@ export function VerseTemplateText({ text, className }: VerseTemplateTextProps) {
     fetch('/api/verse-refs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refs: verseRefs }),
+      body: JSON.stringify({ refs: verseRefs, bible: settings.bible }),
     })
       .then(res => res.json())
       .then(data => {

@@ -4,6 +4,7 @@ import { VerseDisplay } from './VerseDisplay';
 import type { ThemeData, ThemeSection, ThemeVerseRef } from '@/lib/bible';
 import type { VerseWithOriginal } from '@/lib/bible';
 import { toUrlSlug } from '@/lib/url-utils';
+import { useSettings } from '@/components/SettingsContext';
 import styles from '@/styles/pages/theme.module.scss';
 
 interface ThemeVerseDisplayProps {
@@ -15,6 +16,7 @@ interface SectionWithVerses extends ThemeSection {
 }
 
 export function ThemeVerseDisplay({ themeData }: ThemeVerseDisplayProps) {
+  const { settings } = useSettings();
   const [sections, setSections] = useState<SectionWithVerses[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -30,7 +32,7 @@ export function ThemeVerseDisplay({ themeData }: ThemeVerseDisplayProps) {
         const response = await fetch('/api/verses', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refs: allRefs }),
+          body: JSON.stringify({ refs: allRefs, bible: settings.bible }),
         });
 
         if (!response.ok) throw new Error('Failed to fetch verses');
@@ -67,7 +69,7 @@ export function ThemeVerseDisplay({ themeData }: ThemeVerseDisplayProps) {
     }
 
     loadVerses();
-  }, [themeData]);
+  }, [themeData, settings.bible]);
 
   if (loading) {
     return <p>Laster bibelvers...</p>;
