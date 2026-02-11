@@ -1,12 +1,9 @@
-import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Suspense, useState, useEffect, useRef } from 'react';
 import styles from './Header.module.scss';
 import { LoadingIndicator } from './LoadingIndicator';
 import { OfflineIndicator } from './OfflineIndicator';
 import { useSettings } from './SettingsContext';
-import { bibleVersions } from '@/lib/settings';
-import type { BibleVersion } from '@/lib/settings';
-import { getUserBibles } from '@/lib/offline/userBibles';
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -15,37 +12,7 @@ export function Header() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const location = useLocation();
-  const { settings, toggleSetting, updateSetting } = useSettings();
-  const [allVersions, setAllVersions] = useState(bibleVersions);
-
-  const currentBible = settings.bible || 'osnb2';
-
-  useEffect(() => {
-    getUserBibles().then(userBibles => {
-      if (userBibles.length > 0) {
-        setAllVersions([
-          ...bibleVersions,
-          ...userBibles.map(ub => ({ value: ub.id, label: ub.name })),
-        ]);
-      }
-    });
-  }, []);
-
-  function handleBibleChange(bible: BibleVersion) {
-    updateSetting('bible', bible);
-    // If on a chapter page, update the URL query param too
-    const params = new URLSearchParams(searchParams.toString());
-    if (bible === 'osnb2') {
-      params.delete('bible');
-    } else {
-      params.set('bible', bible);
-    }
-    const queryString = params.toString();
-    const hash = typeof window !== 'undefined' ? window.location.hash : '';
-    navigate(`${location.pathname}${queryString ? `?${queryString}` : ''}${hash}`);
-  }
+  const { settings, toggleSetting } = useSettings();
 
   // Keyboard shortcut: "/" or Ctrl+K / Cmd+K to focus search
   useEffect(() => {
@@ -157,19 +124,6 @@ export function Header() {
           </button>
         </form>
 
-        <select
-          className={styles.bibleSelect}
-          value={currentBible}
-          onChange={(e) => handleBibleChange(e.target.value)}
-          aria-label="Velg bibeloversettelse"
-        >
-          {allVersions
-            .filter(v => !(settings.hiddenBibles || []).includes(v.value) || v.value === currentBible)
-            .map(v => (
-              <option key={v.value} value={v.value}>{v.label}</option>
-            ))}
-        </select>
-
         <button
           className={`${styles.readingModeButton} ${settings.readingMode ? styles.active : ''}`}
           onClick={() => toggleSetting('readingMode')}
@@ -191,13 +145,6 @@ export function Header() {
         </button>
 
         <nav id="main-nav" className={`${styles.nav} ${menuOpen ? styles.open : ''}`} aria-label="Hovednavigasjon">
-          <Link to="/" className={styles.navLink} onClick={handleNavClick}>
-            Bøker
-          </Link>
-          <Link to="/sok" className={styles.navLink} onClick={handleNavClick}>
-            Søk
-          </Link>
-
           {/* Dropdown for desktop */}
           <div className={styles.dropdown} ref={dropdownRef}>
             <button
