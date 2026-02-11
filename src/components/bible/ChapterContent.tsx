@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useChapter } from '@/hooks/useChapter';
 import { useTimeline } from '@/hooks/useTimeline';
@@ -62,12 +62,15 @@ export function ChapterContent({
 
   const secondaryBible = settings.showOriginalText ? settings.secondaryBible : undefined;
 
+  const numberingSystem = settings.numberingSystem || 'osnb2';
+
   // Use client-side data fetching
   const { data, isLoading, error, isOffline } = useChapter({
     bookId,
     chapter,
     bible,
     secondaryBible,
+    numberingSystem,
   });
 
   // Fetch timeline events (shared between desktop sidebar and mobile toolbar)
@@ -119,6 +122,81 @@ export function ChapterContent({
 
   // Determine original language based on book
   const originalLanguage = bookId <= 39 ? 'hebrew' : 'greek';
+
+  // Copy handler: intercept copy events to include verse numbers and clean formatting
+  const versesRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    function handleCopy(e: ClipboardEvent) {
+      const section = versesRef.current;
+      if (!section) return;
+
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed || selection.rangeCount === 0) return;
+
+      const range = selection.getRangeAt(0);
+
+      // Only intercept if selection is within the verses section
+      if (!section.contains(range.startContainer) && !section.contains(range.endContainer)) return;
+
+      const verseElements = section.querySelectorAll<HTMLElement>('[data-verse-num]');
+      const parts: { num: string; text: string }[] = [];
+
+      for (const verseEl of verseElements) {
+        if (!selection.containsNode(verseEl, true)) continue;
+
+        const verseNum = verseEl.dataset.verseNum || '';
+        const textSpan = verseEl.querySelector<HTMLElement>('[data-verse-text]');
+        if (!textSpan) continue;
+
+        const isFullySelected = selection.containsNode(verseEl, false);
+
+        if (isFullySelected) {
+          parts.push({ num: verseNum, text: textSpan.textContent?.trim() || '' });
+        } else {
+          // Partially selected verse - extract just the selected portion
+          try {
+            const verseRange = document.createRange();
+            verseRange.selectNodeContents(textSpan);
+
+            if (range.compareBoundaryPoints(Range.START_TO_START, verseRange) > 0) {
+              verseRange.setStart(range.startContainer, range.startOffset);
+            }
+            if (range.compareBoundaryPoints(Range.END_TO_END, verseRange) < 0) {
+              verseRange.setEnd(range.endContainer, range.endOffset);
+            }
+
+            const selectedText = verseRange.toString().trim();
+            if (selectedText) {
+              parts.push({ num: verseNum, text: selectedText });
+            }
+          } catch {
+            // Fallback: use full verse text
+            parts.push({ num: verseNum, text: textSpan.textContent?.trim() || '' });
+          }
+        }
+      }
+
+      if (parts.length === 0) return;
+
+      e.preventDefault();
+
+      // Plain text: "1 Text here\n2 More text"
+      const plainText = parts.map(p => `${p.num} ${p.text}`).join('\n');
+
+      // HTML: clean formatting for Word/rich text editors
+      const escHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const htmlLines = parts.map(p =>
+        `<p style="margin:0 0 4px 0;line-height:1.6;"><sup style="color:#8b7355;font-size:0.75em;">${escHtml(p.num)}</sup> ${escHtml(p.text)}</p>`
+      ).join('\n');
+      const html = `<div style="font-family:Georgia,serif;font-size:12pt;color:#333333;background:white;">${htmlLines}</div>`;
+
+      e.clipboardData?.setData('text/plain', plainText);
+      e.clipboardData?.setData('text/html', html);
+    }
+
+    document.addEventListener('copy', handleCopy);
+    return () => document.removeEventListener('copy', handleCopy);
+  }, []);
 
   // Show loading state only if we have no data at all
   if (isLoading && !verses.length && !initialData?.verses?.length) {
@@ -248,8 +326,11 @@ export function ChapterContent({
             />
           )}
 
-          <section className={styles.verses}>
-            {verses.map(verse => (
+          <section className={styles.verses} ref={versesRef}>
+            {verses.map(verse => {
+              const displayInfo = data?.displayMap?.[verse.id];
+              const displayVerse = displayInfo?.verse;
+              return (
               <VerseDisplay
                 key={`${verse.bible}-${verse.verse}`}
                 verse={verse}
@@ -263,8 +344,10 @@ export function ChapterContent({
                 }
                 initialWord4Word={word4word[verse.verse]}
                 initialReferences={references[verse.verse]}
+                displayVerse={displayVerse}
               />
-            ))}
+              );
+            })}
           </section>
 
           <footer className={styles.footer}>

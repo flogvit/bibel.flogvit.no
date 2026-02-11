@@ -17,6 +17,7 @@ interface VerseDisplayProps {
   secondaryText?: string;
   initialWord4Word?: Word4WordData[];
   initialReferences?: ReferenceData[];
+  displayVerse?: number;
 }
 
 interface Word4WordData {
@@ -57,7 +58,7 @@ function useIsMobile(breakpoint = 600) {
   return isMobile;
 }
 
-export function VerseDisplay({ verse, bookId, originalText, originalLanguage, secondaryText, initialWord4Word, initialReferences }: VerseDisplayProps) {
+export function VerseDisplay({ verse, bookId, originalText, originalLanguage, secondaryText, initialWord4Word, initialReferences, displayVerse }: VerseDisplayProps) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { settings } = useSettings();
@@ -325,8 +326,10 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, se
     setShowNoteTopicSuggestions(null);
   }
 
+  const shownVerse = displayVerse ?? verse.verse;
+
   return (
-    <div id={`v${verse.verse}`} className={styles.verse}>
+    <div id={`v${shownVerse}`} className={styles.verse} data-verse-num={shownVerse}>
       {settings.showVerseDetails ? (
         <span
           className={styles.verseNumber}
@@ -340,21 +343,21 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, se
           tabIndex={0}
           role="button"
           aria-expanded={expanded}
-          aria-label={`Vers ${verse.verse}. Klikk for å se original tekst og referanser`}
+          aria-label={`Vers ${shownVerse}. Klikk for å se original tekst og referanser`}
         >
           {settings.showVerseIndicators && favorited && <span className={styles.favoriteIndicator} aria-label="Favoritt">★</span>}
           {settings.showVerseIndicators && hasTopics && <span className={styles.topicIndicator} aria-label={`${verseTopics.length} emne${verseTopics.length > 1 ? 'r' : ''}`} />}
           {settings.showVerseIndicators && hasNotes && <span className={styles.noteIndicator} aria-label={`${verseNotes.length} notat${verseNotes.length > 1 ? 'er' : ''}`} />}
-          {verse.verse}
+          {shownVerse}
         </span>
       ) : (
         <span className={styles.verseNumberStatic}>
           {settings.showVerseIndicators && favorited && <span className={styles.favoriteIndicator} aria-label="Favoritt">★</span>}
-          {verse.verse}
+          {shownVerse}
         </span>
       )}
 
-      <span className={styles.verseText}>
+      <span className={styles.verseText} data-verse-text>
         {words.map((word, index) => {
           const wordData = word4word?.find(w => w.word_index === index + 1);
           const isSelected = selectedWord?.word_index === index + 1;
