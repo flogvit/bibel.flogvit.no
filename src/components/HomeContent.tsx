@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { booksData } from '@/lib/books-data';
+import { useSettings } from '@/components/SettingsContext';
 import { ContinueReading } from '@/components/ContinueReading';
 import { DailyVerse } from '@/components/DailyVerse';
 import { TodaysReading } from '@/components/TodaysReading';
@@ -10,6 +11,7 @@ function toUrlSlug(shortName: string): string {
 }
 
 export function HomeContent() {
+  const { settings } = useSettings();
   const otBooks = booksData.filter(b => b.testament === 'OT');
   const ntBooks = booksData.filter(b => b.testament === 'NT');
 
@@ -21,8 +23,8 @@ export function HomeContent() {
           <p className="text-muted">Velg en bok for å begynne å lese</p>
         </header>
 
-        <ContinueReading />
-        <DailyVerse />
+        {(settings.showContinueReading ?? true) && <ContinueReading />}
+        {(settings.showDailyVerse ?? true) && <DailyVerse />}
         <TodaysReading />
 
         <section className={styles.testament}>

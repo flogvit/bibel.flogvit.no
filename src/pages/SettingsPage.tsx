@@ -8,9 +8,16 @@ import { useDataImportExport } from '@/hooks/useDataImportExport';
 import type { FontSize } from '@/lib/settings';
 import styles from '@/styles/pages/settings.module.scss';
 
+interface NumberingSystemOption {
+  id: string;
+  name: string;
+  description: string | null;
+}
+
 export function SettingsPage() {
   const { settings, toggleSetting, updateSetting } = useSettings();
   const [allVersions, setAllVersions] = useState(bibleVersions);
+  const [numberingSystems, setNumberingSystems] = useState<NumberingSystemOption[]>([]);
   const {
     fileInputRef,
     importData,
@@ -37,6 +44,13 @@ export function SettingsPage() {
 
   useEffect(() => {
     document.title = 'Innstillinger | bibel.flogvit.no';
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/numbering-systems')
+      .then(res => res.ok ? res.json() : [])
+      .then(systems => setNumberingSystems(systems))
+      .catch(() => setNumberingSystems([]));
   }, []);
 
   const hidden = settings.hiddenBibles || [];
@@ -88,7 +102,7 @@ export function SettingsPage() {
       {/* Section 1: Translations */}
       <div className={styles.section}>
         <h2>Oversettelser</h2>
-        <p>Velg hvilke bibeloversettelser som vises i hurtigpanelet og bibelvelgeren.</p>
+        <p>Klikk for å velge standard oversettelse. Bruk bryteren for å skjule fra hurtigpanelet.</p>
         <div className={styles.bibleList}>
           {allVersions.map(version => {
             const isActive = version.value === settings.bible;
@@ -96,12 +110,21 @@ export function SettingsPage() {
             const isUser = version.value.startsWith('user:');
 
             return (
-              <div key={version.value} className={styles.bibleItem}>
-                <div className={styles.bibleInfo}>
+              <div key={version.value} className={`${styles.bibleItem} ${isActive ? styles.bibleItemActive : ''}`}>
+                <button
+                  className={styles.bibleSelectButton}
+                  onClick={() => {
+                    updateSetting('bible', version.value);
+                    // Unhide if hidden
+                    if (isHidden) {
+                      updateSetting('hiddenBibles', hidden.filter(v => v !== version.value));
+                    }
+                  }}
+                >
                   <span className={styles.bibleName}>{version.label}</span>
-                  {isActive && <span className={styles.activeBadge}>Aktiv</span>}
+                  {isActive && <span className={styles.activeBadge}>Standard</span>}
                   {isUser && <span className={styles.userBadge}>Egen</span>}
-                </div>
+                </button>
                 <label className={styles.toggle}>
                   <input
                     type="checkbox"
@@ -120,7 +143,33 @@ export function SettingsPage() {
         </Link>
       </div>
 
-      {/* Section 2: Display */}
+      {/* Section 2: Home page */}
+      <div className={styles.section}>
+        <h2>Forside</h2>
+        <p>Velg hva som vises på forsiden.</p>
+        <div className={styles.tools}>
+          <label className={styles.tool}>
+            <input
+              type="checkbox"
+              checked={settings.showContinueReading ?? true}
+              onChange={() => toggleSetting('showContinueReading')}
+            />
+            <span className={styles.checkmark}></span>
+            <span className={styles.label}>Fortsett lesing</span>
+          </label>
+          <label className={styles.tool}>
+            <input
+              type="checkbox"
+              checked={settings.showDailyVerse ?? true}
+              onChange={() => toggleSetting('showDailyVerse')}
+            />
+            <span className={styles.checkmark}></span>
+            <span className={styles.label}>Dagens vers</span>
+          </label>
+        </div>
+      </div>
+
+      {/* Section 3: Display */}
       <div className={styles.section}>
         <h2>Visning</h2>
         <p>Velg hva som vises ved bibellesing.</p>
@@ -170,6 +219,25 @@ export function SettingsPage() {
             <span className={styles.label}>Lesemodus</span>
           </label>
         </div>
+
+        {numberingSystems.length > 1 && (
+          <>
+            <h3 style={{ fontSize: '1rem', margin: '1rem 0 0.5rem 0' }}>Versnummerering</h3>
+            <p>Velg hvilken versnummerering som brukes ved bibellesing.</p>
+            <div className={styles.fontSizes}>
+              {numberingSystems.map(sys => (
+                <button
+                  key={sys.id}
+                  className={`${styles.fontSizeButton} ${(settings.numberingSystem || 'osnb2') === sys.id ? styles.active : ''}`}
+                  onClick={() => updateSetting('numberingSystem', sys.id)}
+                  title={sys.description || undefined}
+                >
+                  {sys.name}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Section 3: Appearance */}

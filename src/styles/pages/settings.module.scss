@@ -33,16 +33,34 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: $spacing-sm $spacing-md;
   background: $color-background;
   border: 1px solid $color-border;
   border-radius: $radius-sm;
+  transition: border-color $transition-fast;
+
+  &.bibleItemActive {
+    border-color: $color-primary;
+    background: rgba($color-primary, 0.04);
+  }
 }
 
-.bibleInfo {
+.bibleSelectButton {
+  flex: 1;
   display: flex;
   align-items: center;
   gap: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: $font-sans;
+
+  &:hover {
+    .bibleName {
+      color: $color-secondary;
+    }
+  }
 }
 
 .bibleName {
@@ -369,6 +387,15 @@
   .bibleItem {
     background: $dark-color-paper;
     border-color: $dark-color-border;
+
+    &.bibleItemActive {
+      border-color: $dark-color-secondary;
+      background: rgba($dark-color-secondary, 0.08);
+    }
+  }
+
+  .bibleSelectButton:hover .bibleName {
+    color: $dark-color-secondary;
   }
 
   .bibleName {

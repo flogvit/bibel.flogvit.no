@@ -237,12 +237,15 @@ export interface BibleSettings {
   showOriginalText: boolean;
   showTimeline: boolean;
   showParallels: boolean;
+  showContinueReading: boolean;
+  showDailyVerse: boolean;
   readingMode: boolean;
   fontSize: FontSize;
   darkMode: boolean;
   bible: BibleVersion;
   secondaryBible: string;
   hiddenBibles: string[];
+  numberingSystem: string;
 }
 
 export const defaultSettings: BibleSettings = {
@@ -257,12 +260,15 @@ export const defaultSettings: BibleSettings = {
   showOriginalText: false,
   showTimeline: true,
   showParallels: false,
+  showContinueReading: true,
+  showDailyVerse: true,
   readingMode: false,
   fontSize: 'medium',
   darkMode: false,
   bible: 'osnb2',
   secondaryBible: 'original',
   hiddenBibles: [],
+  numberingSystem: 'osnb2',
 };
 
 export async function getSettings(): Promise<BibleSettings> {
