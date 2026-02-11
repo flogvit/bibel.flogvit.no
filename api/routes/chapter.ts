@@ -8,7 +8,6 @@ import {
   getChapterInsight,
   getOriginalWord4Word,
   getReferences,
-  getChapterByNumbering,
 } from '../../src/lib/bible';
 
 export const chapterRouter = Router();
@@ -49,72 +48,7 @@ chapterRouter.get('/', (req: Request, res: Response) => {
     return;
   }
 
-  const numbering = req.query.numbering as string | undefined;
-
   try {
-    // If a non-default numbering system is requested, use KVN-based lookup
-    if (numbering && numbering !== 'osnb2') {
-      const result = getChapterByNumbering(numbering, bookId, chapter, bible);
-      if (!result || result.verses.length === 0) {
-        res.status(404).json({ error: 'Chapter not found for this numbering system' });
-        return;
-      }
-
-      // Get original text verses via KVN range
-      const originalBible = bookId <= 39 ? 'tanach' : 'sblgnt';
-      const originalResult = getChapterByNumbering(numbering, bookId, chapter, originalBible);
-      const originalVerses = originalResult?.verses.map(v => ({
-        verse: v.verse,
-        text: v.text,
-      })) || [];
-
-      // Get word4word for each verse (uses internal coordinates)
-      const lang = bible === 'osnn1' ? 'nn' : 'nb';
-      const word4word: Record<number, unknown[]> = {};
-      for (const verse of result.verses) {
-        const w4w = getOriginalWord4Word(verse.book_id, verse.chapter, verse.verse, lang);
-        if (w4w.length > 0) {
-          word4word[verse.verse] = w4w;
-        }
-      }
-
-      // Get references for each verse (uses internal coordinates)
-      const references: Record<number, unknown[]> = {};
-      for (const verse of result.verses) {
-        const refs = getReferences(verse.book_id, verse.chapter, verse.verse, lang);
-        if (refs.length > 0) {
-          references[verse.verse] = refs;
-        }
-      }
-
-      // Chapter metadata based on the internal chapter
-      const bookSummary = chapter === 1 ? getBookSummary(bookId) : null;
-      const summary = getChapterSummary(bookId, chapter);
-      const context = getChapterContext(bookId, chapter);
-      const insight = getChapterInsight(bookId, chapter);
-
-      const response = {
-        bookId,
-        chapter,
-        bible,
-        verses: result.verses,
-        originalVerses,
-        word4word,
-        references,
-        bookSummary,
-        summary,
-        context,
-        insight,
-        displayMap: result.displayMap,
-        numberingSystem: numbering,
-        cachedAt: Date.now(),
-      };
-
-      res.set('Cache-Control', 'no-cache');
-      res.json(response);
-      return;
-    }
-
     // Get all verse data
     const verses = getVerses(bookId, chapter, bible);
 

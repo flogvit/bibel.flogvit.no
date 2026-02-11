@@ -38,7 +38,6 @@ interface ImportStats {
   readingPlans: { updated: number; unchanged: number };
   gospelParallels: { updated: number; unchanged: number };
   verseMappings: { updated: number; unchanged: number };
-  kvn: { updated: number; unchanged: number };
 }
 
 const stats: ImportStats = {
@@ -61,7 +60,6 @@ const stats: ImportStats = {
   readingPlans: { updated: 0, unchanged: 0 },
   gospelParallels: { updated: 0, unchanged: 0 },
   verseMappings: { updated: 0, unchanged: 0 },
-  kvn: { updated: 0, unchanged: 0 },
 };
 
 // Sørg for at data-mappen eksisterer
@@ -443,39 +441,7 @@ db.exec(`
     unmapped TEXT
   );
 
-  CREATE TABLE IF NOT EXISTS numbering_systems (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    description TEXT,
-    is_default INTEGER DEFAULT 0
-  );
-
-  CREATE TABLE IF NOT EXISTS verse_kvn_map (
-    kvn INTEGER NOT NULL,
-    system_id TEXT NOT NULL,
-    book_id INTEGER NOT NULL,
-    chapter INTEGER NOT NULL,
-    verse INTEGER NOT NULL,
-    PRIMARY KEY (system_id, book_id, chapter, verse),
-    UNIQUE (system_id, kvn)
-  );
-
-  CREATE TABLE IF NOT EXISTS chapter_kvn_ranges (
-    system_id TEXT NOT NULL,
-    book_id INTEGER NOT NULL,
-    chapter INTEGER NOT NULL,
-    kvn_start INTEGER NOT NULL,
-    kvn_end INTEGER NOT NULL,
-    PRIMARY KEY (system_id, book_id, chapter)
-  );
 `);
-
-// Add kvn column to verses if it doesn't exist
-try {
-  db.exec(`ALTER TABLE verses ADD COLUMN kvn INTEGER`);
-} catch {
-  // Column already exists
-}
 
 // Create content_hashes table for incremental sync
 createContentHashesTable(db);
@@ -1649,234 +1615,6 @@ if (fs.existsSync(mappingsPath)) {
   console.log('  Ingen mappinger-mappe funnet');
 }
 
-// Generer KVN (Kanonisk Versnummer)
-console.log('Genererer KVN-mapping...');
-
-function generateKVN() {
-  // Step 1: Get all osnb2 verses sorted by book, chapter, verse
-  const osnb2Verses = db.prepare(
-    'SELECT id, book_id, chapter, verse FROM verses WHERE bible = ? ORDER BY book_id, chapter, verse'
-  ).all('osnb2') as { id: number; book_id: number; chapter: number; verse: number }[];
-
-  if (osnb2Verses.length === 0) {
-    console.log('  Ingen osnb2-vers funnet, hopper over KVN');
-    return;
-  }
-
-  // Build content hash from verse count + mapping data
-  const mappingRow = db.prepare('SELECT verse_map, unmapped FROM verse_mappings WHERE id = ?').get('bibel2011') as { verse_map: string; unmapped: string | null } | undefined;
-  const kvnContentKey = `${osnb2Verses.length}-${mappingRow?.verse_map?.length || 0}`;
-  const kvnContentHash = computeHash(kvnContentKey);
-
-  if (!isFullImport && !hasContentChanged(db, 'kvn', 'data', kvnContentHash)) {
-    const kvnCount = db.prepare('SELECT COUNT(*) as count FROM verse_kvn_map').get() as { count: number };
-    console.log(`  Uendret (${kvnCount.count} KVN-mappinger)`);
-    stats.kvn.unchanged = kvnCount.count;
-    return;
-  }
-
-  // Clear existing KVN data
-  db.exec('DELETE FROM chapter_kvn_ranges');
-  db.exec('DELETE FROM verse_kvn_map');
-  db.exec('DELETE FROM numbering_systems');
-
-  // Step 2: Insert numbering systems
-  const insertSystem = db.prepare('INSERT INTO numbering_systems (id, name, description, is_default) VALUES (?, ?, ?, ?)');
-  insertSystem.run('osnb2', 'OSNB2', 'Open Source Norsk Bibel 2 (standard nummerering)', 1);
-  insertSystem.run('bibel2011', 'Bibel 2011', 'Bibelselskapets oversettelse 2011', 0);
-
-  // Step 3: Assign KVN = row_number * 10 for osnb2 verses
-  const updateVerseKvn = db.prepare('UPDATE verses SET kvn = ? WHERE book_id = ? AND chapter = ? AND verse = ? AND bible = ?');
-  const insertKvnMap = db.prepare('INSERT INTO verse_kvn_map (kvn, system_id, book_id, chapter, verse) VALUES (?, ?, ?, ?, ?)');
-
-  // Map from "book-chapter-verse" -> kvn for lookup
-  const osnb2KvnMap = new Map<string, number>();
-
-  const assignKvn = db.transaction(() => {
-    let kvnCounter = 0;
-    for (const v of osnb2Verses) {
-      kvnCounter++;
-      const kvn = kvnCounter * 10;
-      const key = `${v.book_id}-${v.chapter}-${v.verse}`;
-      osnb2KvnMap.set(key, kvn);
-
-      // Update verses.kvn for all bibles with same coordinates
-      updateVerseKvn.run(kvn, v.book_id, v.chapter, v.verse, 'osnb2');
-      updateVerseKvn.run(kvn, v.book_id, v.chapter, v.verse, 'osnn1');
-      updateVerseKvn.run(kvn, v.book_id, v.chapter, v.verse, 'tanach');
-      updateVerseKvn.run(kvn, v.book_id, v.chapter, v.verse, 'sblgnt');
-
-      // Insert osnb2 system mapping
-      insertKvnMap.run(kvn, 'osnb2', v.book_id, v.chapter, v.verse);
-    }
-    return kvnCounter;
-  });
-
-  const totalOsnb2 = assignKvn();
-  console.log(`  Tildelt KVN til ${totalOsnb2} osnb2-vers`);
-
-  // Step 4: Build bibel2011 mapping
-  if (mappingRow) {
-    const verseMap = JSON.parse(mappingRow.verse_map) as Record<string, string>;
-    const unmapped = mappingRow.unmapped ? JSON.parse(mappingRow.unmapped) as { bookId: number; srcRef: string; reason: string }[] : [];
-
-    // verseMap: osnb2 key → bibel2011 coordinate
-    // Strategy: Build the complete bibel2011 mapping for each osnb2 verse.
-    // 1. First, assign all explicitly mapped verses their bibel2011 coordinates
-    // 2. For unmapped verses, their bibel2011 coord = osnb2 coord IF not already taken
-    // 3. For unmapped verses whose coord is taken, follow the chain forward
-
-    // Build the complete bibel2011 assignment: osnb2Key → bibel2011Coord
-    const bibel2011Assignment = new Map<string, string>();
-    const usedBibel2011Coords = new Set<string>();
-
-    // Pass 1: assign all explicitly mapped verses
-    for (const v of osnb2Verses) {
-      const osnb2Key = `${v.book_id}-${v.chapter}-${v.verse}`;
-      if (verseMap[osnb2Key]) {
-        const coord = verseMap[osnb2Key];
-        bibel2011Assignment.set(osnb2Key, coord);
-        usedBibel2011Coords.add(coord);
-      }
-    }
-
-    // Pass 2: assign unmapped verses
-    // Process in order so we can track the "next available" verse number per chapter
-    for (const v of osnb2Verses) {
-      const osnb2Key = `${v.book_id}-${v.chapter}-${v.verse}`;
-      if (bibel2011Assignment.has(osnb2Key)) continue; // Already mapped
-
-      const selfCoord = osnb2Key; // Same as osnb2 coordinates
-      if (!usedBibel2011Coords.has(selfCoord)) {
-        // Identity mapping - same coord available
-        bibel2011Assignment.set(osnb2Key, selfCoord);
-        usedBibel2011Coords.add(selfCoord);
-      } else {
-        // Coord is taken. We need to find what comes after us.
-        // Look at the previous osnb2 verse's bibel2011 assignment and increment
-        const prevKey = `${v.book_id}-${v.chapter}-${v.verse - 1}`;
-        const prevAssignment = bibel2011Assignment.get(prevKey);
-        if (prevAssignment) {
-          const [b, c, vStr] = prevAssignment.split('-');
-          let nextVerse = parseInt(vStr) + 1;
-          let candidate = `${b}-${c}-${nextVerse}`;
-          // Keep incrementing if the candidate is also taken
-          while (usedBibel2011Coords.has(candidate)) {
-            nextVerse++;
-            candidate = `${b}-${c}-${nextVerse}`;
-          }
-          bibel2011Assignment.set(osnb2Key, candidate);
-          usedBibel2011Coords.add(candidate);
-        } else {
-          // No previous verse assignment found. Try cross-chapter: look at the last verse
-          // of the previous chapter that's mapped to the same target chapter
-          // This handles cases where a verse moves across chapters
-          // For now, skip these rare edge cases
-          console.warn(`  Kan ikke tildele bibel2011-koordinat for ${osnb2Key} (ingen forrige vers funnet)`);
-        }
-      }
-    }
-
-    const mappedDiffs = Object.keys(verseMap).length;
-    const resolvedCount = [...bibel2011Assignment.values()].filter((v, _, arr) => {
-      // Count entries that differ from their key
-      return true; // We'll count differently
-    }).length - Object.keys(verseMap).length; // unmapped that got non-identity coords
-
-    const insertBibel2011 = db.transaction(() => {
-      let bibel2011Count = 0;
-
-      for (const v of osnb2Verses) {
-        const osnb2Key = `${v.book_id}-${v.chapter}-${v.verse}`;
-        const kvn = osnb2KvnMap.get(osnb2Key)!;
-        const bibel2011Coord = bibel2011Assignment.get(osnb2Key);
-
-        if (bibel2011Coord) {
-          const [bookStr, chapterStr, verseStr] = bibel2011Coord.split('-');
-          insertKvnMap.run(kvn, 'bibel2011', parseInt(bookStr), parseInt(chapterStr), parseInt(verseStr));
-          bibel2011Count++;
-        }
-      }
-
-      // Handle unmapped verses (exist in Bibel 2011 but not in osnb2)
-      // These need new KVN values placed in the ×10 gaps between existing KVNs.
-      if (unmapped.length > 0) {
-        // Collect all KVNs already used for bibel2011 to avoid collisions
-        const usedKvns = new Set<number>();
-        const allBibel2011Kvns = db.prepare(
-          'SELECT kvn FROM verse_kvn_map WHERE system_id = ?'
-        ).all('bibel2011') as { kvn: number }[];
-        for (const row of allBibel2011Kvns) usedKvns.add(row.kvn);
-        // Also include all osnb2 KVNs (since they share the UNIQUE constraint on system_id+kvn,
-        // but these are different system_ids so they won't conflict on the composite key.
-        // The UNIQUE is on (system_id, kvn), so only bibel2011 kvns matter.)
-
-        for (const um of unmapped) {
-          const [chapterStr, verseStr] = um.srcRef.split(':');
-          const chapter = parseInt(chapterStr);
-          const verse = parseInt(verseStr);
-
-          // Find the KVN of the previous bibel2011 verse in this chapter
-          const prevVerse = db.prepare(
-            'SELECT kvn FROM verse_kvn_map WHERE system_id = ? AND book_id = ? AND chapter = ? AND verse < ? ORDER BY verse DESC LIMIT 1'
-          ).get('bibel2011', um.bookId, chapter, verse) as { kvn: number } | undefined;
-
-          let newKvn: number;
-          if (prevVerse) {
-            // Place after previous verse using the gap (×10 spacing gives room for +1 through +9)
-            newKvn = prevVerse.kvn + 1;
-            while (usedKvns.has(newKvn)) newKvn++;
-          } else {
-            // Before first verse of chapter — shouldn't normally happen
-            const firstVerse = db.prepare(
-              'SELECT kvn FROM verse_kvn_map WHERE system_id = ? AND book_id = ? AND chapter = ? ORDER BY verse ASC LIMIT 1'
-            ).get('bibel2011', um.bookId, chapter) as { kvn: number } | undefined;
-            newKvn = firstVerse ? firstVerse.kvn - 1 : (totalOsnb2 * 10) + verse;
-            while (usedKvns.has(newKvn)) newKvn--;
-          }
-
-          usedKvns.add(newKvn);
-          insertKvnMap.run(newKvn, 'bibel2011', um.bookId, chapter, verse);
-          bibel2011Count++;
-        }
-      }
-
-      return bibel2011Count;
-    });
-
-    const totalBibel2011 = insertBibel2011();
-    const resolvedConflicts = [...bibel2011Assignment.entries()].filter(([k, v]) => k !== v && !verseMap[k]).length;
-    console.log(`  Bibel 2011: ${totalBibel2011} vers mappet (${Object.keys(verseMap).length} forskjeller, ${resolvedConflicts} beregnet, ${unmapped.length} unike)`);
-  }
-
-  // Step 5: Populate chapter_kvn_ranges from verse_kvn_map
-  const insertRange = db.prepare(
-    'INSERT INTO chapter_kvn_ranges (system_id, book_id, chapter, kvn_start, kvn_end) VALUES (?, ?, ?, ?, ?)'
-  );
-
-  const populateRanges = db.transaction(() => {
-    const ranges = db.prepare(`
-      SELECT system_id, book_id, chapter, MIN(kvn) as kvn_start, MAX(kvn) as kvn_end
-      FROM verse_kvn_map
-      GROUP BY system_id, book_id, chapter
-    `).all() as { system_id: string; book_id: number; chapter: number; kvn_start: number; kvn_end: number }[];
-
-    for (const range of ranges) {
-      insertRange.run(range.system_id, range.book_id, range.chapter, range.kvn_start, range.kvn_end);
-    }
-    return ranges.length;
-  });
-
-  const rangeCount = populateRanges();
-  console.log(`  ${rangeCount} kapittelranges generert`);
-
-  updateContentHash(db, 'kvn', 'data', kvnContentHash);
-  const totalKvn = db.prepare('SELECT COUNT(*) as count FROM verse_kvn_map').get() as { count: number };
-  stats.kvn.updated = totalKvn.count;
-}
-
-generateKVN();
-
 // Opprett indekser
 console.log('Oppretter indekser...');
 db.exec(`
@@ -1898,9 +1636,6 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_daily_verses_date ON daily_verses(date);
   CREATE INDEX IF NOT EXISTS idx_gospel_parallels_section ON gospel_parallels(section_id);
   CREATE INDEX IF NOT EXISTS idx_gospel_parallel_passages_parallel ON gospel_parallel_passages(parallel_id);
-  CREATE INDEX IF NOT EXISTS idx_verses_kvn ON verses(kvn, bible);
-  CREATE INDEX IF NOT EXISTS idx_kvn_map_kvn ON verse_kvn_map(kvn);
-  CREATE INDEX IF NOT EXISTS idx_kvn_map_chapter ON verse_kvn_map(system_id, book_id, chapter);
 `);
 
 // Check if any content was updated
@@ -1952,7 +1687,6 @@ console.log(`Dagens vers           ${String(stats.dailyVerses.updated).padStart(
 console.log(`Leseplaner            ${String(stats.readingPlans.updated).padStart(9)}  ${String(stats.readingPlans.unchanged).padStart(7)}`);
 console.log(`Evangelieparalleller  ${String(stats.gospelParallels.updated).padStart(9)}  ${String(stats.gospelParallels.unchanged).padStart(7)}`);
 console.log(`Vers-mappinger        ${String(stats.verseMappings.updated).padStart(9)}  ${String(stats.verseMappings.unchanged).padStart(7)}`);
-console.log(`KVN-mappinger         ${String(stats.kvn.updated).padStart(9)}  ${String(stats.kvn.unchanged).padStart(7)}`);
 console.log('----------------------------------------');
 console.log(`Totalt                ${String(totalUpdated).padStart(9)}  ${String(totalUnchanged).padStart(7)}`);
 console.log('\nFerdig!');

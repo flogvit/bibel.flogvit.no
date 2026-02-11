@@ -8,16 +8,9 @@ import { useDataImportExport } from '@/hooks/useDataImportExport';
 import type { FontSize } from '@/lib/settings';
 import styles from '@/styles/pages/settings.module.scss';
 
-interface NumberingSystemOption {
-  id: string;
-  name: string;
-  description: string | null;
-}
-
 export function SettingsPage() {
   const { settings, toggleSetting, updateSetting } = useSettings();
   const [allVersions, setAllVersions] = useState(bibleVersions);
-  const [numberingSystems, setNumberingSystems] = useState<NumberingSystemOption[]>([]);
   const {
     fileInputRef,
     importData,
@@ -44,13 +37,6 @@ export function SettingsPage() {
 
   useEffect(() => {
     document.title = 'Innstillinger | bibel.flogvit.no';
-  }, []);
-
-  useEffect(() => {
-    fetch('/api/numbering-systems')
-      .then(res => res.ok ? res.json() : [])
-      .then(systems => setNumberingSystems(systems))
-      .catch(() => setNumberingSystems([]));
   }, []);
 
   const hidden = settings.hiddenBibles || [];
@@ -220,24 +206,6 @@ export function SettingsPage() {
           </label>
         </div>
 
-        {numberingSystems.length > 1 && (
-          <>
-            <h3 style={{ fontSize: '1rem', margin: '1rem 0 0.5rem 0' }}>Versnummerering</h3>
-            <p>Velg hvilken versnummerering som brukes ved bibellesing.</p>
-            <div className={styles.fontSizes}>
-              {numberingSystems.map(sys => (
-                <button
-                  key={sys.id}
-                  className={`${styles.fontSizeButton} ${(settings.numberingSystem || 'osnb2') === sys.id ? styles.active : ''}`}
-                  onClick={() => updateSetting('numberingSystem', sys.id)}
-                  title={sys.description || undefined}
-                >
-                  {sys.name}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
       </div>
 
       {/* Section 3: Appearance */}
