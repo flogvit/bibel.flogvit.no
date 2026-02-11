@@ -25,6 +25,7 @@ import { dailyVerseRouter } from './routes/daily-verse';
 import { parallelsRouter } from './routes/parallels';
 import { statisticsRouter } from './routes/statistics';
 import { mappingsRouter } from './routes/mappings';
+import { numberingRouter } from './routes/numbering';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -59,10 +60,27 @@ app.use('/api/daily-verse', dailyVerseRouter);
 app.use('/api/parallels', parallelsRouter);
 app.use('/api/statistics', statisticsRouter);
 app.use('/api/mappings', mappingsRouter);
+app.use('/api/numbering-systems', numberingRouter);
 
 // Serve static files from Vite build
 const distPath = path.join(__dirname, '..', 'dist');
-app.use(express.static(distPath));
+
+// Hashed assets (e.g. /assets/index-abc123.js) - cache aggressively
+app.use('/assets', express.static(path.join(distPath, 'assets'), {
+  maxAge: '1y',
+  immutable: true,
+}));
+
+// Other static files - short cache with revalidation
+app.use(express.static(distPath, {
+  maxAge: '1h',
+  setHeaders: (res, filePath) => {
+    // index.html should never be cached by the browser
+    if (filePath.endsWith('index.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+  },
+}));
 
 // SPA fallback - serve index.html for all non-API routes
 app.get('*', (req, res) => {
@@ -71,6 +89,7 @@ app.get('*', (req, res) => {
     res.status(404).json({ error: 'Not found' });
     return;
   }
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.sendFile(path.join(distPath, 'index.html'));
 });
 

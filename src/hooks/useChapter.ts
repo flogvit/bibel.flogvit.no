@@ -9,6 +9,7 @@ interface UseChapterOptions {
   chapter: number;
   bible?: string;
   secondaryBible?: string;
+  numberingSystem?: string;
 }
 
 interface UseChapterResult {
@@ -19,7 +20,7 @@ interface UseChapterResult {
   refetch: () => Promise<void>;
 }
 
-export function useChapter({ bookId, chapter, bible = 'osnb2', secondaryBible }: UseChapterOptions): UseChapterResult {
+export function useChapter({ bookId, chapter, bible = 'osnb2', secondaryBible, numberingSystem }: UseChapterOptions): UseChapterResult {
   const [data, setData] = useState<ChapterAPIResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -121,7 +122,8 @@ export function useChapter({ bookId, chapter, bible = 'osnb2', secondaryBible }:
 
     try {
       const secondaryParam = secondaryBible && secondaryBible !== 'original' && !secondaryBible.startsWith('user:') ? `&secondary=${secondaryBible}` : '';
-      const response = await fetch(`/api/chapter?book=${bookId}&chapter=${chapter}&bible=${bible}${secondaryParam}`);
+      const numberingParam = numberingSystem && numberingSystem !== 'osnb2' ? `&numbering=${numberingSystem}` : '';
+      const response = await fetch(`/api/chapter?book=${bookId}&chapter=${chapter}&bible=${bible}${secondaryParam}${numberingParam}`);
       if (isStale()) return;
 
       if (!response.ok) {
@@ -206,7 +208,7 @@ export function useChapter({ bookId, chapter, bible = 'osnb2', secondaryBible }:
     } finally {
       if (!isStale()) setIsLoading(false);
     }
-  }, [bookId, chapter, bible, secondaryBible]);
+  }, [bookId, chapter, bible, secondaryBible, numberingSystem]);
 
   useEffect(() => {
     fetchChapter();

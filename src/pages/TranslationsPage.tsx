@@ -44,7 +44,7 @@ export function TranslationsPage() {
         setSelectedMapping(data.mappings[0].id);
       }
     } catch {
-      setError('Kunne ikke laste mappinger fra serveren');
+      setError('Kunne ikke laste versnummereringer fra serveren');
     }
   }
 
@@ -151,7 +151,7 @@ export function TranslationsPage() {
 
       <h1>Oversettelser</h1>
       <p className={styles.intro}>
-        Last opp egne bibeloversettelser. Versene blir mappet til intern nummerering slik at kryssreferanser og andre verktøy fortsatt fungerer.
+        Last opp egne bibeloversettelser. Ulike oversettelser kan ha forskjellig versinndeling &ndash; velg riktig nummerering nedenfor, så kobler vi versene til kryssreferanser og andre verktøy automatisk.
       </p>
 
       {error && <div className={styles.error}>{error}</div>}
@@ -188,7 +188,7 @@ export function TranslationsPage() {
         <h2>Last opp ny oversettelse</h2>
         <div className={styles.uploadForm}>
           <div className={styles.formGroup}>
-            <label htmlFor="mapping">Versnummerering (mapping)</label>
+            <label htmlFor="mapping">Versnummerering</label>
             <select
               id="mapping"
               className={styles.select}

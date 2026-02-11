@@ -14,6 +14,8 @@ export interface ChapterAPIResponse {
   context: string | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   insight: any | null;
+  displayMap?: Record<number, { chapter: number; verse: number }>;
+  numberingSystem?: string;
   cachedAt: number;
 }
 
