@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSettings } from '@/components/SettingsContext';
 import { parseStandardRef, refSegmentsToVerseRefs, type RefSegment } from '@/lib/standard-ref-parser';
 import styles from './VerseInsertDialog.module.scss';
 
@@ -13,12 +14,26 @@ interface VerseResult {
 }
 
 export function VerseInsertDialog({ onInsert, onClose }: VerseInsertDialogProps) {
+  const { settings } = useSettings();
   const [query, setQuery] = useState('');
   const [segments, setSegments] = useState<RefSegment[]>([]);
   const [verses, setVerses] = useState<VerseResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<'reference' | 'quote'>('reference');
+
+  const settingsBible = settings.bible?.startsWith('user:') ? 'osnb2' : (settings.bible || 'osnb2');
+
+  function parseQueryBible(q: string): { ref: string; bibleOverride?: string } {
+    const atIdx = q.lastIndexOf('@');
+    if (atIdx > 0) {
+      const possibleBible = q.substring(atIdx + 1).trim();
+      if (possibleBible && /^[a-z0-9_-]+$/i.test(possibleBible)) {
+        return { ref: q.substring(0, atIdx).trim(), bibleOverride: possibleBible };
+      }
+    }
+    return { ref: q };
+  }
 
   async function handleSearch() {
     if (!query.trim()) return;
@@ -29,9 +44,12 @@ export function VerseInsertDialog({ onInsert, onClose }: VerseInsertDialogProps)
     setError(null);
 
     try {
-      const parsed = parseStandardRef(query.trim());
+      const { ref, bibleOverride } = parseQueryBible(query.trim());
+      const bible = bibleOverride || settingsBible;
+
+      const parsed = parseStandardRef(ref);
       if (parsed.length === 0) {
-        setError('Ugyldig referanse. Prøv f.eks. "Joh 3,16" eller "Sal 23,1-6"');
+        setError('Ugyldig referanse. Prøv f.eks. "Joh 3,16" eller "Sal 23,1-6@osnb2"');
         setLoading(false);
         return;
       }
@@ -43,7 +61,7 @@ export function VerseInsertDialog({ onInsert, onClose }: VerseInsertDialogProps)
       const response = await fetch('/api/verses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refs }),
+        body: JSON.stringify({ refs, bible }),
       });
       const data = await response.json() as VerseResult[];
       setVerses(data || []);
@@ -84,7 +102,7 @@ export function VerseInsertDialog({ onInsert, onClose }: VerseInsertDialogProps)
             <input
               type="text"
               className={styles.searchInput}
-              placeholder="Skriv referanse (f.eks. Joh 3,16 eller Sal 23,1-6)..."
+              placeholder="Joh 3,16 eller Sal 23,1-6 (bruk @osnb2 for spesifikk oversettelse)"
               value={query}
               onChange={e => setQuery(e.target.value)}
               onKeyDown={e => {

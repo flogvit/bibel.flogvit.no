@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Link } from 'react-router-dom';
 import { useDevotionals } from '@/components/DevotionalsContext';
+import { useSettings } from '@/components/SettingsContext';
 import { verseRefToUrl } from '@/lib/devotional-utils';
 import { parseStandardRef, refSegmentsToVerseRefs, refSegmentToUrl } from '@/lib/standard-ref-parser';
 import { getBookInfoBySlug } from '@/lib/books-data';
@@ -41,44 +42,65 @@ function parseLegacyRef(ref: string): { bookId: number; chapter: number; verse: 
   return null;
 }
 
+/**
+ * Parse optional @bible suffix from a ref string.
+ * e.g. "Joh 3,16@osnb2" => { ref: "Joh 3,16", bibleOverride: "osnb2" }
+ * e.g. "Joh 3,16" => { ref: "Joh 3,16", bibleOverride: undefined }
+ */
+function parseRefBible(refStr: string): { ref: string; bibleOverride?: string } {
+  const atIdx = refStr.lastIndexOf('@');
+  if (atIdx > 0) {
+    const possibleBible = refStr.substring(atIdx + 1).trim();
+    if (possibleBible && /^[a-z0-9_-]+$/i.test(possibleBible)) {
+      return { ref: refStr.substring(0, atIdx).trim(), bibleOverride: possibleBible };
+    }
+  }
+  return { ref: refStr };
+}
+
 function RefVerseDisplay({ refStr, isLegacy }: { refStr: string; isLegacy?: boolean }) {
+  const { settings } = useSettings();
   const [verseData, setVerseData] = useState<VerseWithOriginal[] | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const { ref, bibleOverride } = useMemo(() => parseRefBible(refStr), [refStr]);
+  const settingsBible = settings.bible?.startsWith('user:') ? 'osnb2' : (settings.bible || 'osnb2');
+  const bible = bibleOverride || settingsBible;
+
   const { url, displayLabel } = useMemo(() => {
     if (isLegacy) {
-      return { url: verseRefToUrl(refStr), displayLabel: refStr };
+      return { url: verseRefToUrl(ref), displayLabel: ref };
     }
-    const segments = parseStandardRef(refStr);
+    const segments = parseStandardRef(ref);
     const first = segments[0];
     return {
       url: first ? refSegmentToUrl(first) : '#',
-      displayLabel: refStr,
+      displayLabel: ref,
     };
-  }, [refStr, isLegacy]);
+  }, [ref, isLegacy]);
 
   const fetchVerses = useCallback(async () => {
     setLoading(true);
     try {
       let data: VerseWithOriginal[];
       if (isLegacy) {
-        const parsed = parseLegacyRef(refStr);
+        const parsed = parseLegacyRef(ref);
         if (!parsed) { setLoading(false); return; }
         const refs = [{ bookId: parsed.bookId, chapter: parsed.chapter, verses: [parsed.verse] }];
         const response = await fetch('/api/verses', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refs }),
+          body: JSON.stringify({ refs, bible }),
         });
         data = await response.json();
       } else {
-        const segments = parseStandardRef(refStr);
+        const segments = parseStandardRef(ref);
         const refs = refSegmentsToVerseRefs(segments);
         const response = await fetch('/api/verses', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refs }),
+          body: JSON.stringify({ refs, bible }),
         });
         data = await response.json();
       }
@@ -87,7 +109,7 @@ function RefVerseDisplay({ refStr, isLegacy }: { refStr: string; isLegacy?: bool
       setVerseData([]);
     }
     setLoading(false);
-  }, [refStr, isLegacy]);
+  }, [ref, isLegacy, bible]);
 
   const handleClick = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
