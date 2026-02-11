@@ -16,7 +16,20 @@ interface SearchResult {
   text: string;
 }
 
+interface StoryResult {
+  slug: string;
+  title: string;
+  description: string | null;
+  category: string;
+}
+
+interface ThemeResult {
+  id: number;
+  name: string;
+}
+
 const RESULTS_PER_PAGE = 50;
+const MAX_EXTRA_RESULTS = 5;
 
 export function SearchPage() {
   const [searchParams] = useSearchParams();
@@ -34,6 +47,8 @@ export function SearchPage() {
   }, [initialQuery]);
 
   const [results, setResults] = useState<SearchResult[]>([]);
+  const [stories, setStories] = useState<StoryResult[]>([]);
+  const [themes, setThemes] = useState<ThemeResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [searched, setSearched] = useState(false);
@@ -43,6 +58,8 @@ export function SearchPage() {
   const performSearch = useCallback(async (searchQuery: string, offset = 0, append = false) => {
     if (searchQuery.length < 2) {
       setResults([]);
+      setStories([]);
+      setThemes([]);
       setSearched(false);
       setTotal(0);
       setHasMore(false);
@@ -56,14 +73,16 @@ export function SearchPage() {
     }
 
     try {
-      let data: { results: SearchResult[]; total: number; hasMore: boolean };
+      const versePromise = bible.startsWith('user:')
+        ? searchUserBible(bible, searchQuery, RESULTS_PER_PAGE, offset)
+        : fetch(`/api/search?q=${encodeURIComponent(searchQuery)}&limit=${RESULTS_PER_PAGE}&offset=${offset}&bible=${bible}`).then(r => r.json());
 
-      if (bible.startsWith('user:')) {
-        data = await searchUserBible(bible, searchQuery, RESULTS_PER_PAGE, offset);
-      } else {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}&limit=${RESULTS_PER_PAGE}&offset=${offset}&bible=${bible}`);
-        data = await res.json();
-      }
+      // Only fetch stories/themes on first page
+      const extraPromise = !append
+        ? fetch(`/api/search/all?q=${encodeURIComponent(searchQuery)}`).then(r => r.json())
+        : Promise.resolve(null);
+
+      const [data, extraData] = await Promise.all([versePromise, extraPromise]);
 
       if (append) {
         setResults(prev => [...prev, ...(data.results || [])]);
@@ -72,11 +91,19 @@ export function SearchPage() {
       }
       setTotal(data.total || 0);
       setHasMore(data.hasMore || false);
+
+      if (extraData) {
+        setStories(extraData.stories || []);
+        setThemes(extraData.themes || []);
+      }
+
       setSearched(true);
     } catch (error) {
       console.error('Search failed:', error);
       if (!append) {
         setResults([]);
+        setStories([]);
+        setThemes([]);
         setTotal(0);
         setHasMore(false);
       }
@@ -100,7 +127,8 @@ export function SearchPage() {
   function highlightMatch(text: string, searchQuery: string) {
     if (!searchQuery) return text;
 
-    const regex = new RegExp(`(${searchQuery})`, 'gi');
+    const escaped = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escaped})`, 'gi');
     const parts = text.split(regex);
 
     return parts.map((part, i) =>
@@ -111,6 +139,8 @@ export function SearchPage() {
       )
     );
   }
+
+  const hasExtraResults = stories.length > 0 || themes.length > 0;
 
   return (
     <div className={styles.main}>
@@ -131,14 +161,70 @@ export function SearchPage() {
 
         <div role="status" aria-live="polite" aria-atomic="true">
           {loading && <p className="text-muted">Søker...</p>}
-          {searched && !loading && (
-            <p className={styles.resultCount}>
-              {total === 0
-                ? 'Ingen resultater funnet'
-                : `Viser ${results.length} av ${total} resultater`}
-            </p>
-          )}
         </div>
+
+        {searched && !loading && hasExtraResults && (
+          <div className={styles.extraResults}>
+            {stories.length > 0 && (
+              <div className={styles.extraSection}>
+                <h2 className={styles.extraSectionTitle}>Bibelhistorier</h2>
+                <div className={styles.extraCards}>
+                  {stories.slice(0, MAX_EXTRA_RESULTS).map((story) => (
+                    <Link
+                      key={story.slug}
+                      to={`/historier/${story.slug}`}
+                      className={styles.extraCard}
+                    >
+                      <span className={styles.extraCardTitle}>{story.title}</span>
+                      {story.description && (
+                        <span className={styles.extraCardDesc}>
+                          {story.description.length > 100
+                            ? story.description.slice(0, 100) + '...'
+                            : story.description}
+                        </span>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+                {stories.length > MAX_EXTRA_RESULTS && (
+                  <Link to={`/historier`} className={styles.showAllLink}>
+                    Vis alle {stories.length} historier
+                  </Link>
+                )}
+              </div>
+            )}
+
+            {themes.length > 0 && (
+              <div className={styles.extraSection}>
+                <h2 className={styles.extraSectionTitle}>Temaer</h2>
+                <div className={styles.extraCards}>
+                  {themes.slice(0, MAX_EXTRA_RESULTS).map((theme) => (
+                    <Link
+                      key={theme.id}
+                      to={`/temaer/${encodeURIComponent(theme.name)}`}
+                      className={styles.extraCard}
+                    >
+                      <span className={styles.extraCardTitle}>{theme.name}</span>
+                    </Link>
+                  ))}
+                </div>
+                {themes.length > MAX_EXTRA_RESULTS && (
+                  <Link to={`/temaer`} className={styles.showAllLink}>
+                    Vis alle {themes.length} temaer
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {searched && !loading && (
+          <p className={styles.resultCount}>
+            {total === 0
+              ? (hasExtraResults ? '' : 'Ingen resultater funnet')
+              : `Viser ${results.length} av ${total} bibeltekst-resultater`}
+          </p>
+        )}
 
         {results.length > 0 && (
           <>

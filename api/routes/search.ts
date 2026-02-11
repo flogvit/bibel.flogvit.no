@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { searchVerses, searchOriginalWord } from '../../src/lib/bible';
+import { searchVerses, searchOriginalWord, searchStories, searchThemes } from '../../src/lib/bible';
 
 export const searchRouter = Router();
 
@@ -25,6 +25,31 @@ searchRouter.get('/', (req: Request, res: Response) => {
     res.json({ results, total, hasMore });
   } catch (error) {
     console.error('Error searching verses:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * GET /api/search/all
+ * Combined search across stories and themes
+ * Query params: q
+ */
+searchRouter.get('/all', (req: Request, res: Response) => {
+  const query = (req.query.q as string) || '';
+
+  if (query.length < 2) {
+    res.json({ stories: [], themes: [] });
+    return;
+  }
+
+  try {
+    const stories = searchStories(query);
+    const themes = searchThemes(query);
+
+    res.set('Cache-Control', 'no-cache');
+    res.json({ stories, themes });
+  } catch (error) {
+    console.error('Error in combined search:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

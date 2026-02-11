@@ -87,6 +87,66 @@
   border-radius: 2px;
 }
 
+.extraResults {
+  margin-bottom: $spacing-xl;
+}
+
+.extraSection {
+  margin-bottom: $spacing-lg;
+}
+
+.extraSectionTitle {
+  font-family: $font-serif;
+  font-size: $font-size-lg;
+  font-weight: 400;
+  color: $color-primary;
+  margin-bottom: $spacing-md;
+}
+
+.extraCards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.extraCard {
+  @include card;
+  display: flex;
+  flex-direction: column;
+  padding: $spacing-md $spacing-lg;
+  text-decoration: none;
+  flex: 0 1 auto;
+  max-width: 300px;
+
+  &:hover {
+    box-shadow: $shadow-md;
+  }
+}
+
+.extraCardTitle {
+  font-weight: 600;
+  color: $color-secondary;
+}
+
+.extraCardDesc {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+  margin-top: $spacing-xs;
+  line-height: 1.4;
+}
+
+.showAllLink {
+  display: inline-block;
+  margin-top: $spacing-sm;
+  font-size: $font-size-sm;
+  color: $color-secondary;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 .loadMoreButton {
   @include button-primary;
   display: block;
@@ -142,6 +202,31 @@
 
   .highlight {
     background: $dark-color-verse-highlight;
+  }
+
+  .extraSectionTitle {
+    color: $dark-color-text;
+  }
+
+  .extraCard {
+    background: $dark-color-paper;
+    border-color: $dark-color-border;
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  .extraCardTitle {
+    color: $dark-color-secondary;
+  }
+
+  .extraCardDesc {
+    color: $dark-color-text-muted;
+  }
+
+  .showAllLink {
+    color: $dark-color-secondary;
   }
 
   .loadMoreButton {
