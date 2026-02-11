@@ -38,6 +38,7 @@ interface ImportStats {
   readingPlans: { updated: number; unchanged: number };
   gospelParallels: { updated: number; unchanged: number };
   verseMappings: { updated: number; unchanged: number };
+  stories: { updated: number; unchanged: number };
 }
 
 const stats: ImportStats = {
@@ -60,6 +61,7 @@ const stats: ImportStats = {
   readingPlans: { updated: 0, unchanged: 0 },
   gospelParallels: { updated: 0, unchanged: 0 },
   verseMappings: { updated: 0, unchanged: 0 },
+  stories: { updated: 0, unchanged: 0 },
 };
 
 // Sørg for at data-mappen eksisterer
@@ -439,6 +441,16 @@ db.exec(`
     book_names TEXT NOT NULL,
     verse_map TEXT NOT NULL,
     unmapped TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS stories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    slug TEXT NOT NULL UNIQUE,
+    title TEXT NOT NULL,
+    keywords TEXT NOT NULL,
+    description TEXT,
+    category TEXT NOT NULL,
+    content TEXT NOT NULL
   );
 
 `);
@@ -1615,6 +1627,85 @@ if (fs.existsSync(mappingsPath)) {
   console.log('  Ingen mappinger-mappe funnet');
 }
 
+// Importer bibelhistorier (per-fil, lik persons-mønsteret)
+console.log('Importerer bibelhistorier...');
+const insertStory = db.prepare(`
+  INSERT OR REPLACE INTO stories (slug, title, keywords, description, category, content) VALUES (?, ?, ?, ?, ?, ?)
+`);
+
+const storiesDir = path.join(GENERATE_PATH, 'stories', 'nb');
+if (fs.existsSync(storiesDir)) {
+  const storyFiles = fs.readdirSync(storiesDir).filter(f => f.endsWith('.json') && f !== 'stories.json');
+
+  if (storyFiles.length > 0) {
+    // Per-fil import (nye individuelle filer)
+    for (const file of storyFiles) {
+      const slug = file.replace('.json', '');
+      const filePath = path.join(storiesDir, file);
+      const content = fs.readFileSync(filePath, 'utf-8');
+      const contentHash = computeHash(content);
+      const contentKey = slug;
+
+      if (!isFullImport && !hasContentChanged(db, 'story', contentKey, contentHash)) {
+        stats.stories.unchanged++;
+        continue;
+      }
+
+      try {
+        const story = JSON.parse(content);
+        insertStory.run(
+          story.slug,
+          story.title,
+          story.keywords.join(','),
+          story.description || null,
+          story.category,
+          JSON.stringify(story)
+        );
+        updateContentHash(db, 'story', contentKey, contentHash);
+        stats.stories.updated++;
+      } catch (e) {
+        console.error(`Ugyldig JSON i ${file}:`, e);
+      }
+    }
+  } else {
+    // Fallback: gammel monolittisk stories.json
+    const storiesJsonPath = path.join(storiesDir, 'stories.json');
+    if (fs.existsSync(storiesJsonPath)) {
+      const content = fs.readFileSync(storiesJsonPath, 'utf-8');
+      const contentHash = computeHash(content);
+
+      if (isFullImport || hasContentChanged(db, 'stories', 'data', contentHash)) {
+        try {
+          const storiesData = JSON.parse(content);
+          db.prepare('DELETE FROM stories').run();
+
+          for (const story of storiesData) {
+            insertStory.run(
+              story.slug,
+              story.title,
+              story.keywords.join(','),
+              story.description || null,
+              story.category,
+              JSON.stringify(story)
+            );
+          }
+
+          updateContentHash(db, 'stories', 'data', contentHash);
+          stats.stories.updated = storiesData.length;
+          console.log(`  Importerte ${storiesData.length} bibelhistorier (fra stories.json)`);
+        } catch (e) {
+          console.error('Ugyldig JSON i stories.json:', e);
+        }
+      } else {
+        const storyCount = db.prepare('SELECT COUNT(*) as count FROM stories').get() as { count: number };
+        console.log(`  Uendret (${storyCount.count} historier)`);
+        stats.stories.unchanged = storyCount.count;
+      }
+    }
+  }
+  console.log(`  Importerte ${stats.stories.updated} bibelhistorier (${stats.stories.unchanged} uendret)`);
+}
+
 // Opprett indekser
 console.log('Oppretter indekser...');
 db.exec(`
@@ -1636,6 +1727,8 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_daily_verses_date ON daily_verses(date);
   CREATE INDEX IF NOT EXISTS idx_gospel_parallels_section ON gospel_parallels(section_id);
   CREATE INDEX IF NOT EXISTS idx_gospel_parallel_passages_parallel ON gospel_parallel_passages(parallel_id);
+  CREATE INDEX IF NOT EXISTS idx_stories_category ON stories(category);
+  CREATE INDEX IF NOT EXISTS idx_stories_slug ON stories(slug);
 `);
 
 // Check if any content was updated
@@ -1687,6 +1780,7 @@ console.log(`Dagens vers           ${String(stats.dailyVerses.updated).padStart(
 console.log(`Leseplaner            ${String(stats.readingPlans.updated).padStart(9)}  ${String(stats.readingPlans.unchanged).padStart(7)}`);
 console.log(`Evangelieparalleller  ${String(stats.gospelParallels.updated).padStart(9)}  ${String(stats.gospelParallels.unchanged).padStart(7)}`);
 console.log(`Vers-mappinger        ${String(stats.verseMappings.updated).padStart(9)}  ${String(stats.verseMappings.unchanged).padStart(7)}`);
+console.log(`Bibelhistorier        ${String(stats.stories.updated).padStart(9)}  ${String(stats.stories.unchanged).padStart(7)}`);
 console.log('----------------------------------------');
 console.log(`Totalt                ${String(totalUpdated).padStart(9)}  ${String(totalUnchanged).padStart(7)}`);
 console.log('\nFerdig!');
