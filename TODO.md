@@ -82,61 +82,44 @@ references.mjs - Kryssreferanser (mangler bøker 2-39 og 43-66)
 
 ## Data
 - [ ] Generere norsk word4word-data for alle bøker (mangler for de fleste GT-bøker)
+- [ ] Sjekke at alle hebraiske word4word har latinske bokstaver (translitterasjon) på de hebraiske ordene, slik vi har for de greske ordene
 
 ## WCAG 2.2 AA - Gjenstående testing
 - [ ] Testing med skjermleser (VoiceOver, NVDA)
 - [ ] Manuell testing med tastatur
 - [ ] Lighthouse accessibility audit
 
-## Andaktsmodul
+## Manuskriptmodul
 
-En modul for å skrive, organisere og koble andakter/taler til bibeltekst.
+Implementert! Se `/manuskripter` for å skrive, organisere og koble manuskripter til bibeltekst.
 
-### Kjernefunksjonalitet
-- [ ] Andakter i Markdown-format (.md) med frontmatter (tittel, dato, tags, etc.)
-- [ ] Bibelvers-referanser i andakter (f.eks. `[vers:joh-3-16]`) som rendres som stilige vers-komponenter
-- [ ] Andaktsliste/arkiv med søk og filtrering
-- [ ] Kobling vers → andakter: fra et vers, se alle andakter som bruker det verset
-- [ ] Kobling andakt → vers: fra en andakt, klikk deg direkte til bibelteksten
+### Implementert
+- [x] Manuskripter med markdown-innhold, tittel, dato, type, tags
+- [x] Typer: andakt, preken, bibeltime, refleksjon, studie, bønn, undervisning
+- [x] Bibelvers-referanser (`[ref:Joh 3,16]`) som rendres som klikkbare lenker med inline-visning
+- [x] Manuskriptliste/arkiv med søk, filtrering (type/tag) og kalendervisning
+- [x] Kobling vers → manuskripter: Manuskripter-tab i vers-popup viser relaterte manuskripter
+- [x] Kobling manuskript → vers: klikk på versreferanse → inline verstekst eller hopp til bibeltekst
+- [x] Markdown-editor med toolbar (bold, italic, heading, list, quote, link, versreferanse)
+- [x] Live preview (side-by-side desktop, toggle mobil)
+- [x] Vers-innsettingsdialog med søk og forhåndsvisning (referanse eller sitat-modus)
+- [x] Søk i andre manuskripter fra editoren (sidepanel med innliming/lenking)
+- [x] Krysslenking mellom manuskripter (`[manuskript:slug]`)
+- [x] Auto-complete for `[vers:` mens man skriver (bokliste dropdown)
+- [x] Tags/emner med auto-suggest fra eksisterende tags
+- [x] Relaterte manuskripter (scorer på delte vers, tags, type)
+- [x] Kalendervisning med månedsnavigasjon og manuskript-markører
+- [x] Lesemodus (global readingMode) skjuler detaljer, viser kun innhold
+- [x] Lagring i IndexedDB (med localStorage fallback)
+- [x] Ruter: `/manuskripter`, `/manuskripter/ny`, `/manuskripter/:slug`, `/manuskripter/:slug/rediger`
+- [x] Dark mode og responsivt design
+- [x] Unsaved changes warning
 
-### Skrivemodus
-- [ ] Markdown-editor med live preview
-- [ ] Enkel innsetting av bibelvers (søk/velg vers → settes inn som referanse)
-- [ ] Auto-complete for versreferanser mens man skriver
-- [ ] Støtte for tags/emner på andakter
-
-### Navigasjon og oppdagelse
-- [ ] Fra bibellesing: "Se andakter som bruker dette verset" (lenke i vers-popup eller ToolsPanel)
-- [ ] Fra andakt: klikk på vers-referanse → hopp til bibeltekst, eller vis vers inline
-- [ ] Relaterte andakter (basert på felles vers eller tags)
-- [ ] Tidslinje/kalender-visning av andakter
-
-### Lagring og format
-- [ ] Markdown-filer med YAML frontmatter:
-  ```yaml
-  ---
-  title: "Nådens kraft"
-  date: 2025-01-15
-  tags: [nåde, frelse, tro]
-  verses: [joh-3-16, rom-8-28, ef-2-8]
-  type: andakt | tale | bibelstudium
-  ---
-  ```
-- [ ] Indeksering av vers-referanser i database for rask oppslag
-- [ ] Lokal lagring først, evt. synkronisering med brukerkonto senere
-
-### Synkronisering (desktop → iPad/mobil)
-- [ ] Skrive andakter på desktop, hente opp på iPad under preken
-- [ ] Skybasert sync (ikke eksport/import) - sømløs og automatisk
-- [ ] Krever brukerkonto (kobles til Fase 9)
-- [ ] Offline-støtte: andakter caches lokalt, synkes når nett er tilgjengelig
-- [ ] Konfliktshåndtering ved endring på flere enheter
-
-### Teknisk
-- [ ] Ny rute: `/andakter/` (liste), `/andakter/[slug]` (les), `/andakter/ny` (skriv)
-- [ ] API: `/api/andakter`, `/api/andakter/by-verse?ref=joh-3-16`
-- [ ] Markdown-parser med custom bibelvers-plugin (rendrer `[vers:...]` som VerseDisplay-komponent)
-- [ ] Database-tabell for andakt-metadata og vers-koblinger
+### Gjenstår (fremtidig)
+- [ ] Sitat-del: Samle og organisere bibelsitater til bruk i manuskripter
+- [ ] Synkronisering desktop → iPad/mobil (krever brukerkonto, Fase 9)
+- [ ] Offline-støtte med sync
+- [ ] Eksport/import av manuskripter
 
 ## Desktop-app (Electron)
 
