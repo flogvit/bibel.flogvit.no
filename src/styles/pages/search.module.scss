@@ -135,12 +135,60 @@
   line-height: 1.4;
 }
 
+.typeBadge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-left: $spacing-sm;
+  vertical-align: middle;
+  background: rgba($color-secondary, 0.12);
+  color: $color-secondary;
+}
+
+.typeBadgeProphecy {
+  background: rgba(#7b68ee, 0.12);
+  color: #7b68ee;
+}
+
+.typeBadgeTimeline {
+  background: rgba(#2e8b57, 0.12);
+  color: #2e8b57;
+}
+
+.typeBadgeParallel {
+  background: rgba(#cd853f, 0.12);
+  color: #cd853f;
+}
+
+.typeBadgePlan {
+  background: rgba(#4682b4, 0.12);
+  color: #4682b4;
+}
+
+.typeBadgeWord {
+  background: rgba(#b8860b, 0.12);
+  color: #b8860b;
+}
+
+.extraCardMeta {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+  margin-top: 2px;
+}
+
 .showAllLink {
   display: inline-block;
   margin-top: $spacing-sm;
   font-size: $font-size-sm;
   color: $color-secondary;
   text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
 
   &:hover {
     text-decoration: underline;
@@ -223,6 +271,40 @@
 
   .extraCardDesc {
     color: $dark-color-text-muted;
+  }
+
+  .extraCardMeta {
+    color: $dark-color-text-muted;
+  }
+
+  .typeBadge {
+    background: rgba($dark-color-secondary, 0.2);
+    color: $dark-color-secondary;
+  }
+
+  .typeBadgeProphecy {
+    background: rgba(#9b8bff, 0.2);
+    color: #9b8bff;
+  }
+
+  .typeBadgeTimeline {
+    background: rgba(#5cb885, 0.2);
+    color: #5cb885;
+  }
+
+  .typeBadgeParallel {
+    background: rgba(#d4a06a, 0.2);
+    color: #d4a06a;
+  }
+
+  .typeBadgePlan {
+    background: rgba(#6ca6d4, 0.2);
+    color: #6ca6d4;
+  }
+
+  .typeBadgeWord {
+    background: rgba(#d4a940, 0.2);
+    color: #d4a940;
   }
 
   .showAllLink {

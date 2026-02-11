@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useSettings } from '@/components/SettingsContext';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
-import { bibleVersions } from '@/lib/settings';
+import { bibleVersions, defaultSearchResultTypes } from '@/lib/settings';
 import { getUserBibles } from '@/lib/offline/userBibles';
 import { useDataImportExport } from '@/hooks/useDataImportExport';
-import type { FontSize } from '@/lib/settings';
+import type { FontSize, SearchResultTypes } from '@/lib/settings';
 import styles from '@/styles/pages/settings.module.scss';
 
 export function SettingsPage() {
@@ -152,6 +152,40 @@ export function SettingsPage() {
             <span className={styles.checkmark}></span>
             <span className={styles.label}>Dagens vers</span>
           </label>
+        </div>
+      </div>
+
+      {/* Section: Search result types */}
+      <div className={styles.section}>
+        <h2>Søkeresultater</h2>
+        <p>Velg hvilke ressurstyper som vises i søkeresultatene.</p>
+        <div className={styles.tools}>
+          {([
+            { key: 'stories', label: 'Bibelhistorier' },
+            { key: 'themes', label: 'Temaer' },
+            { key: 'persons', label: 'Personer' },
+            { key: 'prophecies', label: 'Profetier' },
+            { key: 'timeline', label: 'Tidslinje' },
+            { key: 'parallels', label: 'Evangelieparalleller' },
+            { key: 'plans', label: 'Leseplaner' },
+            { key: 'words', label: 'Viktige ord' },
+          ] as { key: keyof SearchResultTypes; label: string }[]).map(item => {
+            const searchTypes = { ...defaultSearchResultTypes, ...settings.searchResultTypes };
+            return (
+              <label key={item.key} className={styles.tool}>
+                <input
+                  type="checkbox"
+                  checked={searchTypes[item.key]}
+                  onChange={() => {
+                    const current = { ...defaultSearchResultTypes, ...settings.searchResultTypes };
+                    updateSetting('searchResultTypes', { ...current, [item.key]: !current[item.key] });
+                  }}
+                />
+                <span className={styles.checkmark}></span>
+                <span className={styles.label}>{item.label}</span>
+              </label>
+            );
+          })}
         </div>
       </div>
 

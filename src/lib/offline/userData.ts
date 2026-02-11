@@ -226,6 +226,28 @@ export async function saveTopics(data: TopicsData): Promise<void> {
 export type FontSize = 'small' | 'medium' | 'large';
 export type BibleVersion = 'osnb2' | 'osnn1' | (string & {});
 
+export interface SearchResultTypes {
+  stories: boolean;
+  themes: boolean;
+  persons: boolean;
+  prophecies: boolean;
+  timeline: boolean;
+  parallels: boolean;
+  plans: boolean;
+  words: boolean;
+}
+
+export const defaultSearchResultTypes: SearchResultTypes = {
+  stories: true,
+  themes: true,
+  persons: true,
+  prophecies: true,
+  timeline: true,
+  parallels: true,
+  plans: true,
+  words: true,
+};
+
 export interface BibleSettings {
   showBookSummary: boolean;
   showChapterSummary: boolean;
@@ -247,6 +269,7 @@ export interface BibleSettings {
   secondaryBible: string;
   hiddenBibles: string[];
   numberingSystem: string;
+  searchResultTypes: SearchResultTypes;
 }
 
 export const defaultSettings: BibleSettings = {
@@ -270,6 +293,7 @@ export const defaultSettings: BibleSettings = {
   secondaryBible: 'original',
   hiddenBibles: [],
   numberingSystem: 'osnb2',
+  searchResultTypes: { ...defaultSearchResultTypes },
 };
 
 export async function getSettings(): Promise<BibleSettings> {

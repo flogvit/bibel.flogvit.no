@@ -1765,3 +1765,215 @@ export function getStoriesByCategory(category: string): Story[] {
   const db = getDb();
   return db.prepare('SELECT * FROM stories WHERE category = ? ORDER BY title').all(category) as Story[];
 }
+
+// --- Extended search functions ---
+
+export interface PersonSearchResult {
+  id: string;
+  name: string;
+  title: string;
+  era: string;
+  summary: string;
+  roles: string[];
+}
+
+export function searchPersons(query: string): PersonSearchResult[] {
+  if (!query || query.length < 2) return [];
+  const db = getDb();
+
+  const words = query.toLowerCase().split(/\s+/).filter(w => w.length >= 2);
+  if (words.length === 0) return [];
+
+  const conditions = words.map(() =>
+    '(LOWER(name) LIKE ? OR LOWER(content) LIKE ?)'
+  ).join(' AND ');
+
+  const params = words.flatMap(w => {
+    const p = `%${w}%`;
+    return [p, p];
+  });
+
+  const rows = db.prepare(
+    `SELECT * FROM persons WHERE ${conditions} ORDER BY name`
+  ).all(...params) as Person[];
+
+  return rows
+    .map(row => {
+      const data = parsePersonContent(row.content);
+      if (!data) return null;
+      return {
+        id: data.id,
+        name: data.name,
+        title: data.title,
+        era: data.era,
+        summary: data.summary,
+        roles: data.roles,
+      };
+    })
+    .filter((p): p is PersonSearchResult => p !== null);
+}
+
+export interface ProphecySearchResult {
+  id: string;
+  title: string;
+  explanation: string | null;
+  category_name: string;
+  prophecy_ref: string;
+}
+
+export function searchProphecies(query: string): ProphecySearchResult[] {
+  if (!query || query.length < 2) return [];
+  const db = getDb();
+
+  const words = query.toLowerCase().split(/\s+/).filter(w => w.length >= 2);
+  if (words.length === 0) return [];
+
+  const conditions = words.map(() =>
+    '(LOWER(p.title) LIKE ? OR LOWER(p.explanation) LIKE ? OR LOWER(c.name) LIKE ?)'
+  ).join(' AND ');
+
+  const params = words.flatMap(w => {
+    const p = `%${w}%`;
+    return [p, p, p];
+  });
+
+  return db.prepare(`
+    SELECT p.id, p.title, p.explanation, c.name as category_name,
+           b.short_name || ' ' || p.prophecy_chapter || ':' || p.prophecy_verse_start as prophecy_ref
+    FROM prophecies p
+    LEFT JOIN prophecy_categories c ON p.category_id = c.id
+    LEFT JOIN books b ON p.prophecy_book_id = b.id
+    WHERE ${conditions}
+    ORDER BY p.title
+  `).all(...params) as ProphecySearchResult[];
+}
+
+export interface TimelineSearchResult {
+  id: string;
+  title: string;
+  description: string | null;
+  year_display: string | null;
+  timeline_type: string;
+}
+
+export function searchTimelineEvents(query: string): TimelineSearchResult[] {
+  if (!query || query.length < 2) return [];
+  const db = getDb();
+
+  const words = query.toLowerCase().split(/\s+/).filter(w => w.length >= 2);
+  if (words.length === 0) return [];
+
+  const conditions = words.map(() =>
+    '(LOWER(title) LIKE ? OR LOWER(description) LIKE ?)'
+  ).join(' AND ');
+
+  const params = words.flatMap(w => {
+    const p = `%${w}%`;
+    return [p, p];
+  });
+
+  return db.prepare(
+    `SELECT id, title, description, year_display, timeline_type
+     FROM timeline_events
+     WHERE ${conditions}
+     ORDER BY sort_order
+     LIMIT 20`
+  ).all(...params) as TimelineSearchResult[];
+}
+
+export interface GospelParallelSearchResult {
+  id: string;
+  title: string;
+  notes: string | null;
+  section_name: string;
+}
+
+export function searchGospelParallels(query: string): GospelParallelSearchResult[] {
+  if (!query || query.length < 2) return [];
+  const db = getDb();
+
+  const words = query.toLowerCase().split(/\s+/).filter(w => w.length >= 2);
+  if (words.length === 0) return [];
+
+  const conditions = words.map(() =>
+    '(LOWER(p.title) LIKE ? OR LOWER(p.notes) LIKE ? OR LOWER(s.name) LIKE ?)'
+  ).join(' AND ');
+
+  const params = words.flatMap(w => {
+    const p = `%${w}%`;
+    return [p, p, p];
+  });
+
+  return db.prepare(`
+    SELECT p.id, p.title, p.notes, s.name as section_name
+    FROM gospel_parallels p
+    LEFT JOIN gospel_parallel_sections s ON p.section_id = s.id
+    WHERE ${conditions}
+    ORDER BY p.sort_order
+  `).all(...params) as GospelParallelSearchResult[];
+}
+
+export interface ReadingPlanSearchResult {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  days: number;
+}
+
+export function searchReadingPlans(query: string): ReadingPlanSearchResult[] {
+  if (!query || query.length < 2) return [];
+  const db = getDb();
+
+  const words = query.toLowerCase().split(/\s+/).filter(w => w.length >= 2);
+  if (words.length === 0) return [];
+
+  const conditions = words.map(() =>
+    '(LOWER(name) LIKE ? OR LOWER(description) LIKE ? OR LOWER(category) LIKE ?)'
+  ).join(' AND ');
+
+  const params = words.flatMap(w => {
+    const p = `%${w}%`;
+    return [p, p, p];
+  });
+
+  return db.prepare(
+    `SELECT id, name, description, category, days FROM reading_plans WHERE ${conditions} ORDER BY name`
+  ).all(...params) as ReadingPlanSearchResult[];
+}
+
+export interface ImportantWordSearchResult {
+  word: string;
+  explanation: string;
+  book_id: number;
+  chapter: number;
+  book_short_name: string;
+  book_name_no: string;
+}
+
+export function searchImportantWords(query: string): ImportantWordSearchResult[] {
+  if (!query || query.length < 2) return [];
+  const db = getDb();
+
+  const words = query.toLowerCase().split(/\s+/).filter(w => w.length >= 2);
+  if (words.length === 0) return [];
+
+  const conditions = words.map(() =>
+    '(LOWER(iw.word) LIKE ? OR LOWER(iw.explanation) LIKE ?)'
+  ).join(' AND ');
+
+  const params = words.flatMap(w => {
+    const p = `%${w}%`;
+    return [p, p];
+  });
+
+  return db.prepare(`
+    SELECT iw.word, iw.explanation, iw.book_id, iw.chapter,
+           b.short_name as book_short_name, b.name_no as book_name_no
+    FROM important_words iw
+    JOIN books b ON iw.book_id = b.id
+    WHERE ${conditions}
+    ORDER BY iw.word
+    LIMIT 10
+  `).all(...params) as ImportantWordSearchResult[];
+}

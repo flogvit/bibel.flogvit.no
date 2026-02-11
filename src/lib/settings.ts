@@ -10,7 +10,9 @@ export {
   type FontSize,
   type BibleVersion,
   type BibleSettings,
+  type SearchResultTypes,
   defaultSettings,
+  defaultSearchResultTypes,
   getSettings as loadSettings,
   saveSettings,
 } from './offline/userData';
