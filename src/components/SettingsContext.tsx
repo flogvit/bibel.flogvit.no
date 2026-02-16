@@ -1,6 +1,6 @@
 
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import {
   getSettings,
   saveSettings,
@@ -8,6 +8,7 @@ import {
   defaultSettings,
   migrateToIndexedDB,
 } from '@/lib/offline/userData';
+import { useSyncRefresh } from './SyncContext';
 
 // Re-export types for convenience
 export type { BibleSettings };
@@ -57,6 +58,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       document.documentElement.classList.remove('dark');
     }
   }, [settings.fontSize, settings.darkMode, loaded]);
+
+  // Refresh from storage after sync
+  const refreshFromStorage = useCallback(async () => {
+    const data = await getSettings();
+    setSettings(data);
+  }, []);
+  useSyncRefresh(refreshFromStorage);
 
   function updateSetting<K extends keyof BibleSettings>(key: K, value: BibleSettings[K]) {
     setSettings(prev => ({ ...prev, [key]: value }));

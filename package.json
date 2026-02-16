@@ -25,6 +25,7 @@
     "lint": "eslint",
     "import-bible": "npx tsx scripts/import-bible.ts",
     "generate-sitemap": "npx tsx scripts/generate-sitemap.ts",
+    "init-mysql": "npx tsx scripts/init-mysql.ts",
     "deploy": "bash deploy/deploy-docker.sh",
     "deploy:scaleway": "bash deploy/deploy-scaleway.sh"
   },
@@ -36,11 +37,15 @@
     "better-sqlite3": "^12.6.2",
     "cors": "^2.8.5",
     "express": "^4.21.2",
+    "google-auth-library": "^10.5.0",
     "idb": "^8.0.3",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.17.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.1.5",
+    "remark-gfm": "^4.0.1",
     "sass": "^1.97.2"
   },
   "devDependencies": {
@@ -48,6 +53,7 @@
     "@types/better-sqlite3": "^7.6.13",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

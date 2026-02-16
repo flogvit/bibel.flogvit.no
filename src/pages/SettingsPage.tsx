@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useSettings } from '@/components/SettingsContext';
+import { useAuth } from '@/components/AuthContext';
+import { useSync } from '@/components/SyncContext';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton';
 import { bibleVersions, defaultSearchResultTypes } from '@/lib/settings';
 import { getUserBibles } from '@/lib/offline/userBibles';
 import { useDataImportExport } from '@/hooks/useDataImportExport';
@@ -10,6 +13,8 @@ import styles from '@/styles/pages/settings.module.scss';
 
 export function SettingsPage() {
   const { settings, toggleSetting, updateSetting } = useSettings();
+  const { user, isAuthenticated, logout } = useAuth();
+  const { status: syncStatus, lastSyncAt, syncNow } = useSync();
   const [allVersions, setAllVersions] = useState(bibleVersions);
   const {
     fileInputRef,
@@ -84,6 +89,46 @@ export function SettingsPage() {
       ]} />
 
       <h1>Innstillinger</h1>
+
+      {/* Section: Account & Sync */}
+      <div className={styles.section}>
+        <h2>Konto og synkronisering</h2>
+        <p>Logg inn for å synkronisere data mellom enheter.</p>
+        {isAuthenticated && user ? (
+          <div className={styles.accountInfo}>
+            <div className={styles.userRow}>
+              {user.pictureUrl && (
+                <img src={user.pictureUrl} alt="" className={styles.avatar} referrerPolicy="no-referrer" />
+              )}
+              <div>
+                <div className={styles.userName}>{user.name}</div>
+                <div className={styles.userEmail}>{user.email}</div>
+              </div>
+            </div>
+            <div className={styles.syncRow}>
+              <span className={styles.syncStatus}>
+                {syncStatus === 'syncing' && 'Synkroniserer...'}
+                {syncStatus === 'idle' && lastSyncAt && `Sist synkronisert: ${new Date(lastSyncAt).toLocaleString('nb-NO')}`}
+                {syncStatus === 'idle' && !lastSyncAt && 'Ikke synkronisert ennå'}
+                {syncStatus === 'error' && 'Synkronisering feilet'}
+                {syncStatus === 'offline' && 'Frakoblet'}
+              </span>
+              <button
+                className={styles.syncButton}
+                onClick={syncNow}
+                disabled={syncStatus === 'syncing'}
+              >
+                Synkroniser nå
+              </button>
+            </div>
+            <button className={styles.logoutButton} onClick={logout}>
+              Logg ut
+            </button>
+          </div>
+        ) : (
+          <GoogleLoginButton />
+        )}
+      </div>
 
       {/* Section 1: Translations */}
       <div className={styles.section}>

@@ -18,6 +18,7 @@ import {
   calculateCurrentDay,
   resetProgress,
 } from '@/lib/reading-plan';
+import { useSyncRefresh } from './SyncContext';
 
 interface ReadingPlanContextType {
   // All available plans
@@ -95,6 +96,16 @@ export function ReadingPlanProvider({ children }: { children: ReactNode }) {
       setLoadingActivePlan(false);
     }
   }
+
+  // Refresh from storage after sync
+  const refreshFromStorageForSync = useCallback(() => {
+    const activePlanId = getActivePlanId();
+    if (activePlanId) {
+      const progress = getPlanProgress(activePlanId);
+      setActiveProgress(progress);
+    }
+  }, []);
+  useSyncRefresh(refreshFromStorageForSync);
 
   const selectPlan = useCallback(async (planId: string) => {
     setActivePlanId(planId);

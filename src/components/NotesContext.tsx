@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { getNotes, saveNotes, Note, migrateToIndexedDB } from '@/lib/offline/userData';
+import { useSyncRefresh } from './SyncContext';
 
 export type { Note };
 
@@ -41,6 +42,13 @@ export function NotesProvider({ children }: { children: ReactNode }) {
       saveNotes(notes);
     }
   }, [notes, loaded]);
+
+  // Refresh from storage after sync
+  const refreshFromStorage = useCallback(async () => {
+    const data = await getNotes();
+    setNotes(data);
+  }, []);
+  useSyncRefresh(refreshFromStorage);
 
   function addNote(bookId: number, chapter: number, verse: number, content: string): Note {
     const trimmedContent = content.trim();

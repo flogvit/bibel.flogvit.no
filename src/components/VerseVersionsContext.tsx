@@ -1,11 +1,12 @@
 
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import {
   VerseVersionChoices,
   getVerseVersions,
   saveVerseVersions,
 } from '@/lib/offline/userData';
+import { useSyncRefresh } from './SyncContext';
 
 const STORAGE_KEY = 'bible-verse-versions';
 
@@ -60,6 +61,15 @@ export function VerseVersionsProvider({ children }: { children: ReactNode }) {
       saveVerseVersions(choices);
     }
   }, [choices, loaded]);
+
+  // Refresh from storage after sync
+  const refreshFromStorage = useCallback(async () => {
+    const data = await getVerseVersions();
+    if (data && Object.keys(data).length > 0) {
+      setChoices(data);
+    }
+  }, []);
+  useSyncRefresh(refreshFromStorage);
 
   function getSelectedVersion(bookId: number, chapter: number, verse: number): number | undefined {
     const key = makeKey(bookId, chapter, verse);

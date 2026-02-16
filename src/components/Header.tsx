@@ -3,6 +3,7 @@ import { Suspense, useState, useEffect, useRef } from 'react';
 import styles from './Header.module.scss';
 import { LoadingIndicator } from './LoadingIndicator';
 import { OfflineIndicator } from './OfflineIndicator';
+import { SyncStatusIndicator } from './sync/SyncStatusIndicator';
 import { useSettings } from './SettingsContext';
 
 export function Header() {
@@ -116,6 +117,7 @@ export function Header() {
           FLOGVIT.bibel
         </Link>
         <OfflineIndicator />
+        <SyncStatusIndicator />
         <Suspense fallback={null}>
           <LoadingIndicator />
         </Suspense>

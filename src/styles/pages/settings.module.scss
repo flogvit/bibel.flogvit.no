@@ -22,6 +22,89 @@
   }
 }
 
+// Account & sync
+.accountInfo {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.userRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.userName {
+  font-size: $font-size-sm;
+  font-weight: 500;
+  color: $color-text;
+}
+
+.userEmail {
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+}
+
+.syncRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-sm;
+}
+
+.syncStatus {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+}
+
+.syncButton {
+  padding: $spacing-xs $spacing-sm;
+  background: $color-background;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  font-family: $font-sans;
+  font-size: $font-size-xs;
+  color: $color-text;
+  cursor: pointer;
+  transition: all $transition-fast;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    border-color: $color-secondary;
+    background: rgba($color-secondary, 0.05);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.logoutButton {
+  align-self: flex-start;
+  padding: $spacing-xs $spacing-sm;
+  background: none;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  font-family: $font-sans;
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    border-color: $color-error;
+    color: $color-error;
+  }
+}
+
 // Bible visibility toggles
 .bibleList {
   display: flex;
@@ -381,6 +464,39 @@
 
     p {
       color: $dark-color-text-muted;
+    }
+  }
+
+  .userName {
+    color: $dark-color-text;
+  }
+
+  .userEmail {
+    color: $dark-color-text-muted;
+  }
+
+  .syncStatus {
+    color: $dark-color-text-muted;
+  }
+
+  .syncButton {
+    background: $dark-color-background;
+    border-color: $dark-color-border;
+    color: $dark-color-text;
+
+    &:hover:not(:disabled) {
+      border-color: $dark-color-secondary;
+      background: rgba($dark-color-secondary, 0.1);
+    }
+  }
+
+  .logoutButton {
+    border-color: $dark-color-border;
+    color: $dark-color-text-muted;
+
+    &:hover {
+      border-color: $color-error;
+      color: $color-error;
     }
   }
 

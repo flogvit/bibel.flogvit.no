@@ -12,6 +12,7 @@ import {
   parseVerseItemId,
   migrateToIndexedDB
 } from '@/lib/offline/userData';
+import { useSyncRefresh } from './SyncContext';
 
 export type { Topic, VerseTopic, ItemTopic, ItemType };
 export { getVerseItemId, parseVerseItemId };
@@ -71,6 +72,15 @@ export function TopicsProvider({ children }: { children: ReactNode }) {
       saveTopics({ topics, verseTopics, itemTopics });
     }
   }, [topics, verseTopics, itemTopics, loaded]);
+
+  // Refresh from storage after sync
+  const refreshFromStorage = useCallback(async () => {
+    const data = await getTopics();
+    setTopics(data.topics);
+    setVerseTopics(data.verseTopics);
+    setItemTopics(data.itemTopics || []);
+  }, []);
+  useSyncRefresh(refreshFromStorage);
 
   // ============================================
   // Grunnleggende topic-operasjoner

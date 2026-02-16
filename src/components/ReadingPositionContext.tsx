@@ -6,6 +6,7 @@ import {
   getReadingPosition,
   saveReadingPosition,
 } from '@/lib/offline/userData';
+import { useSyncRefresh } from './SyncContext';
 
 export type { ReadingPosition };
 
@@ -60,6 +61,19 @@ export function ReadingPositionProvider({ children }: { children: ReactNode }) {
       saveReadingPosition(position);
     }
   }, [position, loaded]);
+
+  // Refresh from storage after sync
+  const refreshFromStorage = useCallback(async () => {
+    const data = await getReadingPosition();
+    if (data) {
+      setPosition(prev => {
+        // Only update if synced data is newer
+        if (!prev || data.timestamp > prev.timestamp) return data;
+        return prev;
+      });
+    }
+  }, []);
+  useSyncRefresh(refreshFromStorage);
 
   const updatePosition = useCallback((newPos: Omit<ReadingPosition, 'timestamp'>) => {
     if (debounceRef.current) {

@@ -27,6 +27,8 @@ import { statisticsRouter } from './routes/statistics';
 import { mappingsRouter } from './routes/mappings';
 import { chapterContextRouter } from './routes/chapter-context';
 import { storiesRouter } from './routes/stories';
+import { authRouter } from './routes/auth';
+import { syncRouter } from './routes/sync';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -63,6 +65,8 @@ app.use('/api/statistics', statisticsRouter);
 app.use('/api/mappings', mappingsRouter);
 app.use('/api/chapter-context', chapterContextRouter);
 app.use('/api/stories', storiesRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/sync', express.json({ limit: '10mb' }), syncRouter);
 
 // Serve static files from Vite build
 const distPath = path.join(__dirname, '..', 'dist');

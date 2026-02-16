@@ -7,6 +7,7 @@ import {
   FavoriteVerse,
   migrateToIndexedDB,
 } from '@/lib/offline/userData';
+import { useSyncRefresh } from './SyncContext';
 
 export type { FavoriteVerse };
 
@@ -42,6 +43,13 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
       saveFavorites(favorites);
     }
   }, [favorites, loaded]);
+
+  // Refresh from storage after sync
+  const refreshFromStorage = useCallback(async () => {
+    const data = await getFavorites();
+    setFavorites(data);
+  }, []);
+  useSyncRefresh(refreshFromStorage);
 
   const isFavorite = useCallback((bookId: number, chapter: number, verse: number): boolean => {
     return favorites.some(f => f.bookId === bookId && f.chapter === chapter && f.verse === verse);

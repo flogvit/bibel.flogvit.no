@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 import { getDevotionals, saveDevotionals, migrateToIndexedDB } from '@/lib/offline/userData';
 import type { Devotional, DevotionalType, DevotionalPresentation } from '@/types/devotional';
 import { generateId, generateSlug, ensureUniqueSlug, extractVerseRefs, createVersion, getCurrentDraft, getCurrentContent } from '@/lib/devotional-utils';
+import { useSyncRefresh } from './SyncContext';
 
 interface DevotionalsContextType {
   devotionals: Devotional[];
@@ -74,6 +75,14 @@ export function DevotionalsProvider({ children }: { children: ReactNode }) {
       saveDevotionals(devotionals);
     }
   }, [devotionals, loaded]);
+
+  // Refresh from storage after sync
+  const refreshFromStorage = useCallback(async () => {
+    const data = await getDevotionals();
+    const migrated = data.map(migrateDevotional);
+    setDevotionals(migrated);
+  }, []);
+  useSyncRefresh(refreshFromStorage);
 
   function addDevotional(data: { title: string; slug?: string; date: string; type: DevotionalType; tags: string[]; content: string }): Devotional {
     const existingSlugs = devotionals.map(d => d.slug);

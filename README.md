@@ -50,6 +50,29 @@ Bibeldata importeres fra https://github.com/flogvit/free-bible/, `../free-bible/
 - Offline-støtte med nedlasting av data
 - Mørk/lys modus
 
+## Miljøvariabler
+
+Synkroniseringsserveren krever følgende miljøvariabler:
+
+| Variabel | Beskrivelse | Standard |
+|----------|-------------|----------|
+| `GOOGLE_CLIENT_ID` | Google OAuth 2.0 Client ID (server) | *(påkrevd)* |
+| `VITE_GOOGLE_CLIENT_ID` | Google OAuth 2.0 Client ID (klient, samme verdi) | *(påkrevd)* |
+| `JWT_SECRET` | Hemmelighet for signering av JWT-tokens | `dev-secret-change-in-production` |
+| `MYSQL_HOST` | MySQL-serveradresse | `localhost` |
+| `MYSQL_PORT` | MySQL-port | `3312` |
+| `MYSQL_USER` | MySQL-brukernavn | `bible` |
+| `MYSQL_PASSWORD` | MySQL-passord | `test` |
+| `MYSQL_DATABASE` | MySQL-databasenavn | `bible` |
+| `PORT` | Express-serverport | `3018` |
+
+### Oppsett av synkronisering
+
+1. Opprett et Google Cloud-prosjekt med OAuth 2.0-credentials
+2. Sett opp en MySQL-database (port 3312)
+3. Kjør `npm run init-mysql` for å opprette tabeller
+4. Sett miljøvariablene (f.eks. i `.env`)
+
 ## Bidra
 
 Feil og forslag rapporteres via [GitHub Issues](https://github.com/flogvit/bibel.flogvit.no/issues).

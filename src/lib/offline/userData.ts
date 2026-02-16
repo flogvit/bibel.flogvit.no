@@ -23,7 +23,36 @@ const STORAGE_KEYS = {
   devotionals: 'bible-devotionals',
 } as const;
 
-type StorageKey = keyof typeof STORAGE_KEYS;
+export type StorageKey = keyof typeof STORAGE_KEYS;
+
+// ============================================
+// Change Listener System
+// ============================================
+
+type ChangeListener = (storageKey: StorageKey, data: unknown) => void;
+const changeListeners: ChangeListener[] = [];
+
+/**
+ * Register a listener that's called whenever data is saved.
+ * Returns an unsubscribe function.
+ */
+export function addChangeListener(listener: ChangeListener): () => void {
+  changeListeners.push(listener);
+  return () => {
+    const idx = changeListeners.indexOf(listener);
+    if (idx >= 0) changeListeners.splice(idx, 1);
+  };
+}
+
+function notifyChangeListeners(storageKey: StorageKey, data: unknown): void {
+  for (const listener of changeListeners) {
+    try {
+      listener(storageKey, data);
+    } catch (err) {
+      console.error('Change listener error:', err);
+    }
+  }
+}
 
 // Track if we've migrated data from localStorage
 const MIGRATION_KEY = 'bibel-idb-migrated';
@@ -107,6 +136,9 @@ async function saveData<T>(storageKey: StorageKey, data: T): Promise<void> {
   if (await shouldUseIndexedDB()) {
     await setUserData(storageKey, data);
   }
+
+  // Notify change listeners
+  notifyChangeListeners(storageKey, data);
 }
 
 // ============================================
