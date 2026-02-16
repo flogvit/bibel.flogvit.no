@@ -6,6 +6,7 @@ import { DevotionalEditor, type DevotionalEditorHandle } from '@/components/devo
 import { LockVersionDialog } from '@/components/devotional/LockVersionDialog';
 import { BibleLookupPanel } from '@/components/devotional/BibleLookupPanel';
 import { DevotionalSearchPanel } from '@/components/devotional/DevotionalSearchPanel';
+import { ResourceSearchPanel } from '@/components/devotional/ResourceSearchPanel';
 import { ChapterContextPanel, type ChapterContextData } from '@/components/devotional/ChapterContextPanel';
 import { TimelineContextPanel } from '@/components/devotional/TimelineContextPanel';
 import { getCurrentContent } from '@/lib/devotional-utils';
@@ -27,7 +28,7 @@ export function DevotionalEditorPage() {
 
   const [showLockDialog, setShowLockDialog] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
-  const [sidebarTab, setSidebarTab] = useState<'bible' | 'manuscripts' | 'context' | 'timeline'>('bible');
+  const [sidebarTab, setSidebarTab] = useState<'bible' | 'manuscripts' | 'resources' | 'context' | 'timeline'>('bible');
   const [editorContent, setEditorContent] = useState(initialContent);
   const [chapterContextData, setChapterContextData] = useState<ChapterContextData[]>([]);
 
@@ -147,6 +148,12 @@ export function DevotionalEditorPage() {
                   Manuskripter
                 </button>
                 <button
+                  className={`${styles.sidebarTab} ${sidebarTab === 'resources' ? styles.sidebarTabActive : ''}`}
+                  onClick={() => setSidebarTab('resources')}
+                >
+                  Ressurser
+                </button>
+                <button
                   className={`${styles.sidebarTab} ${sidebarTab === 'context' ? styles.sidebarTabActive : ''}`}
                   onClick={() => setSidebarTab('context')}
                 >
@@ -173,6 +180,10 @@ export function DevotionalEditorPage() {
                   onInsertText={handleInsertText}
                   currentDevotionalId={existing?.id}
                 />
+              )}
+
+              {sidebarTab === 'resources' && (
+                <ResourceSearchPanel onInsert={handleInsertText} />
               )}
 
               {/* ChapterContextPanel always mounted to keep data fresh for timeline */}

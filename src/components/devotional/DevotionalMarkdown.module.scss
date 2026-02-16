@@ -159,6 +159,18 @@
   }
 }
 
+.resourceRef {
+  color: $color-secondary;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+
+  &:hover {
+    color: $color-primary;
+    text-decoration-style: solid;
+  }
+}
+
 // Dark mode
 :global(html.dark) {
   .markdown {
@@ -225,6 +237,14 @@
   }
 
   .devotionalRef {
+    color: $dark-color-secondary;
+
+    &:hover {
+      color: $dark-color-primary;
+    }
+  }
+
+  .resourceRef {
     color: $dark-color-secondary;
 
     &:hover {

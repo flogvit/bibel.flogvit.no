@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Link } from 'react-router-dom';
 import { useDevotionals } from '@/components/DevotionalsContext';
 import { useSettings } from '@/components/SettingsContext';
@@ -177,8 +178,8 @@ function DevotionalLink({ slug }: { slug: string }) {
  */
 export function DevotionalMarkdown({ content }: DevotionalMarkdownProps) {
   // Split content into text segments and reference segments
-  const refPattern = /\[(vers|ref|manuskript|andakt):([^\]]+)\]/g;
-  const segments: { type: 'text' | 'vers' | 'ref' | 'manuskript'; value: string }[] = [];
+  const refPattern = /\[(vers|ref|manuskript|andakt|tema|person|profeti|parallell|historie):([^\]]+)\]/g;
+  const segments: { type: 'text' | 'vers' | 'ref' | 'manuskript' | 'tema' | 'person' | 'profeti' | 'parallell' | 'historie'; value: string }[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
@@ -186,7 +187,7 @@ export function DevotionalMarkdown({ content }: DevotionalMarkdownProps) {
     if (match.index > lastIndex) {
       segments.push({ type: 'text', value: content.substring(lastIndex, match.index) });
     }
-    const matchType = match[1] === 'andakt' ? 'manuskript' : match[1] as 'vers' | 'ref' | 'manuskript';
+    const matchType = match[1] === 'andakt' ? 'manuskript' : match[1] as typeof segments[number]['type'];
     segments.push({ type: matchType, value: match[2].trim() });
     lastIndex = match.index + match[0].length;
   }
@@ -206,9 +207,26 @@ export function DevotionalMarkdown({ content }: DevotionalMarkdownProps) {
         if (seg.type === 'manuskript') {
           return <DevotionalLink key={i} slug={seg.value} />;
         }
+        if (seg.type === 'tema') {
+          const slug = seg.value.toLowerCase().replace(/\s+/g, '-');
+          return <Link key={i} to={`/temaer#tema-${slug}`} className={styles.resourceRef}>{seg.value}</Link>;
+        }
+        if (seg.type === 'person') {
+          return <Link key={i} to={`/personer/${seg.value}`} className={styles.resourceRef}>{seg.value}</Link>;
+        }
+        if (seg.type === 'profeti') {
+          return <Link key={i} to={`/profetier#profeti-${seg.value}`} className={styles.resourceRef}>{seg.value}</Link>;
+        }
+        if (seg.type === 'parallell') {
+          return <Link key={i} to={`/paralleller/${seg.value}`} className={styles.resourceRef}>{seg.value}</Link>;
+        }
+        if (seg.type === 'historie') {
+          return <Link key={i} to={`/historier/${seg.value}`} className={styles.resourceRef}>{seg.value}</Link>;
+        }
         return (
           <ReactMarkdown
             key={i}
+            remarkPlugins={[remarkGfm]}
             components={{
               a: ({ href, children }) => {
                 if (href?.startsWith('/')) {

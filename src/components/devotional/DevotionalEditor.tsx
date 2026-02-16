@@ -52,6 +52,7 @@ export const DevotionalEditor = forwardRef<DevotionalEditorHandle, DevotionalEdi
 }, ref) {
   const { getAllTags } = useDevotionals();
   const editorRef = useRef<MarkdownEditorHandle>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [title, setTitle] = useState(initialTitle);
   const [slug, setSlug] = useState(initialSlug);
@@ -66,10 +67,23 @@ export const DevotionalEditor = forwardRef<DevotionalEditorHandle, DevotionalEdi
   const [showPreview, setShowPreview] = useState(false);
   const [showMetadata, setShowMetadata] = useState(true);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [rawMode, setRawMode] = useState(false);
 
-  // Expose insertText for page-level sidebar
-  useImperativeHandle(ref, () => ({
-    insertText(text: string) {
+  // Helper: insert text at cursor in the active editor (CodeMirror or textarea)
+  function insertAtCursor(text: string) {
+    if (rawMode) {
+      const ta = textareaRef.current;
+      if (!ta) return;
+      const { selectionStart, selectionEnd } = ta;
+      const newContent = content.substring(0, selectionStart) + text + content.substring(selectionEnd);
+      const cursorPos = selectionStart + text.length;
+      setContent(newContent);
+      requestAnimationFrame(() => {
+        ta.selectionStart = cursorPos;
+        ta.selectionEnd = cursorPos;
+        ta.focus();
+      });
+    } else {
       const view = editorRef.current?.view;
       if (!view) return;
       const { from } = view.state.selection.main;
@@ -78,6 +92,13 @@ export const DevotionalEditor = forwardRef<DevotionalEditorHandle, DevotionalEdi
         selection: { anchor: from + text.length },
       });
       view.focus();
+    }
+  }
+
+  // Expose insertText for page-level sidebar
+  useImperativeHandle(ref, () => ({
+    insertText(text: string) {
+      insertAtCursor(text);
     },
   }));
 
@@ -137,44 +158,53 @@ export const DevotionalEditor = forwardRef<DevotionalEditorHandle, DevotionalEdi
   }, [hasUnsavedChanges]);
 
   function insertMarkdown(prefix: string, suffix: string = '') {
-    const view = editorRef.current?.view;
-    if (!view) return;
-
-    const { from, to } = view.state.selection.main;
-    const selected = view.state.sliceDoc(from, to);
-    const insert = prefix + selected + suffix;
-    const cursorPos = selected ? from + insert.length : from + prefix.length;
-
-    view.dispatch({
-      changes: { from, to, insert },
-      selection: { anchor: cursorPos },
-    });
-    view.focus();
+    if (rawMode) {
+      const ta = textareaRef.current;
+      if (!ta) return;
+      const { selectionStart, selectionEnd } = ta;
+      const selected = content.substring(selectionStart, selectionEnd);
+      const insert = prefix + selected + suffix;
+      const cursorPos = selected ? selectionStart + insert.length : selectionStart + prefix.length;
+      const newContent = content.substring(0, selectionStart) + insert + content.substring(selectionEnd);
+      setContent(newContent);
+      requestAnimationFrame(() => {
+        ta.selectionStart = cursorPos;
+        ta.selectionEnd = cursorPos;
+        ta.focus();
+      });
+    } else {
+      const view = editorRef.current?.view;
+      if (!view) return;
+      const { from, to } = view.state.selection.main;
+      const selected = view.state.sliceDoc(from, to);
+      const insert = prefix + selected + suffix;
+      const cursorPos = selected ? from + insert.length : from + prefix.length;
+      view.dispatch({
+        changes: { from, to, insert },
+        selection: { anchor: cursorPos },
+      });
+      view.focus();
+    }
   }
 
   function handleToolbar(action: string) {
     switch (action) {
       case 'bold': insertMarkdown('**', '**'); break;
       case 'italic': insertMarkdown('*', '*'); break;
+      case 'strikethrough': insertMarkdown('~~', '~~'); break;
       case 'heading': insertMarkdown('### '); break;
       case 'list': insertMarkdown('- '); break;
       case 'orderedList': insertMarkdown('1. '); break;
       case 'quote': insertMarkdown('> '); break;
+      case 'hr': insertMarkdown('\n---\n'); break;
       case 'link': insertMarkdown('[', '](url)'); break;
+      case 'image': insertMarkdown('![', '](url)'); break;
       case 'verse': setShowVerseDialog(true); break;
     }
   }
 
   function handleVerseInsert(text: string) {
-    const view = editorRef.current?.view;
-    if (!view) return;
-
-    const { from } = view.state.selection.main;
-    view.dispatch({
-      changes: { from, to: from, insert: text },
-      selection: { anchor: from + text.length },
-    });
-    view.focus();
+    insertAtCursor(text);
     setShowVerseDialog(false);
   }
 
@@ -352,11 +382,14 @@ export const DevotionalEditor = forwardRef<DevotionalEditorHandle, DevotionalEdi
       {/* Toolbar */}
       <div className={styles.toolbar}>
         <div className={styles.toolbarButtons}>
-          <button className={styles.toolButton} onClick={() => handleToolbar('bold')} title="Fet (Ctrl+B)">
+          <button className={styles.toolButton} onClick={() => handleToolbar('bold')} title="Fet">
             <strong>B</strong>
           </button>
-          <button className={styles.toolButton} onClick={() => handleToolbar('italic')} title="Kursiv (Ctrl+I)">
+          <button className={styles.toolButton} onClick={() => handleToolbar('italic')} title="Kursiv">
             <em>I</em>
+          </button>
+          <button className={styles.toolButton} onClick={() => handleToolbar('strikethrough')} title="Gjennomstreking">
+            <s>S</s>
           </button>
           <span className={styles.toolSeparator} />
           <button className={styles.toolButton} onClick={() => handleToolbar('heading')} title="Overskrift">
@@ -371,12 +404,28 @@ export const DevotionalEditor = forwardRef<DevotionalEditorHandle, DevotionalEdi
           <button className={styles.toolButton} onClick={() => handleToolbar('quote')} title="Sitat">
             &ldquo;
           </button>
+          <button className={styles.toolButton} onClick={() => handleToolbar('hr')} title="Skillelinje">
+            &mdash;
+          </button>
+          <span className={styles.toolSeparator} />
           <button className={styles.toolButton} onClick={() => handleToolbar('link')} title="Lenke">
             {'\uD83D\uDD17'}
           </button>
-          <span className={styles.toolSeparator} />
+          <button className={styles.toolButton} onClick={() => handleToolbar('image')} title="Bilde (URL)">
+            {'\uD83D\uDDBC'}
+          </button>
           <button className={`${styles.toolButton} ${styles.verseButton}`} onClick={() => handleToolbar('verse')} title="Sett inn versreferanse">
             Vers
+          </button>
+        </div>
+
+        <div className={styles.toolbarRight}>
+          <button
+            className={`${styles.toolButton} ${styles.modeButton} ${rawMode ? styles.active : ''}`}
+            onClick={() => setRawMode(!rawMode)}
+            title={rawMode ? 'Bytt til rikt redigeringsmodus' : 'Bytt til ren markdown'}
+          >
+            {'</>'}
           </button>
           {onToggleSidebar && (
             <button
@@ -387,25 +436,34 @@ export const DevotionalEditor = forwardRef<DevotionalEditorHandle, DevotionalEdi
               Sidepanel
             </button>
           )}
+          <button
+            className={`${styles.previewToggle} ${showPreview ? styles.active : ''}`}
+            onClick={() => setShowPreview(!showPreview)}
+          >
+            {showPreview ? 'Skjul visning' : 'Forhåndsvis'}
+          </button>
         </div>
-
-        <button
-          className={`${styles.previewToggle} ${showPreview ? styles.active : ''}`}
-          onClick={() => setShowPreview(!showPreview)}
-        >
-          {showPreview ? 'Skjul visning' : 'Forhåndsvis'}
-        </button>
       </div>
 
       {/* Editor area with optional preview */}
       <div className={`${styles.editorArea} ${showPreview ? styles.withPreview : ''}`}>
         <div className={styles.editorPane}>
-          <MarkdownEditor
-            ref={editorRef}
-            value={content}
-            onChange={setContent}
-            placeholder="Skriv manuskriptet ditt her...&#10;&#10;Bruk [ref:Joh 3,16] for versreferanser."
-          />
+          {rawMode ? (
+            <textarea
+              ref={textareaRef}
+              className={styles.rawTextarea}
+              value={content}
+              onChange={e => setContent(e.target.value)}
+              placeholder={'Skriv manuskriptet ditt her...\n\nBruk [ref:Joh 3,16] for versreferanser.'}
+            />
+          ) : (
+            <MarkdownEditor
+              ref={editorRef}
+              value={content}
+              onChange={setContent}
+              placeholder="Skriv manuskriptet ditt her...&#10;&#10;Bruk [ref:Joh 3,16] for versreferanser."
+            />
+          )}
         </div>
 
         {showPreview && (

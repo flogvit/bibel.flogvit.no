@@ -256,6 +256,12 @@
   flex-wrap: wrap;
 }
 
+.toolbarRight {
+  display: flex;
+  gap: $spacing-sm;
+  align-items: center;
+}
+
 .toolButton {
   padding: $spacing-xs $spacing-sm;
   background: none;
@@ -277,6 +283,18 @@
 .verseButton {
   color: $color-verse-number;
   font-weight: 500;
+}
+
+.modeButton {
+  font-family: monospace;
+  font-size: $font-size-xs;
+  letter-spacing: -0.5px;
+
+  &.active {
+    background: $color-primary;
+    color: white;
+    border-color: $color-primary;
+  }
 }
 
 .sidebarButton {
@@ -346,6 +364,29 @@
   .editorArea:not(.withPreview) & {
     border: none;
     border-radius: 0;
+  }
+}
+
+.rawTextarea {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  padding: $spacing-md;
+  border: none;
+  resize: none;
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: $font-size-sm;
+  line-height: 1.6;
+  background: $color-paper;
+  color: $color-text;
+  tab-size: 2;
+
+  &:focus {
+    outline: none;
+  }
+
+  &::placeholder {
+    color: $color-text-muted;
   }
 }
 
@@ -506,6 +547,12 @@
     color: $dark-color-verse-number;
   }
 
+  .modeButton.active {
+    background: $dark-color-primary;
+    color: $dark-color-background;
+    border-color: $dark-color-primary;
+  }
+
   .sidebarButton {
     color: $dark-color-secondary;
 
@@ -513,6 +560,15 @@
       background: $dark-color-secondary;
       color: $dark-color-background;
       border-color: $dark-color-secondary;
+    }
+  }
+
+  .rawTextarea {
+    background: $dark-color-paper;
+    color: $dark-color-text;
+
+    &::placeholder {
+      color: $dark-color-text-muted;
     }
   }
 
