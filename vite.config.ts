@@ -55,8 +55,18 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react-dom') || id.includes('/react/') || id.includes('react-router')) {
+              return 'vendor';
+            }
+            if (id.includes('react-markdown') || id.includes('remark') || id.includes('rehype') || id.includes('unified') || id.includes('micromark') || id.includes('mdast') || id.includes('hast') || id.includes('unist')) {
+              return 'markdown';
+            }
+            if (id.includes('@codemirror') || id.includes('@lezer') || id.includes('@uiw/react-codemirror') || id.includes('@uiw/codemirror')) {
+              return 'codemirror';
+            }
+          }
         },
       },
     },
