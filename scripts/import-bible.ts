@@ -39,6 +39,8 @@ interface ImportStats {
   gospelParallels: { updated: number; unchanged: number };
   verseMappings: { updated: number; unchanged: number };
   stories: { updated: number; unchanged: number };
+  numberSymbolism: { updated: number; unchanged: number };
+  days: { updated: number; unchanged: number };
 }
 
 const stats: ImportStats = {
@@ -62,7 +64,45 @@ const stats: ImportStats = {
   gospelParallels: { updated: 0, unchanged: 0 },
   verseMappings: { updated: 0, unchanged: 0 },
   stories: { updated: 0, unchanged: 0 },
+  numberSymbolism: { updated: 0, unchanged: 0 },
+  days: { updated: 0, unchanged: 0 },
 };
+
+const deleted: Record<string, number> = {};
+
+/**
+ * Remove rows from a table where the key column value no longer has a matching file on disk.
+ * Also cleans up content_hashes for removed entries.
+ */
+function cleanupRemovedEntries(
+  database: Database.Database,
+  table: string,
+  keyColumn: string,
+  diskKeys: Set<string>,
+  contentType: string,
+  label: string,
+) {
+  const rows = database.prepare(`SELECT ${keyColumn} FROM ${table}`).all() as Record<string, string | number>[];
+  const toDelete: (string | number)[] = [];
+
+  for (const row of rows) {
+    const key = String(row[keyColumn]);
+    if (!diskKeys.has(key)) {
+      toDelete.push(row[keyColumn]);
+    }
+  }
+
+  if (toDelete.length > 0) {
+    const deleteRow = database.prepare(`DELETE FROM ${table} WHERE ${keyColumn} = ?`);
+    const deleteHash = database.prepare(`DELETE FROM content_hashes WHERE content_type = ? AND content_key = ?`);
+    for (const key of toDelete) {
+      deleteRow.run(key);
+      deleteHash.run(contentType, String(key));
+    }
+    deleted[label] = toDelete.length;
+    console.log(`  Slettet ${toDelete.length} ${label} som ikke lenger finnes på disk`);
+  }
+}
 
 // Sørg for at data-mappen eksisterer
 if (!fs.existsSync(path.join(process.cwd(), 'data'))) {
@@ -177,6 +217,7 @@ db.exec(`
     text TEXT NOT NULL,
     bible TEXT NOT NULL DEFAULT 'osnb2',
     versions TEXT,
+    footnotes TEXT,
     FOREIGN KEY (book_id) REFERENCES books(id),
     UNIQUE (book_id, chapter, verse, bible)
   );
@@ -443,6 +484,18 @@ db.exec(`
     unmapped TEXT
   );
 
+  CREATE TABLE IF NOT EXISTS days (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    content TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS number_symbolism (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    number INTEGER NOT NULL UNIQUE,
+    content TEXT NOT NULL
+  );
+
   CREATE TABLE IF NOT EXISTS stories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     slug TEXT NOT NULL UNIQUE,
@@ -458,6 +511,14 @@ db.exec(`
 // Create content_hashes table for incremental sync
 createContentHashesTable(db);
 
+// Migrations: add columns that may not exist in older databases
+try {
+  db.exec('ALTER TABLE verses ADD COLUMN footnotes TEXT');
+  console.log('Migrering: La til footnotes-kolonne i verses');
+} catch {
+  // Column already exists
+}
+
 // Importer bøker
 console.log('Importerer bøker...');
 const insertBook = db.prepare(`
@@ -472,8 +533,8 @@ for (const book of books) {
 // Importer vers med hash-sjekk
 console.log('Importerer vers...');
 const insertVerse = db.prepare(`
-  INSERT OR REPLACE INTO verses (book_id, chapter, verse, text, bible, versions)
-  VALUES (?, ?, ?, ?, ?, ?)
+  INSERT OR REPLACE INTO verses (book_id, chapter, verse, text, bible, versions, footnotes)
+  VALUES (?, ?, ?, ?, ?, ?, ?)
 `);
 const deleteChapterVerses = db.prepare(`
   DELETE FROM verses WHERE book_id = ? AND chapter = ? AND bible = ?
@@ -513,7 +574,8 @@ function importVerses(bible: string) {
       deleteChapterVerses.run(bookId, chapterId, bible);
       for (const v of verses) {
         const versions = v.versions ? JSON.stringify(v.versions) : null;
-        insertVerse.run(v.bookId, v.chapterId, v.verseId, v.text, bible, versions);
+        const footnotes = v.footnotes ? JSON.stringify(v.footnotes) : null;
+        insertVerse.run(v.bookId, v.chapterId, v.verseId, v.text, bible, versions, footnotes);
       }
       updateContentHash(db, 'chapter', contentKey, contentHash);
       stats.chapters.updated++;
@@ -1058,6 +1120,13 @@ if (fs.existsSync(themesPath)) {
     updateContentHash(db, 'theme', contentKey, contentHash);
     stats.themes.updated++;
   }
+
+  // Cleanup: remove themes that no longer exist on disk
+  const themeKeysOnDisk = new Set([
+    ...jsonFiles.map(f => f.replace('.json', '')),
+    ...txtFiles.map(f => f.replace('.txt', '')),
+  ]);
+  cleanupRemovedEntries(db, 'themes', 'name', themeKeysOnDisk, 'theme', 'temaer');
 }
 
 // Importer tidslinje (bible, world, books)
@@ -1364,6 +1433,10 @@ if (fs.existsSync(personsPath)) {
     }
   }
   console.log(`  Importerte ${stats.persons.updated} personer`);
+
+  // Cleanup: remove persons that no longer exist on disk
+  const personKeysOnDisk = new Set(files.map(f => f.replace('.json', '')));
+  cleanupRemovedEntries(db, 'persons', 'name', personKeysOnDisk, 'person', 'personer');
 }
 
 // Importer kapittel-innsikter
@@ -1704,6 +1777,85 @@ if (fs.existsSync(storiesDir)) {
     }
   }
   console.log(`  Importerte ${stats.stories.updated} bibelhistorier (${stats.stories.unchanged} uendret)`);
+
+  // Cleanup: remove stories that no longer exist on disk (only for per-file mode)
+  if (storyFiles.length > 0) {
+    const storyKeysOnDisk = new Set(storyFiles.map(f => f.replace('.json', '')));
+    cleanupRemovedEntries(db, 'stories', 'slug', storyKeysOnDisk, 'story', 'historier');
+  }
+}
+
+// Importer tallsymbolikk
+console.log('Importerer tallsymbolikk...');
+const insertNumberSymbolism = db.prepare(`
+  INSERT OR REPLACE INTO number_symbolism (number, content) VALUES (?, ?)
+`);
+
+const numberSymbolismPath = path.join(GENERATE_PATH, 'number_symbolism', 'nb');
+if (fs.existsSync(numberSymbolismPath)) {
+  const jsonFiles = fs.readdirSync(numberSymbolismPath).filter(f => f.endsWith('.json'));
+
+  for (const file of jsonFiles) {
+    const filePath = path.join(numberSymbolismPath, file);
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const contentHash = computeHash(content);
+    const contentKey = `number-${file.replace('.json', '')}`;
+
+    if (!isFullImport && !hasContentChanged(db, 'numberSymbolism', contentKey, contentHash)) {
+      stats.numberSymbolism.unchanged++;
+      continue;
+    }
+
+    try {
+      const data = JSON.parse(content);
+      insertNumberSymbolism.run(data.number, content);
+      updateContentHash(db, 'numberSymbolism', contentKey, contentHash);
+      stats.numberSymbolism.updated++;
+    } catch (e) {
+      console.error(`Ugyldig JSON i ${file}:`, e);
+    }
+  }
+  console.log(`  Importerte ${stats.numberSymbolism.updated} tall (${stats.numberSymbolism.unchanged} uendret)`);
+
+  // Cleanup: remove numbers that no longer exist on disk
+  const numberKeysOnDisk = new Set(jsonFiles.map(f => f.replace('.json', '')));
+  cleanupRemovedEntries(db, 'number_symbolism', 'number', numberKeysOnDisk, 'numberSymbolism', 'tall');
+}
+
+// Importer dager (helligdager/merkedager)
+console.log('Importerer dager...');
+const insertDay = db.prepare(`
+  INSERT OR REPLACE INTO days (id, name, content) VALUES (?, ?, ?)
+`);
+
+const daysPath = path.join(GENERATE_PATH, 'days', 'nb');
+if (fs.existsSync(daysPath)) {
+  const dayFiles = fs.readdirSync(daysPath).filter(f => f.endsWith('.json'));
+
+  for (const file of dayFiles) {
+    const id = file.replace('.json', '');
+    const filePath = path.join(daysPath, file);
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const contentHash = computeHash(content);
+
+    if (!isFullImport && !hasContentChanged(db, 'day', id, contentHash)) {
+      stats.days.unchanged++;
+      continue;
+    }
+
+    try {
+      const data = JSON.parse(content);
+      insertDay.run(data.id, data.name, content);
+      updateContentHash(db, 'day', id, contentHash);
+      stats.days.updated++;
+    } catch (e) {
+      console.error(`Ugyldig JSON i ${file}:`, e);
+    }
+  }
+  console.log(`  Importerte ${stats.days.updated} dager (${stats.days.unchanged} uendret)`);
+
+  const dayKeysOnDisk = new Set(dayFiles.map(f => f.replace('.json', '')));
+  cleanupRemovedEntries(db, 'days', 'id', dayKeysOnDisk, 'day', 'dager');
 }
 
 // Opprett indekser
@@ -1734,9 +1886,10 @@ db.exec(`
 // Check if any content was updated
 const totalUpdated = Object.values(stats).reduce((sum, s) => sum + s.updated, 0);
 const totalUnchanged = Object.values(stats).reduce((sum, s) => sum + s.unchanged, 0);
+const totalDeleted = Object.values(deleted).reduce((sum, n) => sum + n, 0);
 
 // Only increment sync version if something changed
-if (totalUpdated > 0 || isFullImport) {
+if (totalUpdated > 0 || totalDeleted > 0 || isFullImport) {
   const newSyncVersion = incrementSyncVersion(db);
 
   // Store timestamp for this version
@@ -1759,28 +1912,31 @@ db.close();
 console.log('\n=== Import-sammendrag ===');
 console.log(`Modus: ${isFullImport ? 'Full reimport' : 'Inkrementell'}`);
 console.log('');
-console.log('Innholdstype          Oppdatert  Uendret');
-console.log('----------------------------------------');
-console.log(`Kapitler              ${String(stats.chapters.updated).padStart(9)}  ${String(stats.chapters.unchanged).padStart(7)}`);
-console.log(`Word4word             ${String(stats.word4word.updated).padStart(9)}  ${String(stats.word4word.unchanged).padStart(7)}`);
-console.log(`Referanser            ${String(stats.references.updated).padStart(9)}  ${String(stats.references.unchanged).padStart(7)}`);
-console.log(`Boksammendrag         ${String(stats.bookSummaries.updated).padStart(9)}  ${String(stats.bookSummaries.unchanged).padStart(7)}`);
-console.log(`Bokkontekst           ${String(stats.bookContext.updated).padStart(9)}  ${String(stats.bookContext.unchanged).padStart(7)}`);
-console.log(`Kapittelsammendrag    ${String(stats.chapterSummaries.updated).padStart(9)}  ${String(stats.chapterSummaries.unchanged).padStart(7)}`);
-console.log(`Kapittelkontekst      ${String(stats.chapterContext.updated).padStart(9)}  ${String(stats.chapterContext.unchanged).padStart(7)}`);
-console.log(`Viktige ord           ${String(stats.importantWords.updated).padStart(9)}  ${String(stats.importantWords.unchanged).padStart(7)}`);
-console.log(`Vers-bønn             ${String(stats.versePrayers.updated).padStart(9)}  ${String(stats.versePrayers.unchanged).padStart(7)}`);
-console.log(`Vers-andakt           ${String(stats.verseSermons.updated).padStart(9)}  ${String(stats.verseSermons.unchanged).padStart(7)}`);
-console.log(`Temaer                ${String(stats.themes.updated).padStart(9)}  ${String(stats.themes.unchanged).padStart(7)}`);
-console.log(`Tidslinje             ${String(stats.timeline.updated).padStart(9)}  ${String(stats.timeline.unchanged).padStart(7)}`);
-console.log(`Profetier             ${String(stats.prophecies.updated).padStart(9)}  ${String(stats.prophecies.unchanged).padStart(7)}`);
-console.log(`Personer              ${String(stats.persons.updated).padStart(9)}  ${String(stats.persons.unchanged).padStart(7)}`);
-console.log(`Kapittel-innsikter    ${String(stats.chapterInsights.updated).padStart(9)}  ${String(stats.chapterInsights.unchanged).padStart(7)}`);
-console.log(`Dagens vers           ${String(stats.dailyVerses.updated).padStart(9)}  ${String(stats.dailyVerses.unchanged).padStart(7)}`);
-console.log(`Leseplaner            ${String(stats.readingPlans.updated).padStart(9)}  ${String(stats.readingPlans.unchanged).padStart(7)}`);
-console.log(`Evangelieparalleller  ${String(stats.gospelParallels.updated).padStart(9)}  ${String(stats.gospelParallels.unchanged).padStart(7)}`);
-console.log(`Vers-mappinger        ${String(stats.verseMappings.updated).padStart(9)}  ${String(stats.verseMappings.unchanged).padStart(7)}`);
-console.log(`Bibelhistorier        ${String(stats.stories.updated).padStart(9)}  ${String(stats.stories.unchanged).padStart(7)}`);
-console.log('----------------------------------------');
-console.log(`Totalt                ${String(totalUpdated).padStart(9)}  ${String(totalUnchanged).padStart(7)}`);
+const d = (label: string) => deleted[label] ? String(deleted[label]).padStart(7) : '      -';
+console.log('Innholdstype          Oppdatert  Uendret  Slettet');
+console.log('--------------------------------------------------');
+console.log(`Kapitler              ${String(stats.chapters.updated).padStart(9)}  ${String(stats.chapters.unchanged).padStart(7)}  ${d('kapitler')}`);
+console.log(`Word4word             ${String(stats.word4word.updated).padStart(9)}  ${String(stats.word4word.unchanged).padStart(7)}  ${d('word4word')}`);
+console.log(`Referanser            ${String(stats.references.updated).padStart(9)}  ${String(stats.references.unchanged).padStart(7)}  ${d('referanser')}`);
+console.log(`Boksammendrag         ${String(stats.bookSummaries.updated).padStart(9)}  ${String(stats.bookSummaries.unchanged).padStart(7)}  ${d('boksammendrag')}`);
+console.log(`Bokkontekst           ${String(stats.bookContext.updated).padStart(9)}  ${String(stats.bookContext.unchanged).padStart(7)}  ${d('bokkontekst')}`);
+console.log(`Kapittelsammendrag    ${String(stats.chapterSummaries.updated).padStart(9)}  ${String(stats.chapterSummaries.unchanged).padStart(7)}  ${d('kapittelsammendrag')}`);
+console.log(`Kapittelkontekst      ${String(stats.chapterContext.updated).padStart(9)}  ${String(stats.chapterContext.unchanged).padStart(7)}  ${d('kapittelkontekst')}`);
+console.log(`Viktige ord           ${String(stats.importantWords.updated).padStart(9)}  ${String(stats.importantWords.unchanged).padStart(7)}  ${d('viktige ord')}`);
+console.log(`Vers-bønn             ${String(stats.versePrayers.updated).padStart(9)}  ${String(stats.versePrayers.unchanged).padStart(7)}  ${d('vers-bønn')}`);
+console.log(`Vers-andakt           ${String(stats.verseSermons.updated).padStart(9)}  ${String(stats.verseSermons.unchanged).padStart(7)}  ${d('vers-andakt')}`);
+console.log(`Temaer                ${String(stats.themes.updated).padStart(9)}  ${String(stats.themes.unchanged).padStart(7)}  ${d('temaer')}`);
+console.log(`Tidslinje             ${String(stats.timeline.updated).padStart(9)}  ${String(stats.timeline.unchanged).padStart(7)}  ${d('tidslinje')}`);
+console.log(`Profetier             ${String(stats.prophecies.updated).padStart(9)}  ${String(stats.prophecies.unchanged).padStart(7)}  ${d('profetier')}`);
+console.log(`Personer              ${String(stats.persons.updated).padStart(9)}  ${String(stats.persons.unchanged).padStart(7)}  ${d('personer')}`);
+console.log(`Kapittel-innsikter    ${String(stats.chapterInsights.updated).padStart(9)}  ${String(stats.chapterInsights.unchanged).padStart(7)}  ${d('kapittel-innsikter')}`);
+console.log(`Dagens vers           ${String(stats.dailyVerses.updated).padStart(9)}  ${String(stats.dailyVerses.unchanged).padStart(7)}  ${d('dagens vers')}`);
+console.log(`Leseplaner            ${String(stats.readingPlans.updated).padStart(9)}  ${String(stats.readingPlans.unchanged).padStart(7)}  ${d('leseplaner')}`);
+console.log(`Evangelieparalleller  ${String(stats.gospelParallels.updated).padStart(9)}  ${String(stats.gospelParallels.unchanged).padStart(7)}  ${d('evangelieparalleller')}`);
+console.log(`Vers-mappinger        ${String(stats.verseMappings.updated).padStart(9)}  ${String(stats.verseMappings.unchanged).padStart(7)}  ${d('vers-mappinger')}`);
+console.log(`Bibelhistorier        ${String(stats.stories.updated).padStart(9)}  ${String(stats.stories.unchanged).padStart(7)}  ${d('historier')}`);
+console.log(`Tallsymbolikk         ${String(stats.numberSymbolism.updated).padStart(9)}  ${String(stats.numberSymbolism.unchanged).padStart(7)}  ${d('tall')}`);
+console.log(`Dager                 ${String(stats.days.updated).padStart(9)}  ${String(stats.days.unchanged).padStart(7)}  ${d('dager')}`);
+console.log('--------------------------------------------------');
+console.log(`Totalt                ${String(totalUpdated).padStart(9)}  ${String(totalUnchanged).padStart(7)}  ${totalDeleted > 0 ? String(totalDeleted).padStart(7) : '      -'}`);
 console.log('\nFerdig!');
