@@ -1455,6 +1455,53 @@ export function getPersonsByChapter(bookId: number, chapter: number): PersonData
     .filter((p): p is PersonData => p !== null);
 }
 
+export function getNumberSymbolismByChapter(bookId: number, chapter: number): NumberSymbolismData[] {
+  const db = getDb();
+  const rows = db.prepare(`
+    SELECT content FROM number_symbolism
+    WHERE EXISTS (
+      SELECT 1 FROM json_each(json_extract(content, '$.references'))
+      WHERE json_extract(value, '$.bookId') = ?
+        AND json_extract(value, '$.chapterId') = ?
+    )
+  `).all(bookId, chapter) as { content: string }[];
+
+  return rows
+    .map(r => { try { return JSON.parse(r.content) as NumberSymbolismData; } catch { return null; } })
+    .filter((n): n is NumberSymbolismData => n !== null);
+}
+
+export function getThemesByChapter(bookId: number, chapter: number): { id: number; name: string; title: string }[] {
+  const db = getDb();
+  const themes = db.prepare('SELECT id, name, content FROM themes').all() as Theme[];
+
+  return themes.filter(t => {
+    try {
+      const data: ThemeData = JSON.parse(t.content);
+      return data.sections?.some(s =>
+        s.verses?.some(v => v.bookId === bookId && v.chapter === chapter)
+      );
+    } catch { return false; }
+  }).map(t => {
+    const data: ThemeData = JSON.parse(t.content);
+    return { id: t.id, name: t.name, title: data.title };
+  });
+}
+
+export function getStoriesByChapter(bookId: number, chapter: number): { slug: string; title: string; category: string }[] {
+  const db = getDb();
+  const stories = db.prepare('SELECT slug, title, category, content FROM stories').all() as Story[];
+
+  return stories.filter(s => {
+    try {
+      const data: StoryData = JSON.parse(s.content);
+      return data.references?.some(r =>
+        r.bookId === bookId && r.startChapter <= chapter && r.endChapter >= chapter
+      );
+    } catch { return false; }
+  }).map(s => ({ slug: s.slug, title: s.title, category: s.category }));
+}
+
 export function getPersonsByRole(role: string): PersonData[] {
   const allPersons = getAllPersonsData();
   return allPersons.filter(p => p.roles.includes(role));

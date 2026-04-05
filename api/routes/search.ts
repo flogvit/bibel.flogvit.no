@@ -6,6 +6,7 @@ import {
   searchNumberSymbolism,
   searchDays,
   getPersonsByChapter, getPropheciesForChapter,
+  getNumberSymbolismByChapter, getThemesByChapter, getStoriesByChapter,
 } from '../../src/lib/bible';
 
 export const searchRouter = Router();
@@ -79,7 +80,7 @@ searchRouter.get('/chapter-resources', (req: Request, res: Response) => {
   const chapter = parseInt(req.query.chapter as string, 10);
 
   if (!bookId || !chapter) {
-    res.json({ persons: [], prophecies: [] });
+    res.json({ persons: [], prophecies: [], numbers: [], themes: [], stories: [] });
     return;
   }
 
@@ -99,8 +100,25 @@ searchRouter.get('/chapter-resources', (req: Request, res: Response) => {
       explanation: p.explanation,
     }));
 
+    const numbers = getNumberSymbolismByChapter(bookId, chapter).map(n => ({
+      number: n.number,
+      meaning: n.meaning,
+    }));
+
+    const themes = getThemesByChapter(bookId, chapter).map(t => ({
+      id: t.id,
+      name: t.name,
+      title: t.title,
+    }));
+
+    const stories = getStoriesByChapter(bookId, chapter).map(s => ({
+      slug: s.slug,
+      title: s.title,
+      category: s.category,
+    }));
+
     res.set('Cache-Control', 'public, max-age=3600');
-    res.json({ persons, prophecies });
+    res.json({ persons, prophecies, numbers, themes, stories });
   } catch (error) {
     console.error('Error fetching chapter resources:', error);
     res.status(500).json({ error: 'Internal server error' });

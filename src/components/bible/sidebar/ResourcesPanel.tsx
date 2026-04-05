@@ -57,6 +57,17 @@ export function ResourcesPanel({ bookId, chapter, bookName }: ResourcesPanelProp
           type: 'prophecy', id: p.id, title: p.title, subtitle: p.category_name,
           description: p.explanation,
         }));
+        if (data.themes) data.themes.forEach((t: any) => items.push({
+          type: 'theme', id: t.id, title: t.title || t.name, url: `/temaer/${t.name}`,
+        }));
+        if (data.stories) data.stories.forEach((s: any) => items.push({
+          type: 'story', id: s.slug, title: s.title, subtitle: s.category,
+          url: `/fortellinger/${s.slug}`,
+        }));
+        if (data.numbers) data.numbers.forEach((n: any) => items.push({
+          type: 'number', id: n.number, title: `${n.number}`, subtitle: n.meaning,
+          url: `/tall/${n.number}`,
+        }));
         setChapterResults(items);
         setLoading(false);
       })
