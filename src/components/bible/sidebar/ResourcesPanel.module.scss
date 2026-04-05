@@ -144,6 +144,40 @@
   margin: 0 0 $spacing-sm 0;
 }
 
+.verseLinks {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+  margin-bottom: $spacing-sm;
+}
+
+.verseLinksLabel {
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+}
+
+.verseLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  padding: 2px $spacing-xs;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  background: $color-background;
+  color: $color-secondary;
+  font-size: $font-size-xs;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: $color-secondary;
+    color: white;
+    border-color: $color-secondary;
+  }
+}
+
 .detailLink {
   font-size: $font-size-sm;
   color: $color-secondary;
@@ -229,6 +263,22 @@
 
   .description {
     color: $dark-color-text-light;
+  }
+
+  .verseLinksLabel {
+    color: $dark-color-text-muted;
+  }
+
+  .verseLink {
+    border-color: $dark-color-border;
+    background: $dark-color-background;
+    color: $dark-color-secondary;
+
+    &:hover {
+      background: $dark-color-secondary;
+      color: $dark-color-background;
+      border-color: $dark-color-secondary;
+    }
   }
 
   .detailLink {

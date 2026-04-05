@@ -207,6 +207,13 @@ p {
   }
 }
 
+// Persistent verse highlight (from resource panel)
+.verse-resource-highlight {
+  background-color: $color-verse-highlight;
+  border-radius: $radius-sm;
+  transition: background-color $transition-base;
+}
+
 // Font size variations
 html[data-font-size="small"] {
   font-size: 14px;
@@ -241,6 +248,10 @@ html.dark {
 
   .text-muted {
     color: $dark-color-text-muted;
+  }
+
+  .verse-resource-highlight {
+    background-color: $dark-color-verse-highlight;
   }
 }
 

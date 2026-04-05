@@ -85,25 +85,52 @@ searchRouter.get('/chapter-resources', (req: Request, res: Response) => {
   }
 
   try {
-    const persons = getPersonsByChapter(bookId, chapter).map(p => ({
-      id: p.id,
-      name: p.name,
-      title: p.title,
-      era: p.era,
-      summary: p.summary,
-    }));
+    const persons = getPersonsByChapter(bookId, chapter).map(p => {
+      const chapterVerses = (p.references || [])
+        .filter((r: any) => r.bookId === bookId && r.chapterId === chapter)
+        .map((r: any) => r.verseId);
+      return {
+        id: p.id,
+        name: p.name,
+        title: p.title,
+        era: p.era,
+        summary: p.summary,
+        verses: chapterVerses,
+      };
+    });
 
-    const prophecies = getPropheciesForChapter(bookId, chapter).map(p => ({
-      id: p.id,
-      title: p.title,
-      category_name: p.category?.name || '',
-      explanation: p.explanation,
-    }));
+    const prophecies = getPropheciesForChapter(bookId, chapter).map(p => {
+      const verses: number[] = [];
+      // Check prophecy origin
+      if (p.prophecy.book_id === bookId && p.prophecy.chapter === chapter) {
+        for (let v = p.prophecy.verse_start; v <= p.prophecy.verse_end; v++) verses.push(v);
+      }
+      // Check fulfillments
+      for (const f of p.fulfillments) {
+        if (f.book_id === bookId && f.chapter === chapter) {
+          for (let v = f.verse_start; v <= f.verse_end; v++) verses.push(v);
+        }
+      }
+      return {
+        id: p.id,
+        title: p.title,
+        category_name: p.category?.name || '',
+        explanation: p.explanation,
+        verses,
+      };
+    });
 
-    const numbers = getNumberSymbolismByChapter(bookId, chapter).map(n => ({
-      number: n.number,
-      meaning: n.meaning,
-    }));
+    const numbers = getNumberSymbolismByChapter(bookId, chapter).map(n => {
+      const chapterVerses = n.references
+        .filter(r => r.bookId === bookId && r.chapterId === chapter)
+        .map(r => r.fromVerseId);
+      return {
+        number: n.number,
+        meaning: n.meaning,
+        description: n.description,
+        verses: chapterVerses,
+      };
+    });
 
     const themes = getThemesByChapter(bookId, chapter).map(t => ({
       id: t.id,

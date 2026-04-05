@@ -15,6 +15,7 @@ interface ResourceItem {
   subtitle?: string;
   description?: string;
   url?: string;
+  verses?: number[];
 }
 
 const typeLabels: Record<string, string> = {
@@ -37,6 +38,15 @@ export function ResourcesPanel({ bookId, chapter, bookName }: ResourcesPanelProp
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isSearchMode, setIsSearchMode] = useState(false);
 
+  // Clean up highlights on unmount or chapter change
+  useEffect(() => {
+    return () => {
+      document.querySelectorAll('.verse-resource-highlight').forEach(
+        el => el.classList.remove('verse-resource-highlight')
+      );
+    };
+  }, [bookId, chapter]);
+
   // Auto-load resources for current chapter
   useEffect(() => {
     let cancelled = false;
@@ -51,11 +61,11 @@ export function ResourcesPanel({ bookId, chapter, bookName }: ResourcesPanelProp
         const items: ResourceItem[] = [];
         if (data.persons) data.persons.forEach((p: any) => items.push({
           type: 'person', id: p.id, title: p.name, subtitle: p.title || p.era,
-          description: p.summary, url: `/personer/${p.id}`,
+          description: p.summary, url: `/personer/${p.id}`, verses: p.verses,
         }));
         if (data.prophecies) data.prophecies.forEach((p: any) => items.push({
           type: 'prophecy', id: p.id, title: p.title, subtitle: p.category_name,
-          description: p.explanation,
+          description: p.explanation, verses: p.verses,
         }));
         if (data.themes) data.themes.forEach((t: any) => items.push({
           type: 'theme', id: t.id, title: t.title || t.name, url: `/temaer/${t.name}`,
@@ -66,7 +76,7 @@ export function ResourcesPanel({ bookId, chapter, bookName }: ResourcesPanelProp
         }));
         if (data.numbers) data.numbers.forEach((n: any) => items.push({
           type: 'number', id: n.number, title: `${n.number}`, subtitle: n.meaning,
-          url: `/tall/${n.number}`,
+          description: n.description, url: `/tall/${n.number}`, verses: n.verses,
         }));
         setChapterResults(items);
         setLoading(false);
@@ -174,13 +184,48 @@ export function ResourcesPanel({ bookId, chapter, bookName }: ResourcesPanelProp
 
               return (
                 <div key={key} className={`${styles.item} ${isExpanded ? styles.expanded : ''}`}>
-                  <div className={styles.itemHeader} onClick={() => setExpandedId(isExpanded ? null : key)}>
+                  <div className={styles.itemHeader} onClick={() => {
+                    const newExpanded = isExpanded ? null : key;
+                    setExpandedId(newExpanded);
+                    // Clear previous highlights
+                    document.querySelectorAll('.verse-resource-highlight').forEach(
+                      el => el.classList.remove('verse-resource-highlight')
+                    );
+                    // Highlight verses for newly expanded item
+                    if (newExpanded && item.verses) {
+                      item.verses.forEach(v => {
+                        document.getElementById(`v${v}`)?.classList.add('verse-resource-highlight');
+                      });
+                    }
+                  }}>
                     <span className={styles.itemTitle}>{item.title}</span>
                     {item.subtitle && <span className={styles.itemSubtitle}>{item.subtitle}</span>}
                   </div>
                   {isExpanded && (
                     <div className={styles.itemDetail}>
                       {item.description && <p className={styles.description}>{item.description}</p>}
+                      {item.verses && item.verses.length > 0 && (
+                        <div className={styles.verseLinks}>
+                          <span className={styles.verseLinksLabel}>Vers:</span>
+                          {item.verses.map(v => (
+                            <button
+                              key={v}
+                              className={styles.verseLink}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const el = document.getElementById(`v${v}`);
+                                if (el) {
+                                  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                  el.classList.add('verse-highlight');
+                                  setTimeout(() => el.classList.remove('verse-highlight'), 3000);
+                                }
+                              }}
+                            >
+                              {v}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                       {item.url && (
                         <Link to={item.url} className={styles.detailLink}>
                           Les mer →
