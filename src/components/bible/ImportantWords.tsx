@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSettings } from '@/components/SettingsContext';
+import { InlineRefs } from '@/components/InlineRefs';
 import styles from './ImportantWords.module.scss';
 
 interface ImportantWord {
@@ -70,7 +71,7 @@ export function ImportantWords({ bookId, chapter }: ImportantWordsProps) {
               <span className={styles.toggle} aria-hidden="true">{expanded === index ? '−' : '+'}</span>
             </button>
             {expanded === index && (
-              <p id={`word-explanation-${index}`} className={styles.explanation}>{word.explanation}</p>
+              <p id={`word-explanation-${index}`} className={styles.explanation}><InlineRefs>{word.explanation}</InlineRefs></p>
             )}
           </div>
         ))}

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ThemeVerseDisplay } from '@/components/bible/ThemeVerseDisplay';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { ItemTagging } from '@/components/ItemTagging';
+import { InlineRefs } from '@/components/InlineRefs';
 import type { ThemeData } from '@/lib/bible';
 import styles from '@/styles/pages/theme.module.scss';
 
@@ -150,7 +151,7 @@ export function ThemePage() {
           {oldFormatItems.map((item, index) => (
             <div key={index} className={styles.themeItem}>
               <h2>{item.title}</h2>
-              <p>{item.description}</p>
+              <p><InlineRefs>{item.description}</InlineRefs></p>
             </div>
           ))}
         </div>

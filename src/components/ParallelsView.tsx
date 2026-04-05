@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import styles from './ParallelsView.module.scss';
 import type { GospelParallelSection, GospelParallel, GospelParallelPassage } from '@/lib/bible';
 import { toUrlSlug } from '@/lib/url-utils';
+import { InlineRefs } from '@/components/InlineRefs';
 
 interface ParallelsViewProps {
   sections: GospelParallelSection[];
@@ -184,7 +185,7 @@ export function ParallelsView({ sections, parallels }: ParallelsViewProps) {
               {showSectionHeader && section && (
                 <div className={styles.sectionHeader}>
                   <h2>{section.name}</h2>
-                  {section.description && <p>{section.description}</p>}
+                  {section.description && <p><InlineRefs>{section.description}</InlineRefs></p>}
                 </div>
               )}
 
@@ -209,7 +210,7 @@ export function ParallelsView({ sections, parallels }: ParallelsViewProps) {
                 {isExpanded && (
                   <div className={styles.parallelContent}>
                     {parallel.notes && (
-                      <p className={styles.notes}>{parallel.notes}</p>
+                      <p className={styles.notes}><InlineRefs>{parallel.notes}</InlineRefs></p>
                     )}
 
                     {isMobile ? (

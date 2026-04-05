@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { InlineRefs } from '@/components/InlineRefs';
 import styles from '@/styles/pages/stories.module.scss';
 
 interface StoryItem {
@@ -186,7 +187,7 @@ export function StoriesPage() {
               >
                 <h2>{story.title}</h2>
                 {story.description && (
-                  <p className={styles.storyDescription}>{story.description}</p>
+                  <p className={styles.storyDescription}><InlineRefs>{story.description}</InlineRefs></p>
                 )}
                 <div className={styles.storyMeta}>
                   <span className={styles.categoryBadge}>

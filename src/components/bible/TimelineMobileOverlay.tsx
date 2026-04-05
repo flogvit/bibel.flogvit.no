@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { InlineRefs } from '@/components/InlineRefs';
 import styles from './TimelineMobileOverlay.module.scss';
 import type { TimelineEvent, TimelineReference } from '@/lib/bible';
 import { toUrlSlug } from '@/lib/url-utils';
@@ -155,7 +156,7 @@ export function TimelineMobileOverlay({ events, currentBookId, currentChapter, o
                     {isExpanded && (
                       <div className={styles.eventDetails}>
                         {event.description && (
-                          <p className={styles.eventDescription}>{event.description}</p>
+                          <p className={styles.eventDescription}><InlineRefs>{event.description}</InlineRefs></p>
                         )}
 
                         {event.references && event.references.length > 0 && (

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { InlineRefs } from '@/components/InlineRefs';
 import type { ChapterContextData } from './ChapterContextPanel';
 import styles from './TimelineContextPanel.module.scss';
 
@@ -101,7 +102,7 @@ export function TimelineContextPanel({ contextData }: TimelineContextPanelProps)
                     </span>
 
                     {isExpanded && ev.description && (
-                      <p className={styles.eventDescription}>{ev.description}</p>
+                      <p className={styles.eventDescription}><InlineRefs>{ev.description}</InlineRefs></p>
                     )}
                   </div>
                 </div>

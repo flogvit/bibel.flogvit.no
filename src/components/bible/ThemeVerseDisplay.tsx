@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { VerseDisplay } from './VerseDisplay';
+import { InlineRefs } from '@/components/InlineRefs';
 import type { ThemeData, ThemeSection, ThemeVerseRef } from '@/lib/bible';
 import type { VerseWithOriginal } from '@/lib/bible';
 import { toUrlSlug } from '@/lib/url-utils';
@@ -78,7 +79,7 @@ export function ThemeVerseDisplay({ themeData }: ThemeVerseDisplayProps) {
   return (
     <>
       {themeData.introduction && (
-        <p className={styles.introduction}>{themeData.introduction}</p>
+        <p className={styles.introduction}><InlineRefs>{themeData.introduction}</InlineRefs></p>
       )}
 
       <div className={styles.sections}>
@@ -86,7 +87,7 @@ export function ThemeVerseDisplay({ themeData }: ThemeVerseDisplayProps) {
           <div key={sectionIndex} className={styles.section}>
             <h2>{section.title}</h2>
             {section.description && (
-              <p className={styles.sectionDescription}>{section.description}</p>
+              <p className={styles.sectionDescription}><InlineRefs>{section.description}</InlineRefs></p>
             )}
 
             {section.loadedVerses.map((verseData, verseIndex) => (

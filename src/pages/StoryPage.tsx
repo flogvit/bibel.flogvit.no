@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { VerseDisplay } from '@/components/bible/VerseDisplay';
+import { InlineRefs } from '@/components/InlineRefs';
 import { useSettings } from '@/components/SettingsContext';
 import { getBookInfoById } from '@/lib/books-data';
 import { toUrlSlug } from '@/lib/url-utils';
@@ -177,7 +178,7 @@ export function StoryPage() {
         </Link>
 
         {storyData.description && (
-          <p className={styles.description}>{storyData.description}</p>
+          <p className={styles.description}><InlineRefs>{storyData.description}</InlineRefs></p>
         )}
 
         {storyData.keywords && storyData.keywords.length > 0 && (

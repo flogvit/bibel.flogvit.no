@@ -6,6 +6,7 @@ import { toUrlSlug } from '@/lib/url-utils';
 import { useSettings } from '@/components/SettingsContext';
 import { VerseDisplay } from './bible/VerseDisplay';
 import { ItemTagging } from './ItemTagging';
+import { InlineRefs } from '@/components/InlineRefs';
 
 interface TimelineViewProps {
   periods: TimelinePeriod[];
@@ -141,7 +142,7 @@ export function TimelineView({ periods, events }: TimelineViewProps) {
                   style={{ '--period-color': period.color || '#8b7355' } as React.CSSProperties}
                 >
                   <h2>{period.name}</h2>
-                  {period.description && <p>{period.description}</p>}
+                  {period.description && <p><InlineRefs>{period.description}</InlineRefs></p>}
                 </div>
               )}
 
@@ -164,7 +165,7 @@ export function TimelineView({ periods, events }: TimelineViewProps) {
                   </div>
 
                   {(isExpanded || event.importance === 'major') && event.description && (
-                    <p className={styles.eventDescription}>{event.description}</p>
+                    <p className={styles.eventDescription}><InlineRefs>{event.description}</InlineRefs></p>
                   )}
 
                   {isExpanded && (

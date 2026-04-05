@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import Markdown from 'react-markdown';
+import { InlineRefs } from '@/components/InlineRefs';
 import { extractChapterRefs } from '@/lib/devotional-utils';
 import styles from './ChapterContextPanel.module.scss';
 
@@ -161,7 +161,7 @@ export function ChapterContextPanel({ content, onDataChange }: ChapterContextPan
               <>
                 {group.bookSummary && (
                   <div className={styles.bookSummary}>
-                    <Markdown>{group.bookSummary}</Markdown>
+                    <InlineRefs markdown>{group.bookSummary}</InlineRefs>
                   </div>
                 )}
 
@@ -187,7 +187,7 @@ export function ChapterContextPanel({ content, onDataChange }: ChapterContextPan
                         <div className={styles.chapterContent}>
                           {hasSummary && (
                             <div className={styles.summaryText}>
-                              <Markdown>{ch.summary!}</Markdown>
+                              <InlineRefs markdown>{ch.summary!}</InlineRefs>
                             </div>
                           )}
 
@@ -195,7 +195,7 @@ export function ChapterContextPanel({ content, onDataChange }: ChapterContextPan
                             <>
                               <p className={styles.contextLabel}>Historisk kontekst:</p>
                               <div className={styles.contextText}>
-                                <Markdown>{ch.context!}</Markdown>
+                                <InlineRefs markdown>{ch.context!}</InlineRefs>
                               </div>
                             </>
                           )}

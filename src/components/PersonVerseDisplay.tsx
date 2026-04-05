@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { VerseDisplay } from './bible/VerseDisplay';
+import { InlineRefs } from '@/components/InlineRefs';
 import type { PersonKeyEvent, PersonVerseRef } from '@/lib/bible';
 import type { VerseWithOriginal } from '@/lib/bible';
 import { toUrlSlug } from '@/lib/url-utils';
@@ -82,7 +83,7 @@ export function PersonVerseDisplay({ keyEvents }: PersonVerseDisplayProps) {
           <div className={styles.eventHeader}>
             <h3>{event.title}</h3>
           </div>
-          <p className={styles.eventDescription}>{event.description}</p>
+          <p className={styles.eventDescription}><InlineRefs>{event.description}</InlineRefs></p>
 
           {event.loadedVerses.map((verseData, verseIndex) => (
             <div key={verseIndex} className={styles.verseGroup}>

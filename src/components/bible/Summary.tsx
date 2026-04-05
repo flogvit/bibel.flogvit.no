@@ -1,7 +1,7 @@
 
 
 import { useSettings } from '@/components/SettingsContext';
-import Markdown from 'react-markdown';
+import { InlineRefs } from '@/components/InlineRefs';
 import styles from './Summary.module.scss';
 
 interface SummaryProps {
@@ -31,7 +31,7 @@ export function Summary({ type, title, content }: SummaryProps) {
   return (
     <section className={styles.summary}>
       <h2>{title}</h2>
-      <Markdown>{content}</Markdown>
+      <InlineRefs markdown>{content}</InlineRefs>
     </section>
   );
 }

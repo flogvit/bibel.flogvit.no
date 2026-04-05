@@ -6,6 +6,7 @@ import { toUrlSlug } from '@/lib/url-utils';
 import { useSettings } from '@/components/SettingsContext';
 import { VerseDisplay } from './bible/VerseDisplay';
 import { ItemTagging } from './ItemTagging';
+import { InlineRefs } from '@/components/InlineRefs';
 
 interface ProphecyViewProps {
   categories: ProphecyCategory[];
@@ -132,7 +133,7 @@ export function ProphecyView({ categories, prophecies }: ProphecyViewProps) {
               {showCategoryHeader && category && (
                 <div className={styles.categoryHeader}>
                   <h2>{category.name}</h2>
-                  {category.description && <p>{category.description}</p>}
+                  {category.description && <p><InlineRefs>{category.description}</InlineRefs></p>}
                 </div>
               )}
 
@@ -177,7 +178,7 @@ export function ProphecyView({ categories, prophecies }: ProphecyViewProps) {
                 {isExpanded && (
                   <div className={styles.prophecyContent}>
                     {prophecy.explanation && (
-                      <p className={styles.explanation}>{prophecy.explanation}</p>
+                      <p className={styles.explanation}><InlineRefs>{prophecy.explanation}</InlineRefs></p>
                     )}
 
                     <div className={styles.taggingSection}>

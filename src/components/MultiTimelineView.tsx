@@ -14,6 +14,7 @@ import { toUrlSlug } from '@/lib/url-utils';
 import { useSettings } from '@/components/SettingsContext';
 import { VerseDisplay } from './bible/VerseDisplay';
 import { ItemTagging } from './ItemTagging';
+import { InlineRefs } from '@/components/InlineRefs';
 
 function formatReference(ref: TimelineReference): string {
   const verseRange = ref.verse_start === ref.verse_end
@@ -87,7 +88,7 @@ function EventCard({ event, compact, showRegion, bible }: EventCardProps) {
       </div>
 
       {(expanded || (!compact && event.importance === 'major')) && event.description && (
-        <p className={styles.eventDescription}>{event.description}</p>
+        <p className={styles.eventDescription}><InlineRefs>{event.description}</InlineRefs></p>
       )}
 
       {expanded && (
@@ -368,7 +369,7 @@ export function MultiTimelineView({ data }: MultiTimelineViewProps) {
             {/* Period title spanning all columns */}
             <div className={styles.periodBanner}>
               <h2>{period.name}</h2>
-              {period.description && <p>{period.description}</p>}
+              {period.description && <p><InlineRefs>{period.description}</InlineRefs></p>}
             </div>
 
             {/* Three cells */}
@@ -379,7 +380,7 @@ export function MultiTimelineView({ data }: MultiTimelineViewProps) {
                   <div className={styles.cellSubtitle}>{worldPeriod.name}</div>
                 )}
                 {worldPeriod?.description && (
-                  <p className={styles.cellDescription}>{worldPeriod.description}</p>
+                  <p className={styles.cellDescription}><InlineRefs>{worldPeriod.description}</InlineRefs></p>
                 )}
                 <div className={styles.eventList}>
                   {worldDisplay.map(event => (
@@ -427,7 +428,7 @@ export function MultiTimelineView({ data }: MultiTimelineViewProps) {
                             <span className={styles.sectionChapters}>
                               Kap. {section.chapter_start}–{section.chapter_end}
                             </span>
-                            {section.description && <p>{section.description}</p>}
+                            {section.description && <p><InlineRefs>{section.description}</InlineRefs></p>}
                           </div>
                           <div className={styles.eventList}>
                             {sectionEvents.map(event => (
