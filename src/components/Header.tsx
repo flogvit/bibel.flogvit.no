@@ -4,7 +4,7 @@ import styles from './Header.module.scss';
 import { LoadingIndicator } from './LoadingIndicator';
 import { OfflineIndicator } from './OfflineIndicator';
 import { SyncStatusIndicator } from './sync/SyncStatusIndicator';
-import { useSettings } from './SettingsContext';
+import { LayoutModeButtons } from '@/components/bible/LayoutModeButtons';
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -14,8 +14,6 @@ export function Header() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const { settings, toggleSetting } = useSettings();
-
   useEffect(() => {
     setIsMac(navigator.platform.toUpperCase().indexOf('MAC') >= 0);
   }, []);
@@ -137,15 +135,7 @@ export function Header() {
           </button>
         </form>
 
-        <button
-          className={`${styles.readingModeButton} ${settings.readingMode ? styles.active : ''}`}
-          onClick={() => toggleSetting('readingMode')}
-          aria-label={settings.readingMode ? 'Slå av lesemodus' : 'Slå på lesemodus'}
-          aria-pressed={settings.readingMode}
-          title={`Lesemodus ${settings.readingMode ? 'på' : 'av'} (R)`}
-        >
-          <span className={styles.readingModeIcon} aria-hidden="true">📖</span>
-        </button>
+        <LayoutModeButtons />
 
         <button
           className={styles.menuButton}
