@@ -214,6 +214,31 @@
   }
 }
 
+.mobileGroup {
+  display: contents;
+}
+
+.mobileGroupTitle {
+  display: none;
+
+  @include mobile {
+    display: block;
+    font-family: $font-serif;
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: $spacing-lg $spacing-md $spacing-xs;
+    text-align: center;
+    border-top: 1px solid $color-border;
+
+    .mobileGroup:first-child & {
+      border-top: none;
+      padding-top: 0;
+    }
+  }
+}
+
 
 .menuButton {
   display: none;
@@ -331,6 +356,11 @@
     &:hover {
       background: $dark-color-border;
     }
+  }
+
+  .mobileGroupTitle {
+    color: $dark-color-text-muted;
+    border-top-color: $dark-color-border;
   }
 
 }

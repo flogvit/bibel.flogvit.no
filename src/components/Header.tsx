@@ -8,11 +8,11 @@ import { LayoutModeButtons } from '@/components/bible/LayoutModeButtons';
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isMac, setIsMac] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const navigate = useNavigate();
   useEffect(() => {
     setIsMac(navigator.platform.toUpperCase().indexOf('MAC') >= 0);
@@ -47,8 +47,12 @@ export function Header() {
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDropdownOpen(false);
+      const refs = dropdownRefs.current;
+      const clickedInside = Object.values(refs).some(
+        ref => ref && ref.contains(e.target as Node)
+      );
+      if (!clickedInside) {
+        setOpenDropdown(null);
       }
     }
 
@@ -99,7 +103,11 @@ export function Header() {
 
   function handleNavClick() {
     setMenuOpen(false);
-    setDropdownOpen(false);
+    setOpenDropdown(null);
+  }
+
+  function toggleDropdown(name: string) {
+    setOpenDropdown(prev => prev === name ? null : name);
   }
 
   const mod = isMac ? '⌥⇧' : 'Alt+Shift+';
@@ -148,22 +156,18 @@ export function Header() {
         </button>
 
         <nav id="main-nav" className={`${styles.nav} ${menuOpen ? styles.open : ''}`} aria-label="Hovednavigasjon">
-          {/* Dropdown for desktop */}
-          <div className={styles.dropdown} ref={dropdownRef}>
+          {/* Desktop dropdowns */}
+          <div className={styles.dropdown} ref={el => { dropdownRefs.current['mitt'] = el; }}>
             <button
               className={`${styles.navLink} ${styles.dropdownTrigger}`}
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              aria-expanded={dropdownOpen}
+              onClick={() => toggleDropdown('mitt')}
+              aria-expanded={openDropdown === 'mitt'}
               aria-haspopup="true"
-              aria-controls="resources-menu"
             >
-              Ressurser
-              <span className={`${styles.dropdownArrow} ${dropdownOpen ? styles.open : ''}`} aria-hidden="true">▾</span>
+              Mitt
+              <span className={`${styles.dropdownArrow} ${openDropdown === 'mitt' ? styles.open : ''}`} aria-hidden="true">▾</span>
             </button>
-            <div id="resources-menu" className={`${styles.dropdownMenu} ${dropdownOpen ? styles.open : ''}`} role="menu">
-              <Link to="/kjente-vers" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
-                Kjente vers {shortcut('K')}
-              </Link>
+            <div className={`${styles.dropdownMenu} ${openDropdown === 'mitt' ? styles.open : ''}`} role="menu">
               <Link to="/favoritter" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Favoritter {shortcut('F')}
               </Link>
@@ -173,23 +177,37 @@ export function Header() {
               <Link to="/notater" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Notater {shortcut('N')}
               </Link>
-              <Link to="/manuskripter" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
-                Manuskripter {shortcut('M')}
-              </Link>
               <Link to="/lister" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Verslister {shortcut('V')}
               </Link>
               <Link to="/leseplan" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Leseplan {shortcut('L')}
               </Link>
+              <Link to="/manuskripter" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
+                Manuskripter {shortcut('M')}
+              </Link>
+            </div>
+          </div>
+
+          <div className={styles.dropdown} ref={el => { dropdownRefs.current['studier'] = el; }}>
+            <button
+              className={`${styles.navLink} ${styles.dropdownTrigger}`}
+              onClick={() => toggleDropdown('studier')}
+              aria-expanded={openDropdown === 'studier'}
+              aria-haspopup="true"
+            >
+              Studier
+              <span className={`${styles.dropdownArrow} ${openDropdown === 'studier' ? styles.open : ''}`} aria-hidden="true">▾</span>
+            </button>
+            <div className={`${styles.dropdownMenu} ${openDropdown === 'studier' ? styles.open : ''}`} role="menu">
+              <Link to="/kjente-vers" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
+                Kjente vers {shortcut('K')}
+              </Link>
               <Link to="/temaer" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Temaer {shortcut('C')}
               </Link>
               <Link to="/historier" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Bibelhistorier {shortcut('B')}
-              </Link>
-              <Link to="/tidslinje" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
-                Tidslinje {shortcut('T')}
               </Link>
               <Link to="/profetier" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Profetier {shortcut('P')}
@@ -200,11 +218,28 @@ export function Header() {
               <Link to="/personer" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Personer {shortcut('O')}
               </Link>
-              <Link to="/dager" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
-                Dager {shortcut('D')}
-              </Link>
               <Link to="/tall" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Tall {shortcut('Y')}
+              </Link>
+            </div>
+          </div>
+
+          <div className={styles.dropdown} ref={el => { dropdownRefs.current['oversikt'] = el; }}>
+            <button
+              className={`${styles.navLink} ${styles.dropdownTrigger}`}
+              onClick={() => toggleDropdown('oversikt')}
+              aria-expanded={openDropdown === 'oversikt'}
+              aria-haspopup="true"
+            >
+              Oversikt
+              <span className={`${styles.dropdownArrow} ${openDropdown === 'oversikt' ? styles.open : ''}`} aria-hidden="true">▾</span>
+            </button>
+            <div className={`${styles.dropdownMenu} ${openDropdown === 'oversikt' ? styles.open : ''}`} role="menu">
+              <Link to="/tidslinje" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
+                Tidslinje {shortcut('T')}
+              </Link>
+              <Link to="/dager" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
+                Dager {shortcut('D')}
               </Link>
               <Link to="/statistikk" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Statistikk {shortcut('I')}
@@ -215,59 +250,34 @@ export function Header() {
             </div>
           </div>
 
-          {/* Mobile: show dropdown items inline */}
+          {/* Mobile: grouped items */}
           <div className={styles.mobileDropdownItems}>
-            <Link to="/kjente-vers" className={styles.navLink} onClick={handleNavClick}>
-              Kjente vers
-            </Link>
-            <Link to="/favoritter" className={styles.navLink} onClick={handleNavClick}>
-              Favoritter
-            </Link>
-            <Link to="/emner" className={styles.navLink} onClick={handleNavClick}>
-              Emner
-            </Link>
-            <Link to="/notater" className={styles.navLink} onClick={handleNavClick}>
-              Notater
-            </Link>
-            <Link to="/manuskripter" className={styles.navLink} onClick={handleNavClick}>
-              Andakter
-            </Link>
-            <Link to="/lister" className={styles.navLink} onClick={handleNavClick}>
-              Verslister
-            </Link>
-            <Link to="/leseplan" className={styles.navLink} onClick={handleNavClick}>
-              Leseplan
-            </Link>
-            <Link to="/temaer" className={styles.navLink} onClick={handleNavClick}>
-              Temaer
-            </Link>
-            <Link to="/historier" className={styles.navLink} onClick={handleNavClick}>
-              Bibelhistorier
-            </Link>
-            <Link to="/tidslinje" className={styles.navLink} onClick={handleNavClick}>
-              Tidslinje
-            </Link>
-            <Link to="/profetier" className={styles.navLink} onClick={handleNavClick}>
-              Profetier
-            </Link>
-            <Link to="/paralleller" className={styles.navLink} onClick={handleNavClick}>
-              Paralleller
-            </Link>
-            <Link to="/personer" className={styles.navLink} onClick={handleNavClick}>
-              Personer
-            </Link>
-            <Link to="/dager" className={styles.navLink} onClick={handleNavClick}>
-              Dager
-            </Link>
-            <Link to="/tall" className={styles.navLink} onClick={handleNavClick}>
-              Tall
-            </Link>
-            <Link to="/statistikk" className={styles.navLink} onClick={handleNavClick}>
-              Statistikk
-            </Link>
-            <Link to="/oversettelser" className={styles.navLink} onClick={handleNavClick}>
-              Oversettelser
-            </Link>
+            <div className={styles.mobileGroup}>
+              <span className={styles.mobileGroupTitle}>Mitt</span>
+              <Link to="/favoritter" className={styles.navLink} onClick={handleNavClick}>Favoritter</Link>
+              <Link to="/emner" className={styles.navLink} onClick={handleNavClick}>Emner</Link>
+              <Link to="/notater" className={styles.navLink} onClick={handleNavClick}>Notater</Link>
+              <Link to="/lister" className={styles.navLink} onClick={handleNavClick}>Verslister</Link>
+              <Link to="/leseplan" className={styles.navLink} onClick={handleNavClick}>Leseplan</Link>
+              <Link to="/manuskripter" className={styles.navLink} onClick={handleNavClick}>Andakter</Link>
+            </div>
+            <div className={styles.mobileGroup}>
+              <span className={styles.mobileGroupTitle}>Studier</span>
+              <Link to="/kjente-vers" className={styles.navLink} onClick={handleNavClick}>Kjente vers</Link>
+              <Link to="/temaer" className={styles.navLink} onClick={handleNavClick}>Temaer</Link>
+              <Link to="/historier" className={styles.navLink} onClick={handleNavClick}>Bibelhistorier</Link>
+              <Link to="/profetier" className={styles.navLink} onClick={handleNavClick}>Profetier</Link>
+              <Link to="/paralleller" className={styles.navLink} onClick={handleNavClick}>Paralleller</Link>
+              <Link to="/personer" className={styles.navLink} onClick={handleNavClick}>Personer</Link>
+              <Link to="/tall" className={styles.navLink} onClick={handleNavClick}>Tall</Link>
+            </div>
+            <div className={styles.mobileGroup}>
+              <span className={styles.mobileGroupTitle}>Oversikt</span>
+              <Link to="/tidslinje" className={styles.navLink} onClick={handleNavClick}>Tidslinje</Link>
+              <Link to="/dager" className={styles.navLink} onClick={handleNavClick}>Dager</Link>
+              <Link to="/statistikk" className={styles.navLink} onClick={handleNavClick}>Statistikk</Link>
+              <Link to="/oversettelser" className={styles.navLink} onClick={handleNavClick}>Oversettelser</Link>
+            </div>
           </div>
 
         </nav>
