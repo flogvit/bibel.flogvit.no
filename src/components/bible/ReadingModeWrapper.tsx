@@ -11,8 +11,14 @@ interface ReadingModeWrapperProps {
 export function ReadingModeWrapper({ children, className = '' }: ReadingModeWrapperProps) {
   const { settings } = useSettings();
 
+  const modeClass = settings.layoutMode === 'reading'
+    ? 'reading-mode'
+    : settings.layoutMode === 'panel'
+      ? 'panel-mode'
+      : '';
+
   return (
-    <div className={`${className} ${settings.readingMode ? 'reading-mode' : ''}`}>
+    <div className={`${className} ${modeClass}`}>
       {children}
     </div>
   );

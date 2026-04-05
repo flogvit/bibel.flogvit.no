@@ -20,6 +20,21 @@
       margin: 0 auto;
     }
   }
+
+  &:global(.panel-mode) {
+    .layout {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .sidebar {
+      display: none;
+    }
+
+    .content {
+      max-width: none;
+      padding-right: $spacing-lg;
+    }
+  }
 }
 
 .layout {
