@@ -14,7 +14,7 @@ export function Summary({ type, title, content }: SummaryProps) {
   const { settings } = useSettings();
 
   // Hide in reading mode
-  if (settings.readingMode) {
+  if (settings.layoutMode === 'reading') {
     return null;
   }
 

@@ -288,8 +288,8 @@ export function SettingsPage() {
           <label className={styles.tool}>
             <input
               type="checkbox"
-              checked={settings.readingMode ?? false}
-              onChange={() => toggleSetting('readingMode')}
+              checked={settings.layoutMode === 'reading'}
+              onChange={() => updateSetting('layoutMode', settings.layoutMode === 'reading' ? 'normal' : 'reading')}
             />
             <span className={styles.checkmark}></span>
             <span className={styles.label}>Lesemodus</span>

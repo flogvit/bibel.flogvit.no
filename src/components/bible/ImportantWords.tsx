@@ -39,7 +39,7 @@ export function ImportantWords({ bookId, chapter, embedded }: ImportantWordsProp
   }, [settings.showImportantWords, bookId, chapter, words, loading]);
 
   // Hide in reading mode (skip checks when embedded in sidebar)
-  if (!embedded && (settings.readingMode || !settings.showImportantWords)) {
+  if (!embedded && (settings.layoutMode === 'reading' || !settings.showImportantWords)) {
     return null;
   }
 

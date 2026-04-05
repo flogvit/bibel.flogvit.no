@@ -82,7 +82,7 @@ export function TimelinePanel({ events, chapterEventIds = [], currentBookId, cur
   }, [currentBookId, currentChapter, chapterEventIds, events, settings.showTimeline]);
 
   // Hide in reading mode
-  if (settings.readingMode || !settings.showTimeline) {
+  if (settings.layoutMode === 'reading' || !settings.showTimeline) {
     return null;
   }
 

@@ -107,7 +107,7 @@ export function DevotionalViewPage() {
               </time>
             </div>
             <h1 className={styles.title}>{devotional.title}</h1>
-            {!settings.readingMode && devotional.tags.length > 0 && (
+            {settings.layoutMode !== 'reading' && devotional.tags.length > 0 && (
               <div className={styles.tags}>
                 {devotional.tags.map(tag => (
                   <span key={tag} className={styles.tag}>{tag}</span>
@@ -128,11 +128,11 @@ export function DevotionalViewPage() {
             </div>
           )}
 
-          <div className={`${styles.content} ${settings.readingMode ? styles.contentReadMode : ''}`}>
+          <div className={`${styles.content} ${settings.layoutMode === 'reading' ? styles.contentReadMode : ''}`}>
             <DevotionalMarkdown content={displayContent} />
           </div>
 
-          {!settings.readingMode && <footer className={styles.footer}>
+          {settings.layoutMode !== 'reading' && <footer className={styles.footer}>
             {devotional.verses.length > 0 && (
               <div className={styles.versesList}>
                 <h3 className={styles.footerTitle}>Versreferanser</h3>

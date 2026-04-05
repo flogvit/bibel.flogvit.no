@@ -24,7 +24,7 @@ export function ChapterInsightsPanel({ insight }: ChapterInsightsPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Hide in reading mode
-  if (settings.readingMode || !settings.showChapterInsights || !insight) {
+  if (settings.layoutMode === 'reading' || !settings.showChapterInsights || !insight) {
     return null;
   }
 
