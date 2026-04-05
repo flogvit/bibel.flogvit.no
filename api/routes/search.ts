@@ -144,7 +144,7 @@ searchRouter.get('/chapter-resources', (req: Request, res: Response) => {
       category: s.category,
     }));
 
-    res.set('Cache-Control', 'public, max-age=3600');
+    res.set('Cache-Control', 'no-cache');
     res.json({ persons, prophecies, numbers, themes, stories });
   } catch (error) {
     console.error('Error fetching chapter resources:', error);
