@@ -79,8 +79,11 @@ export function NumberSymbolismListPage() {
   const filtered = filter
     ? numbers.filter(n => {
         const q = filter.toLowerCase();
-        return String(n.number).includes(q)
-          || n.meaning.toLowerCase().includes(q)
+        // Exact match for pure number queries, substring for text
+        if (/^\d+$/.test(q)) {
+          return n.number === parseInt(q, 10);
+        }
+        return n.meaning.toLowerCase().includes(q)
           || n.description.toLowerCase().includes(q);
       })
     : numbers;
