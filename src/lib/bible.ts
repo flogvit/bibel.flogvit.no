@@ -1439,6 +1439,22 @@ export function getAllPersonsData(): PersonData[] {
     .filter((p): p is PersonData => p !== null);
 }
 
+export function getPersonsByChapter(bookId: number, chapter: number): PersonData[] {
+  const db = getDb();
+  const rows = db.prepare(`
+    SELECT content FROM persons
+    WHERE EXISTS (
+      SELECT 1 FROM json_each(json_extract(content, '$.references'))
+      WHERE json_extract(value, '$.bookId') = ?
+        AND json_extract(value, '$.chapterId') = ?
+    )
+  `).all(bookId, chapter) as { content: string }[];
+
+  return rows
+    .map(r => parsePersonContent(r.content))
+    .filter((p): p is PersonData => p !== null);
+}
+
 export function getPersonsByRole(role: string): PersonData[] {
   const allPersons = getAllPersonsData();
   return allPersons.filter(p => p.roles.includes(role));

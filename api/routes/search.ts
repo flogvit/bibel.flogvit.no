@@ -4,7 +4,8 @@ import {
   searchPersons, searchProphecies, searchTimelineEvents,
   searchGospelParallels, searchReadingPlans, searchImportantWords,
   searchNumberSymbolism,
-  searchDays
+  searchDays,
+  getPersonsByChapter, getPropheciesForChapter,
 } from '../../src/lib/bible';
 
 export const searchRouter = Router();
@@ -64,6 +65,44 @@ searchRouter.get('/all', (req: Request, res: Response) => {
     res.json({ stories, themes, persons, prophecies, timeline, parallels, plans, words, numberSymbolism, days });
   } catch (error) {
     console.error('Error in combined search:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * GET /api/search/chapter-resources
+ * Resources related to a specific chapter (by reference, not text search)
+ * Query params: bookId, chapter
+ */
+searchRouter.get('/chapter-resources', (req: Request, res: Response) => {
+  const bookId = parseInt(req.query.bookId as string, 10);
+  const chapter = parseInt(req.query.chapter as string, 10);
+
+  if (!bookId || !chapter) {
+    res.json({ persons: [], prophecies: [] });
+    return;
+  }
+
+  try {
+    const persons = getPersonsByChapter(bookId, chapter).map(p => ({
+      id: p.id,
+      name: p.name,
+      title: p.title,
+      era: p.era,
+      summary: p.summary,
+    }));
+
+    const prophecies = getPropheciesForChapter(bookId, chapter).map(p => ({
+      id: p.id,
+      title: p.title,
+      category_name: p.category?.name || '',
+      explanation: p.explanation,
+    }));
+
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.json({ persons, prophecies });
+  } catch (error) {
+    console.error('Error fetching chapter resources:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

@@ -56,6 +56,24 @@
   }
 }
 
+.clearSearch {
+  display: block;
+  width: 100%;
+  padding: $spacing-xs $spacing-sm;
+  border: none;
+  border-bottom: 1px solid $color-border;
+  background: $color-background;
+  color: $color-secondary;
+  font-size: $font-size-xs;
+  cursor: pointer;
+  text-align: left;
+  transition: background $transition-fast;
+
+  &:hover {
+    background: $color-border;
+  }
+}
+
 .loading {
   padding: $spacing-lg;
   text-align: center;
@@ -171,6 +189,16 @@
       background: $dark-color-secondary;
       border-color: $dark-color-secondary;
       color: $dark-color-background;
+    }
+  }
+
+  .clearSearch {
+    background: $dark-color-background;
+    border-bottom-color: $dark-color-border;
+    color: $dark-color-secondary;
+
+    &:hover {
+      background: $dark-color-border;
     }
   }
 
