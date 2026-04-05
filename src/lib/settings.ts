@@ -5,6 +5,9 @@
  * for backwards compatibility. New code should import directly from '@/lib/offline/userData'.
  */
 
+// Import for internal use
+import { saveSettings as _saveSettings } from './offline/userData';
+
 // Re-export types and functions from userData
 export {
   type FontSize,
@@ -47,7 +50,7 @@ export function saveSettingsSync(settings: import('./offline/userData').BibleSet
   try {
     localStorage.setItem('bible-settings', JSON.stringify(settings));
     // Also update IndexedDB in background for consistency
-    saveSettings(settings);
+    _saveSettings(settings);
   } catch (e) {
     console.error('Failed to save settings:', e);
   }

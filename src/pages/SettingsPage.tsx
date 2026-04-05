@@ -197,6 +197,15 @@ export function SettingsPage() {
             <span className={styles.checkmark}></span>
             <span className={styles.label}>Dagens vers</span>
           </label>
+          <label className={styles.tool}>
+            <input
+              type="checkbox"
+              checked={settings.showTodaysDay ?? true}
+              onChange={() => toggleSetting('showTodaysDay')}
+            />
+            <span className={styles.checkmark}></span>
+            <span className={styles.label}>Dagens helligdag</span>
+          </label>
         </div>
       </div>
 
@@ -214,6 +223,8 @@ export function SettingsPage() {
             { key: 'parallels', label: 'Evangelieparalleller' },
             { key: 'plans', label: 'Leseplaner' },
             { key: 'words', label: 'Viktige ord' },
+            { key: 'numberSymbolism', label: 'Tall' },
+            { key: 'days', label: 'Dager' },
           ] as { key: keyof SearchResultTypes; label: string }[]).map(item => {
             const searchTypes = { ...defaultSearchResultTypes, ...settings.searchResultTypes };
             return (
@@ -282,6 +293,24 @@ export function SettingsPage() {
             />
             <span className={styles.checkmark}></span>
             <span className={styles.label}>Lesemodus</span>
+          </label>
+          <label className={styles.tool}>
+            <input
+              type="checkbox"
+              checked={settings.copyVerseNumbers ?? true}
+              onChange={() => toggleSetting('copyVerseNumbers')}
+            />
+            <span className={styles.checkmark}></span>
+            <span className={styles.label}>Inkluder versnummer ved kopiering</span>
+          </label>
+          <label className={styles.tool}>
+            <input
+              type="checkbox"
+              checked={settings.showVerseFootnotes ?? true}
+              onChange={() => toggleSetting('showVerseFootnotes')}
+            />
+            <span className={styles.checkmark}></span>
+            <span className={styles.label}>Vis fotnoter på vers</span>
           </label>
         </div>
 

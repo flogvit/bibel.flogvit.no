@@ -801,6 +801,36 @@
   }
 }
 
+// Footnotes tab
+.footnotesContent {
+  padding: $spacing-md;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.footnoteItem {
+  p {
+    margin: 0;
+    font-size: $font-size-sm;
+    line-height: $line-height-base;
+    color: $color-text;
+  }
+}
+
+.footnoteSource {
+  display: inline-block;
+  font-size: $font-size-xs;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: $color-secondary;
+  background: rgba($color-secondary, 0.1);
+  padding: 2px $spacing-sm;
+  border-radius: $radius-sm;
+  margin-bottom: $spacing-xs;
+}
+
 // Verse versions
 .versionsContent {
   padding: $spacing-md;
@@ -1293,6 +1323,16 @@
     &:hover {
       background: color.adjust($dark-color-border, $lightness: 5%);
     }
+  }
+
+  // Footnotes tab dark mode
+  .footnoteItem p {
+    color: $dark-color-text;
+  }
+
+  .footnoteSource {
+    color: $dark-color-secondary;
+    background: rgba($dark-color-secondary, 0.15);
   }
 
   // Verse versions dark mode

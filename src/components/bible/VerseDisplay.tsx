@@ -10,6 +10,8 @@ import { useNotes, Note } from '@/components/NotesContext';
 import { useVerseVersions } from '@/components/VerseVersionsContext';
 import { useDevotionals } from '@/components/DevotionalsContext';
 import { getBookInfoById } from '@/lib/books-data';
+import { InlineRefs } from '@/components/InlineRefs';
+import { Footnotes } from '@/components/Footnotes';
 
 interface VerseDisplayProps {
   verse: Verse;
@@ -43,7 +45,7 @@ interface VerseExtras {
   sermon: string | null;
 }
 
-type TabType = 'original' | 'references' | 'prophecies' | 'prayer' | 'sermon' | 'topics' | 'notes' | 'versions' | 'devotionals';
+type TabType = 'original' | 'references' | 'prophecies' | 'prayer' | 'sermon' | 'topics' | 'notes' | 'versions' | 'devotionals' | 'footnotes';
 
 // Hook to detect mobile
 function useIsMobile(breakpoint = 600) {
@@ -400,6 +402,9 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, se
             </span>
           );
         })}
+        {settings.showVerseFootnotes && verse.footnotes && verse.footnotes.length > 0 && (
+          <Footnotes footnotes={verse.footnotes} />
+        )}
       </span>
 
       {settings.showWord4Word && selectedWord && selectedWord.original && (
@@ -501,6 +506,14 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, se
                         Versjoner {selectedVersionIndex !== undefined && '●'}
                       </button>
                     )}
+                    {verse.footnotes && verse.footnotes.length > 0 && (
+                      <button
+                        className={`${styles.tab} ${activeTab === 'footnotes' ? styles.active : ''}`}
+                        onClick={() => setActiveTab('footnotes')}
+                      >
+                        Fotnoter ({verse.footnotes.length})
+                      </button>
+                    )}
                   </div>
 
                   <div className={styles.tabContent}>
@@ -586,7 +599,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, se
                         >
                           <span className={styles.refLink}>{formatReference(ref)}</span>
                           {ref.description && (
-                            <span className={styles.refDescription}>{ref.description}</span>
+                            <span className={styles.refDescription}><InlineRefs>{ref.description}</InlineRefs></span>
                           )}
                         </a>
                       ))
@@ -607,7 +620,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, se
                         <span className={styles.prophecyTitle}>{prophecy.title}</span>
                         <span className={styles.prophecyCategory}>{prophecy.category?.name}</span>
                         {prophecy.explanation && (
-                          <p className={styles.prophecyExplanation}>{prophecy.explanation}</p>
+                          <p className={styles.prophecyExplanation}><InlineRefs>{prophecy.explanation}</InlineRefs></p>
                         )}
                       </a>
                     ))}
@@ -904,6 +917,21 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, se
                   </div>
                 )}
 
+                {activeTab === 'footnotes' && verse.footnotes && verse.footnotes.length > 0 && (
+                  <div className={styles.footnotesContent}>
+                    {verse.footnotes.map((fn, i) => (
+                      <div key={i} className={styles.footnoteItem}>
+                        {fn.source && (
+                          <span className={styles.footnoteSource}>
+                            {fn.source.charAt(0).toUpperCase() + fn.source.slice(1)}
+                          </span>
+                        )}
+                        <p>{fn.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {activeTab === 'versions' && hasVersions && (
                   <div className={styles.versionsContent}>
                     <p className={styles.versionsIntro}>
@@ -1057,7 +1085,7 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, se
                               >
                                 <span className={styles.refLink}>{formatReference(ref)}</span>
                                 {ref.description && (
-                                  <span className={styles.refDescription}>{ref.description}</span>
+                                  <span className={styles.refDescription}><InlineRefs>{ref.description}</InlineRefs></span>
                                 )}
                               </a>
                             ))
@@ -1392,6 +1420,35 @@ export function VerseDisplay({ verse, bookId, originalText, originalLanguage, se
                                     )}
                                   </span>
                                 </label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {verse.footnotes && verse.footnotes.length > 0 && (
+                    <div className={styles.accordionSection}>
+                      <button
+                        className={`${styles.accordionHeader} ${openSections.has('footnotes') ? styles.open : ''}`}
+                        onClick={() => toggleSection('footnotes')}
+                        aria-expanded={openSections.has('footnotes')}
+                      >
+                        <span>Fotnoter ({verse.footnotes.length})</span>
+                        <span className={styles.accordionIcon}>{openSections.has('footnotes') ? '−' : '+'}</span>
+                      </button>
+                      {openSections.has('footnotes') && (
+                        <div className={styles.accordionContent}>
+                          <div className={styles.footnotesContent}>
+                            {verse.footnotes.map((fn, i) => (
+                              <div key={i} className={styles.footnoteItem}>
+                                {fn.source && (
+                                  <span className={styles.footnoteSource}>
+                                    {fn.source.charAt(0).toUpperCase() + fn.source.slice(1)}
+                                  </span>
+                                )}
+                                <p>{fn.text}</p>
                               </div>
                             ))}
                           </div>
