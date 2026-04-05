@@ -136,12 +136,16 @@ searchRouter.get('/chapter-resources', (req: Request, res: Response) => {
       id: t.id,
       name: t.name,
       title: t.title,
+      description: t.introduction,
+      verses: t.verses,
     }));
 
     const stories = getStoriesByChapter(bookId, chapter).map(s => ({
       slug: s.slug,
       title: s.title,
       category: s.category,
+      description: s.description,
+      verses: s.verses,
     }));
 
     res.set('Cache-Control', 'no-cache');

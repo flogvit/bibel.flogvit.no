@@ -23,10 +23,10 @@ const typeLabels: Record<string, string> = {
   prophecy: 'Profetier',
   theme: 'Temaer',
   parallel: 'Paralleller',
-  story: 'Fortellinger',
+  story: 'Historier',
   timeline: 'Tidslinje',
   word: 'Viktige ord',
-  number: 'Tallsymbolikk',
+  number: 'Tall',
   day: 'Dager',
 };
 
@@ -68,11 +68,12 @@ export function ResourcesPanel({ bookId, chapter, bookName }: ResourcesPanelProp
           description: p.explanation, verses: p.verses,
         }));
         if (data.themes) data.themes.forEach((t: any) => items.push({
-          type: 'theme', id: t.id, title: t.title || t.name, url: `/temaer/${t.name}`,
+          type: 'theme', id: t.id, title: t.title || t.name,
+          description: t.description, url: `/temaer/${t.name}`, verses: t.verses,
         }));
         if (data.stories) data.stories.forEach((s: any) => items.push({
           type: 'story', id: s.slug, title: s.title, subtitle: s.category,
-          url: `/fortellinger/${s.slug}`,
+          description: s.description, url: `/historier/${s.slug}`, verses: s.verses,
         }));
         if (data.numbers) data.numbers.forEach((n: any) => items.push({
           type: 'number', id: n.number, title: `${n.number}`, subtitle: n.meaning,
@@ -113,7 +114,7 @@ export function ResourcesPanel({ bookId, chapter, bookName }: ResourcesPanelProp
         type: 'parallel', id: p.id, title: p.title, url: `/paralleller/${p.id}`,
       }));
       if (data.stories) data.stories.forEach((s: any) => items.push({
-        type: 'story', id: s.id, title: s.title, subtitle: s.category, url: `/fortellinger/${s.slug}`,
+        type: 'story', id: s.id, title: s.title, subtitle: s.category, url: `/historier/${s.slug}`,
       }));
       if (data.timeline) data.timeline.forEach((t: any) => items.push({
         type: 'timeline', id: t.id, title: t.title, subtitle: t.year_display,

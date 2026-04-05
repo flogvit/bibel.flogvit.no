@@ -1471,7 +1471,7 @@ export function getNumberSymbolismByChapter(bookId: number, chapter: number): Nu
     .filter((n): n is NumberSymbolismData => n !== null);
 }
 
-export function getThemesByChapter(bookId: number, chapter: number): { id: number; name: string; title: string }[] {
+export function getThemesByChapter(bookId: number, chapter: number): { id: number; name: string; title: string; introduction?: string; verses: number[] }[] {
   const db = getDb();
   const themes = db.prepare('SELECT id, name, content FROM themes').all() as Theme[];
 
@@ -1484,13 +1484,22 @@ export function getThemesByChapter(bookId: number, chapter: number): { id: numbe
     } catch { return false; }
   }).map(t => {
     const data: ThemeData = JSON.parse(t.content);
-    return { id: t.id, name: t.name, title: data.title };
+    const verses: number[] = [];
+    for (const s of data.sections || []) {
+      for (const v of s.verses || []) {
+        if (v.bookId === bookId && v.chapter === chapter) {
+          if (v.verses) verses.push(...v.verses);
+          else if (v.verse) verses.push(v.verse);
+        }
+      }
+    }
+    return { id: t.id, name: t.name, title: data.title, introduction: data.introduction, verses: [...new Set(verses)] };
   });
 }
 
-export function getStoriesByChapter(bookId: number, chapter: number): { slug: string; title: string; category: string }[] {
+export function getStoriesByChapter(bookId: number, chapter: number): { slug: string; title: string; category: string; description: string; verses: number[] }[] {
   const db = getDb();
-  const stories = db.prepare('SELECT slug, title, category, content FROM stories').all() as Story[];
+  const stories = db.prepare('SELECT slug, title, category, content, description FROM stories').all() as (Story & { description: string })[];
 
   return stories.filter(s => {
     try {
@@ -1499,7 +1508,18 @@ export function getStoriesByChapter(bookId: number, chapter: number): { slug: st
         r.bookId === bookId && r.startChapter <= chapter && r.endChapter >= chapter
       );
     } catch { return false; }
-  }).map(s => ({ slug: s.slug, title: s.title, category: s.category }));
+  }).map(s => {
+    const data: StoryData = JSON.parse(s.content);
+    const verses: number[] = [];
+    for (const r of data.references || []) {
+      if (r.bookId === bookId && r.startChapter <= chapter && r.endChapter >= chapter) {
+        const startV = r.startChapter === chapter ? r.startVerse : 1;
+        const endV = r.endChapter === chapter ? r.endVerse : 999;
+        for (let v = startV; v <= endV; v++) verses.push(v);
+      }
+    }
+    return { slug: s.slug, title: s.title, category: s.category, description: s.description || data.description, verses: [...new Set(verses)] };
+  });
 }
 
 export function getPersonsByRole(role: string): PersonData[] {
