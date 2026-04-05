@@ -2,6 +2,7 @@ import { useSettings } from '@/components/SettingsContext';
 import { TimelinePanel } from './TimelinePanel';
 import { ContextPanel } from './sidebar/ContextPanel';
 import { LookupPanel } from './sidebar/LookupPanel';
+import { ResourcesPanel } from './sidebar/ResourcesPanel';
 import type { SidebarTab } from '@/lib/settings';
 import type { TimelineEvent } from '@/lib/bible';
 import styles from './ReadingSidebar.module.scss';
@@ -77,7 +78,7 @@ export function ReadingSidebar({
         )}
 
         {activeTab === 'resources' && (
-          <div className={styles.placeholder}>Ressurser (kommer snart)</div>
+          <ResourcesPanel bookId={bookId} chapter={chapter} bookName={bookName} />
         )}
 
         {activeTab === 'lookup' && <LookupPanel />}
