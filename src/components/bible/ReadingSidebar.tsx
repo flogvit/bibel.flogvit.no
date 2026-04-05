@@ -1,5 +1,6 @@
 import { useSettings } from '@/components/SettingsContext';
 import { TimelinePanel } from './TimelinePanel';
+import { ContextPanel } from './sidebar/ContextPanel';
 import type { SidebarTab } from '@/lib/settings';
 import type { TimelineEvent } from '@/lib/bible';
 import styles from './ReadingSidebar.module.scss';
@@ -64,7 +65,14 @@ export function ReadingSidebar({
         )}
 
         {activeTab === 'context' && (
-          <div className={styles.placeholder}>Kontekst (kommer snart)</div>
+          <ContextPanel
+            bookId={bookId}
+            chapter={chapter}
+            bookName={bookName}
+            bookSummary={bookSummary}
+            chapterSummary={chapterSummary}
+            historicalContext={historicalContext}
+          />
         )}
 
         {activeTab === 'resources' && (

@@ -13,16 +13,17 @@ interface ImportantWord {
 interface ImportantWordsProps {
   bookId: number;
   chapter: number;
+  embedded?: boolean;
 }
 
-export function ImportantWords({ bookId, chapter }: ImportantWordsProps) {
+export function ImportantWords({ bookId, chapter, embedded }: ImportantWordsProps) {
   const { settings } = useSettings();
   const [words, setWords] = useState<ImportantWord[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState<number | null>(null);
 
   useEffect(() => {
-    if (settings.showImportantWords && words === null && !loading) {
+    if ((embedded || settings.showImportantWords) && words === null && !loading) {
       setLoading(true);
       fetch(`/api/important-words?bookId=${bookId}&chapter=${chapter}`)
         .then(res => res.json())
@@ -37,8 +38,8 @@ export function ImportantWords({ bookId, chapter }: ImportantWordsProps) {
     }
   }, [settings.showImportantWords, bookId, chapter, words, loading]);
 
-  // Hide in reading mode
-  if (settings.readingMode || !settings.showImportantWords) {
+  // Hide in reading mode (skip checks when embedded in sidebar)
+  if (!embedded && (settings.readingMode || !settings.showImportantWords)) {
     return null;
   }
 

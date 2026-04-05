@@ -290,31 +290,35 @@ export function ChapterContent({
             </div>
           </header>
 
-          {bookSummary && (
-            <Summary
-              type="book"
-              title={`Om ${bookName}`}
-              content={bookSummary}
-            />
-          )}
+          {settings.showContextInline && (
+            <>
+              {bookSummary && (
+                <Summary
+                  type="book"
+                  title={`Om ${bookName}`}
+                  content={bookSummary}
+                />
+              )}
 
-          {summary && (
-            <Summary
-              type="chapter"
-              title={`Kapittel ${chapter}`}
-              content={summary}
-            />
-          )}
+              {summary && (
+                <Summary
+                  type="chapter"
+                  title={`Kapittel ${chapter}`}
+                  content={summary}
+                />
+              )}
 
-          {context && (
-            <Summary
-              type="context"
-              title="Historisk kontekst"
-              content={context}
-            />
-          )}
+              {context && (
+                <Summary
+                  type="context"
+                  title="Historisk kontekst"
+                  content={context}
+                />
+              )}
 
-          <ImportantWords bookId={bookId} chapter={chapter} />
+              <ImportantWords bookId={bookId} chapter={chapter} />
+            </>
+          )}
 
           <ChapterInsightsPanel bookId={bookId} chapter={chapter} insight={insight} />
 

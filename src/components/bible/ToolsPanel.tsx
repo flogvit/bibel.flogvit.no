@@ -68,14 +68,10 @@ export function ToolsPanel({ onClose, hasParallels = false }: ToolsPanelProps) {
   }
 
   const tools = [
-    { key: 'showBookSummary' as const, label: 'Boksammendrag' },
-    { key: 'showChapterSummary' as const, label: 'Kapittelsammendrag' },
-    { key: 'showChapterContext' as const, label: 'Historisk kontekst' },
+    { key: 'showContextInline' as const, label: 'Vis kontekst i toppen' },
     { key: 'showChapterInsights' as const, label: 'Kapittelinnsikt' },
-    { key: 'showImportantWords' as const, label: 'Viktige ord' },
     { key: 'showVerseDetails' as const, label: 'Versdetaljer' },
     { key: 'showVerseIndicators' as const, label: 'Versindikatorer' },
-    { key: 'showTimeline' as const, label: 'Tidslinje' },
     ...(hasParallels ? [{ key: 'showParallels' as const, label: 'Parallelle tekster' }] : []),
   ];
 
