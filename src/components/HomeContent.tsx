@@ -3,6 +3,7 @@ import { booksData } from '@/lib/books-data';
 import { useSettings } from '@/components/SettingsContext';
 import { ContinueReading } from '@/components/ContinueReading';
 import { DailyVerse } from '@/components/DailyVerse';
+import { TodaysDay } from '@/components/TodaysDay';
 import { TodaysReading } from '@/components/TodaysReading';
 import styles from '@/styles/pages/home.module.scss';
 
@@ -24,6 +25,7 @@ export function HomeContent() {
         </header>
 
         {(settings.showContinueReading ?? true) && <ContinueReading />}
+        {(settings.showTodaysDay ?? true) && <TodaysDay />}
         {(settings.showDailyVerse ?? true) && <DailyVerse />}
         <TodaysReading />
 
