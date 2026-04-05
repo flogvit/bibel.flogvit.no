@@ -51,6 +51,29 @@
       margin-bottom: 0;
     }
   }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: $font-serif;
+    font-weight: 400;
+    color: $color-primary;
+    margin: $spacing-md 0 $spacing-xs 0;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  h1 {
+    font-size: $font-size-base;
+  }
+
+  h2 {
+    font-size: $font-size-sm;
+  }
+
+  h3, h4, h5, h6 {
+    font-size: $font-size-xs;
+  }
 }
 
 .empty {
@@ -79,6 +102,10 @@
 
   .sectionContent {
     color: $dark-color-text-light;
+
+    h1, h2, h3, h4, h5, h6 {
+      color: $dark-color-primary;
+    }
   }
 
   .empty {
