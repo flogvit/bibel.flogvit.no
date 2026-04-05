@@ -27,6 +27,8 @@ import { statisticsRouter } from './routes/statistics';
 import { mappingsRouter } from './routes/mappings';
 import { chapterContextRouter } from './routes/chapter-context';
 import { storiesRouter } from './routes/stories';
+import { numberSymbolismRouter } from './routes/number-symbolism';
+import { daysRouter } from './routes/days';
 import { authRouter } from './routes/auth';
 import { syncRouter } from './routes/sync';
 
@@ -65,6 +67,8 @@ app.use('/api/statistics', statisticsRouter);
 app.use('/api/mappings', mappingsRouter);
 app.use('/api/chapter-context', chapterContextRouter);
 app.use('/api/stories', storiesRouter);
+app.use('/api/number-symbolism', numberSymbolismRouter);
+app.use('/api/days', daysRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/sync', express.json({ limit: '10mb' }), syncRouter);
 

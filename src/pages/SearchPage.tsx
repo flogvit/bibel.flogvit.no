@@ -78,6 +78,19 @@ interface ImportantWordResult {
   book_name_no: string;
 }
 
+interface NumberSymbolismResult {
+  number: number;
+  meaning: string;
+  description: string;
+}
+
+interface DayResult {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+}
+
 const RESULTS_PER_PAGE = 50;
 const MAX_EXTRA_RESULTS = 5;
 
@@ -106,6 +119,8 @@ export function SearchPage() {
   const [parallels, setParallels] = useState<GospelParallelResult[]>([]);
   const [plans, setPlans] = useState<ReadingPlanResult[]>([]);
   const [words, setWords] = useState<ImportantWordResult[]>([]);
+  const [numberSymbolism, setNumberSymbolism] = useState<NumberSymbolismResult[]>([]);
+  const [days, setDays] = useState<DayResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [searched, setSearched] = useState(false);
@@ -123,6 +138,8 @@ export function SearchPage() {
       setParallels([]);
       setPlans([]);
       setWords([]);
+      setNumberSymbolism([]);
+      setDays([]);
       setExpandedSections(new Set());
       setSearched(false);
       setTotal(0);
@@ -166,6 +183,8 @@ export function SearchPage() {
         setParallels(extraData.parallels || []);
         setPlans(extraData.plans || []);
         setWords(extraData.words || []);
+        setNumberSymbolism(extraData.numberSymbolism || []);
+        setDays(extraData.days || []);
       }
 
       setSearched(true);
@@ -181,6 +200,8 @@ export function SearchPage() {
         setParallels([]);
         setPlans([]);
         setWords([]);
+        setNumberSymbolism([]);
+        setDays([]);
         setTotal(0);
         setHasMore(false);
       }
@@ -243,7 +264,9 @@ export function SearchPage() {
     (searchTypes.timeline && timeline.length > 0) ||
     (searchTypes.parallels && parallels.length > 0) ||
     (searchTypes.plans && plans.length > 0) ||
-    (searchTypes.words && words.length > 0);
+    (searchTypes.words && words.length > 0) ||
+    (searchTypes.numberSymbolism && numberSymbolism.length > 0) ||
+    (searchTypes.days && days.length > 0);
 
   return (
     <div className={styles.main}>
@@ -525,6 +548,67 @@ export function SearchPage() {
                     {expandedSections.has('words')
                       ? 'Vis færre'
                       : `Vis alle ${words.length} viktige ord`}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {searchTypes.numberSymbolism && numberSymbolism.length > 0 && (
+              <div className={styles.extraSection}>
+                <h2 className={styles.extraSectionTitle}>Tall</h2>
+                <div className={styles.extraCards}>
+                  {visibleItems(numberSymbolism, 'numberSymbolism').map((item) => (
+                    <Link
+                      key={item.number}
+                      to={`/tall/${item.number}`}
+                      className={styles.extraCard}
+                    >
+                      <span className={styles.extraCardTitle}>
+                        Tallet {item.number}
+                        <span className={`${styles.typeBadge} ${styles.typeBadgeNumber}`}>Tall</span>
+                      </span>
+                      <span className={styles.extraCardMeta}>{item.meaning}</span>
+                      <span className={styles.extraCardDesc}>
+                        {item.description.length > 100
+                          ? item.description.slice(0, 100) + '...'
+                          : item.description}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+                {numberSymbolism.length > MAX_EXTRA_RESULTS && (
+                  <button onClick={() => toggleSection('numberSymbolism')} className={styles.showAllLink}>
+                    {expandedSections.has('numberSymbolism')
+                      ? 'Vis færre'
+                      : `Vis alle ${numberSymbolism.length} tall`}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {searchTypes.days && days.length > 0 && (
+              <div className={styles.extraSection}>
+                <h2 className={styles.extraSectionTitle}>Dager</h2>
+                <div className={styles.extraCards}>
+                  {visibleItems(days, 'days').map((day) => (
+                    <Link
+                      key={day.id}
+                      to={`/dager/${day.id}`}
+                      className={styles.extraCard}
+                    >
+                      <span className={styles.extraCardTitle}>
+                        {day.name}
+                        <span className={`${styles.typeBadge} ${styles.typeBadgeDay}`}>Dag</span>
+                      </span>
+                      <span className={styles.extraCardDesc}>{day.description}</span>
+                    </Link>
+                  ))}
+                </div>
+                {days.length > MAX_EXTRA_RESULTS && (
+                  <button onClick={() => toggleSection('days')} className={styles.showAllLink}>
+                    {expandedSections.has('days')
+                      ? 'Vis færre'
+                      : `Vis alle ${days.length} dager`}
                   </button>
                 )}
               </div>

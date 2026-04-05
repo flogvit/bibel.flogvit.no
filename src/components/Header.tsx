@@ -210,6 +210,12 @@ export function Header() {
               <Link to="/personer" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Personer {shortcut('O')}
               </Link>
+              <Link to="/dager" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
+                Dager {shortcut('D')}
+              </Link>
+              <Link to="/tall" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
+                Tall {shortcut('Y')}
+              </Link>
               <Link to="/statistikk" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Statistikk {shortcut('I')}
               </Link>
@@ -259,6 +265,12 @@ export function Header() {
             </Link>
             <Link to="/personer" className={styles.navLink} onClick={handleNavClick}>
               Personer
+            </Link>
+            <Link to="/dager" className={styles.navLink} onClick={handleNavClick}>
+              Dager
+            </Link>
+            <Link to="/tall" className={styles.navLink} onClick={handleNavClick}>
+              Tall
             </Link>
             <Link to="/statistikk" className={styles.navLink} onClick={handleNavClick}>
               Statistikk

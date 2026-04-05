@@ -2,7 +2,9 @@ import { Router, Request, Response } from 'express';
 import {
   searchVerses, searchOriginalWord, searchStories, searchThemes,
   searchPersons, searchProphecies, searchTimelineEvents,
-  searchGospelParallels, searchReadingPlans, searchImportantWords
+  searchGospelParallels, searchReadingPlans, searchImportantWords,
+  searchNumberSymbolism,
+  searchDays
 } from '../../src/lib/bible';
 
 export const searchRouter = Router();
@@ -41,8 +43,8 @@ searchRouter.get('/', (req: Request, res: Response) => {
 searchRouter.get('/all', (req: Request, res: Response) => {
   const query = (req.query.q as string) || '';
 
-  if (query.length < 2) {
-    res.json({ stories: [], themes: [], persons: [], prophecies: [], timeline: [], parallels: [], plans: [], words: [] });
+  if (query.length < 2 && !/^\d+$/.test(query.trim())) {
+    res.json({ stories: [], themes: [], persons: [], prophecies: [], timeline: [], parallels: [], plans: [], words: [], numberSymbolism: [], days: [] });
     return;
   }
 
@@ -55,9 +57,11 @@ searchRouter.get('/all', (req: Request, res: Response) => {
     const parallels = searchGospelParallels(query);
     const plans = searchReadingPlans(query);
     const words = searchImportantWords(query);
+    const numberSymbolism = searchNumberSymbolism(query);
+    const days = searchDays(query);
 
     res.set('Cache-Control', 'no-cache');
-    res.json({ stories, themes, persons, prophecies, timeline, parallels, plans, words });
+    res.json({ stories, themes, persons, prophecies, timeline, parallels, plans, words, numberSymbolism, days });
   } catch (error) {
     console.error('Error in combined search:', error);
     res.status(500).json({ error: 'Internal server error' });

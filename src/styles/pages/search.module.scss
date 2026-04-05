@@ -172,6 +172,16 @@
   color: #b8860b;
 }
 
+.typeBadgeNumber {
+  background: rgba(#8b5cf6, 0.12);
+  color: #8b5cf6;
+}
+
+.typeBadgeDay {
+  background: rgba(#d4577a, 0.12);
+  color: #d4577a;
+}
+
 .extraCardMeta {
   font-size: $font-size-sm;
   color: $color-text-muted;
@@ -305,6 +315,16 @@
   .typeBadgeWord {
     background: rgba(#d4a940, 0.2);
     color: #d4a940;
+  }
+
+  .typeBadgeNumber {
+    background: rgba(#a78bfa, 0.2);
+    color: #a78bfa;
+  }
+
+  .typeBadgeDay {
+    background: rgba(#e87da0, 0.2);
+    color: #e87da0;
   }
 
   .showAllLink {

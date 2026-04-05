@@ -170,6 +170,14 @@ export function KeyboardShortcuts({
             e.preventDefault();
             navigate('/temaer');
             break;
+          case 'KeyD':
+            e.preventDefault();
+            navigate('/dager');
+            break;
+          case 'KeyY':
+            e.preventDefault();
+            navigate('/tall');
+            break;
         }
       }
     }
@@ -312,6 +320,14 @@ export function KeyboardShortcuts({
               <div className={styles.shortcut}>
                 <dt>{isMac ? <><kbd>⌥</kbd>+<kbd>⇧</kbd>+<kbd>C</kbd></> : <><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd></>}</dt>
                 <dd>Temaer</dd>
+              </div>
+              <div className={styles.shortcut}>
+                <dt>{isMac ? <><kbd>⌥</kbd>+<kbd>⇧</kbd>+<kbd>D</kbd></> : <><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>D</kbd></>}</dt>
+                <dd>Dager</dd>
+              </div>
+              <div className={styles.shortcut}>
+                <dt>{isMac ? <><kbd>⌥</kbd>+<kbd>⇧</kbd>+<kbd>Y</kbd></> : <><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>Y</kbd></>}</dt>
+                <dd>Tall</dd>
               </div>
             </dl>
           </section>

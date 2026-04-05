@@ -39,6 +39,8 @@ const ITEM_TYPE_LABELS: Record<ItemType, string> = {
   person: 'Personer',
   readingplan: 'Leseplaner',
   theme: 'Temaer',
+  'number-symbolism': 'Tall',
+  day: 'Dager',
 };
 
 const ITEM_TYPE_BADGE_STYLES: Record<ItemType, string> = {
@@ -49,6 +51,8 @@ const ITEM_TYPE_BADGE_STYLES: Record<ItemType, string> = {
   person: styles.personBadge,
   readingplan: styles.readingplanBadge,
   theme: styles.themeBadge,
+  'number-symbolism': styles.themeBadge,
+  day: styles.themeBadge,
 };
 
 function getItemUrl(itemType: ItemType, itemId: string): string {
@@ -63,6 +67,10 @@ function getItemUrl(itemType: ItemType, itemId: string): string {
       return '/leseplan';
     case 'theme':
       return `/temaer/${itemId}`;
+    case 'number-symbolism':
+      return `/tall/${itemId}`;
+    case 'day':
+      return `/dager/${itemId}`;
     default:
       return '/';
   }

@@ -23,6 +23,11 @@ export interface VerseVersion {
   severity?: VersionSeverity;
 }
 
+export interface VerseFootnote {
+  text: string;
+  source?: string;
+}
+
 export interface Verse {
   id: number;
   book_id: number;
@@ -31,6 +36,7 @@ export interface Verse {
   text: string;
   bible: string;
   versions?: VerseVersion[];
+  footnotes?: VerseFootnote[];
 }
 
 export interface Word4Word {
@@ -91,6 +97,7 @@ interface VerseRow {
   text: string;
   bible: string;
   versions: string | null;
+  footnotes: string | null;
 }
 
 export function getVerses(bookId: number, chapter: number, bible = 'osnb2'): Verse[] {
@@ -101,7 +108,8 @@ export function getVerses(bookId: number, chapter: number, bible = 'osnb2'): Ver
 
   return rows.map(row => ({
     ...row,
-    versions: row.versions ? JSON.parse(row.versions) : undefined
+    versions: row.versions ? JSON.parse(row.versions) : undefined,
+    footnotes: row.footnotes ? JSON.parse(row.footnotes) : undefined,
   }));
 }
 
@@ -142,7 +150,8 @@ export function getVerse(bookId: number, chapter: number, verseNum: number, bibl
 
   return {
     ...row,
-    versions: row.versions ? JSON.parse(row.versions) : undefined
+    versions: row.versions ? JSON.parse(row.versions) : undefined,
+    footnotes: row.footnotes ? JSON.parse(row.footnotes) : undefined,
   };
 }
 
@@ -394,6 +403,125 @@ export function parseThemeContent(content: string): ThemeItem[] {
         description: line.substring(colonIdx + 1).trim()
       };
     });
+}
+
+// --- Dager (helligdager/merkedager) ---
+
+export interface Day {
+  id: string;
+  name: string;
+  content: string;
+}
+
+export interface DayReference {
+  bookId: number;
+  chapterId: number;
+  fromVerseId: number;
+  toVerseId: number;
+  relevance: 'primary' | 'secondary';
+  reason?: string;
+}
+
+export interface DayData {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  biblicalBasis?: string;
+  significance?: string;
+  liturgicalContext?: string;
+  history?: string;
+  otConnections?: string;
+  dates: Record<string, string>;
+  references?: DayReference[];
+  footnotes?: { text: string; source?: string }[];
+}
+
+export function getAllDays(): Day[] {
+  const db = getDb();
+  return db.prepare('SELECT * FROM days ORDER BY name').all() as Day[];
+}
+
+export function getDayById(id: string): Day | undefined {
+  const db = getDb();
+  return db.prepare('SELECT * FROM days WHERE id = ?').get(id) as Day | undefined;
+}
+
+export function getTodaysDays(): DayData[] {
+  const db = getDb();
+  const today = new Date().toISOString().substring(0, 10);
+  const year = today.substring(0, 4);
+  const rows = db.prepare('SELECT * FROM days').all() as Day[];
+
+  return rows
+    .map(row => {
+      try {
+        return JSON.parse(row.content) as DayData;
+      } catch {
+        return null;
+      }
+    })
+    .filter((d): d is DayData => d !== null && d.dates[year] === today);
+}
+
+export function searchDays(query: string): { id: string; name: string; description: string; category: string }[] {
+  if (!query || query.length < 2) return [];
+  const db = getDb();
+
+  const words = query.toLowerCase().split(/\s+/).filter(w => w.length >= 2);
+  if (words.length === 0) return [];
+
+  const conditions = words.map(() =>
+    '(LOWER(name) LIKE ? OR LOWER(content) LIKE ?)'
+  ).join(' AND ');
+
+  const params = words.flatMap(w => {
+    const p = `%${w}%`;
+    return [p, p];
+  });
+
+  const rows = db.prepare(
+    `SELECT * FROM days WHERE ${conditions} ORDER BY name`
+  ).all(...params) as Day[];
+
+  return rows.map(row => {
+    const data = JSON.parse(row.content) as DayData;
+    return { id: data.id, name: data.name, description: data.description, category: data.category };
+  });
+}
+
+// --- Tallsymbolikk ---
+
+export interface NumberSymbolism {
+  id: number;
+  number: number;
+  content: string;
+}
+
+export interface NumberSymbolismData {
+  number: number;
+  meaning: string;
+  description: string;
+  references: {
+    bookId: number;
+    chapterId: number;
+    fromVerseId: number;
+    toVerseId: number;
+  }[];
+  footnotes?: {
+    text: string;
+    source?: string;
+  }[];
+}
+
+export function getAllNumberSymbolism(): NumberSymbolism[] {
+  const db = getDb();
+  return db.prepare('SELECT * FROM number_symbolism ORDER BY number').all() as NumberSymbolism[];
+}
+
+export function getNumberSymbolismByNumber(num: number): NumberSymbolism | undefined {
+  const db = getDb();
+  return db.prepare('SELECT * FROM number_symbolism WHERE number = ?').get(num) as NumberSymbolism | undefined;
 }
 
 export interface SearchResponse {
@@ -839,27 +967,19 @@ export function getFullTimeline(): TimelineData {
   };
 }
 
-export function getTimelineEventsForChapter(bookId: number, chapter: number): TimelineEvent[] {
-  const db = getDb();
-
-  // Find events that have references to this book and chapter
-  const eventIds = db.prepare(`
-    SELECT DISTINCT event_id
-    FROM timeline_references
-    WHERE book_id = ? AND chapter = ?
-  `).all(bookId, chapter) as { event_id: string }[];
-
-  if (eventIds.length === 0) return [];
-
-  const events: TimelineEvent[] = [];
-  for (const { event_id } of eventIds) {
-    const event = getTimelineEventById(event_id);
-    if (event) {
-      events.push(event);
+function deduplicateTimelineEvents(events: TimelineEvent[]): TimelineEvent[] {
+  const titleMap = new Map<string, TimelineEvent>();
+  for (const event of events) {
+    const key = event.title.toLowerCase();
+    const existing = titleMap.get(key);
+    if (!existing || (event.timeline_type === 'books' && existing.timeline_type !== 'books')) {
+      titleMap.set(key, event);
     }
   }
+  return Array.from(titleMap.values());
+}
 
-  // Sort by year (chronologically), then sort_order as tiebreaker
+function sortTimelineEvents(events: TimelineEvent[]): TimelineEvent[] {
   return events.sort((a, b) => {
     if (a.year == null && b.year == null) return a.sort_order - b.sort_order;
     if (a.year == null) return -1;
@@ -867,6 +987,107 @@ export function getTimelineEventsForChapter(bookId: number, chapter: number): Ti
     if (a.year !== b.year) return a.year - b.year;
     return a.sort_order - b.sort_order;
   });
+}
+
+function getEventsForChapterDirect(db: ReturnType<typeof getDb>, bookId: number, chapter: number): TimelineEvent[] {
+  const eventIds = db.prepare(`
+    SELECT DISTINCT event_id
+    FROM timeline_references
+    WHERE book_id = ? AND chapter = ?
+  `).all(bookId, chapter) as { event_id: string }[];
+
+  const events: TimelineEvent[] = [];
+  for (const { event_id } of eventIds) {
+    const event = getTimelineEventById(event_id);
+    if (event) events.push(event);
+  }
+  return events;
+}
+
+/**
+ * Map events to bible-type event IDs for highlighting in the main timeline.
+ * For books-type events, find bible equivalent by title or nearest by year.
+ */
+function mapToBibleEventIds(db: ReturnType<typeof getDb>, events: TimelineEvent[]): string[] {
+  const ids = new Set<string>();
+  for (const event of events) {
+    if (event.timeline_type === 'bible') {
+      ids.add(event.id);
+      continue;
+    }
+    // Try exact title match first
+    const bibleEvent = db.prepare(`
+      SELECT id FROM timeline_events
+      WHERE timeline_type = 'bible' AND LOWER(title) = LOWER(?)
+    `).get(event.title) as { id: string } | undefined;
+    if (bibleEvent) {
+      ids.add(bibleEvent.id);
+      continue;
+    }
+    // Fallback: find nearest bible event by year
+    if (event.year != null) {
+      const nearest = db.prepare(`
+        SELECT id FROM timeline_events
+        WHERE timeline_type = 'bible' AND year IS NOT NULL
+        ORDER BY ABS(year - ?)
+        LIMIT 1
+      `).get(event.year) as { id: string } | undefined;
+      if (nearest) {
+        ids.add(nearest.id);
+      }
+    }
+  }
+  return Array.from(ids);
+}
+
+export function getTimelineEventsForChapter(bookId: number, chapter: number): TimelineEvent[] {
+  const db = getDb();
+
+  // Direct hits for this chapter
+  const direct = getEventsForChapterDirect(db, bookId, chapter);
+  if (direct.length > 0) {
+    return sortTimelineEvents(deduplicateTimelineEvents(direct));
+  }
+
+  // No direct hits — find nearest chapters in this book that have events
+  const nearbyChapters = db.prepare(`
+    SELECT DISTINCT chapter
+    FROM timeline_references
+    WHERE book_id = ?
+    ORDER BY chapter
+  `).all(bookId) as { chapter: number }[];
+
+  if (nearbyChapters.length === 0) return [];
+
+  const chapters = nearbyChapters.map(r => r.chapter);
+
+  // Find closest chapter before and after
+  let before: number | null = null;
+  let after: number | null = null;
+  for (const ch of chapters) {
+    if (ch < chapter) before = ch;
+    if (ch > chapter && after === null) after = ch;
+  }
+
+  const contextEvents: TimelineEvent[] = [];
+  if (before !== null) {
+    contextEvents.push(...getEventsForChapterDirect(db, bookId, before));
+  }
+  if (after !== null) {
+    contextEvents.push(...getEventsForChapterDirect(db, bookId, after));
+  }
+
+  return sortTimelineEvents(deduplicateTimelineEvents(contextEvents));
+}
+
+/**
+ * Get bible-timeline event IDs relevant for a chapter.
+ * Maps books-type events to bible-type equivalents.
+ */
+export function getChapterTimelineEventIds(bookId: number, chapter: number): string[] {
+  const db = getDb();
+  const events = getTimelineEventsForChapter(bookId, chapter);
+  return mapToBibleEventIds(db, events);
 }
 
 // Prophecy types and functions
@@ -1128,6 +1349,12 @@ export interface PersonFamily {
   children?: string[];
 }
 
+export interface PersonReference {
+  bookId: number;
+  chapterId: number;
+  verseId: number;
+}
+
 export interface PersonData {
   id: string;
   name: string;
@@ -1136,6 +1363,8 @@ export interface PersonData {
   lifespan?: string;
   summary: string;
   roles: string[];
+  aliases?: string[];
+  references?: PersonReference[];
   family?: PersonFamily;
   relatedPersons?: string[];
   keyEvents: PersonKeyEvent[];
@@ -1976,4 +2205,45 @@ export function searchImportantWords(query: string): ImportantWordSearchResult[]
     ORDER BY iw.word
     LIMIT 10
   `).all(...params) as ImportantWordSearchResult[];
+}
+
+export interface NumberSymbolismSearchResult {
+  number: number;
+  meaning: string;
+  description: string;
+}
+
+export function searchNumberSymbolism(query: string): NumberSymbolismSearchResult[] {
+  const db = getDb();
+
+  // Direct number lookup — bypasses the 2-char minimum
+  if (/^\d+$/.test(query.trim())) {
+    const num = parseInt(query.trim(), 10);
+    const row = db.prepare('SELECT * FROM number_symbolism WHERE number = ?').get(num) as NumberSymbolism | undefined;
+    if (row) {
+      const data = JSON.parse(row.content) as NumberSymbolismData;
+      return [{ number: data.number, meaning: data.meaning, description: data.description }];
+    }
+    return [];
+  }
+
+  if (!query || query.length < 2) return [];
+
+  const words = query.toLowerCase().split(/\s+/).filter(w => w.length >= 2);
+  if (words.length === 0) return [];
+
+  const conditions = words.map(() =>
+    'LOWER(content) LIKE ?'
+  ).join(' AND ');
+
+  const params = words.map(w => `%${w}%`);
+
+  const rows = db.prepare(
+    `SELECT * FROM number_symbolism WHERE ${conditions} ORDER BY number`
+  ).all(...params) as NumberSymbolism[];
+
+  return rows.map(row => {
+    const data = JSON.parse(row.content) as NumberSymbolismData;
+    return { number: data.number, meaning: data.meaning, description: data.description };
+  });
 }

@@ -191,7 +191,7 @@ export interface Topic {
 }
 
 // Generisk tagging - støtter alle typer innhold
-export type ItemType = 'verse' | 'note' | 'prophecy' | 'timeline' | 'person' | 'readingplan' | 'theme';
+export type ItemType = 'verse' | 'note' | 'prophecy' | 'timeline' | 'person' | 'readingplan' | 'theme' | 'number-symbolism' | 'day';
 
 export interface ItemTopic {
   itemType: ItemType;
@@ -267,6 +267,8 @@ export interface SearchResultTypes {
   parallels: boolean;
   plans: boolean;
   words: boolean;
+  numberSymbolism: boolean;
+  days: boolean;
 }
 
 export const defaultSearchResultTypes: SearchResultTypes = {
@@ -278,6 +280,8 @@ export const defaultSearchResultTypes: SearchResultTypes = {
   parallels: true,
   plans: true,
   words: true,
+  numberSymbolism: true,
+  days: true,
 };
 
 export interface BibleSettings {
@@ -302,6 +306,9 @@ export interface BibleSettings {
   hiddenBibles: string[];
   numberingSystem: string;
   searchResultTypes: SearchResultTypes;
+  copyVerseNumbers: boolean;
+  showVerseFootnotes: boolean;
+  showTodaysDay: boolean;
 }
 
 export const defaultSettings: BibleSettings = {
@@ -326,6 +333,9 @@ export const defaultSettings: BibleSettings = {
   hiddenBibles: [],
   numberingSystem: 'osnb2',
   searchResultTypes: { ...defaultSearchResultTypes },
+  copyVerseNumbers: true,
+  showVerseFootnotes: true,
+  showTodaysDay: true,
 };
 
 export async function getSettings(): Promise<BibleSettings> {
