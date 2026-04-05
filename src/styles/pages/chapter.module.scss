@@ -39,7 +39,7 @@
 
 .layout {
   display: grid;
-  grid-template-columns: $sidebar-width 1fr $sidebar-width;
+  grid-template-columns: $sidebar-width 1fr var(--sidebar-width, #{$sidebar-width});
   min-height: 100vh;
 
   @include tablet {

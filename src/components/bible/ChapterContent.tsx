@@ -244,7 +244,10 @@ export function ChapterContent({
         bibleQuery={bibleQuery}
       />
 
-      <div className={styles.layout}>
+      <div
+        className={styles.layout}
+        style={{ '--sidebar-width': `${settings.sidebarWidth || 280}px` } as React.CSSProperties}
+      >
         <aside className={styles.sidebar} aria-label="Kapittelnavigasjon og innstillinger">
           <nav className={styles.nav} aria-label="Kapittelliste">
             <Link to="/" className={styles.backLink}>← Alle bøker</Link>
