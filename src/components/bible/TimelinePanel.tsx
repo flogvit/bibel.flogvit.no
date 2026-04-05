@@ -56,7 +56,7 @@ export function TimelinePanel({ events, chapterEventIds = [], currentBookId, cur
 
   // Auto-scroll to current event or marker when chapter changes
   useEffect(() => {
-    if (!settings.showTimeline || !containerRef.current || events.length === 0) return;
+    if (!settings.showTimeline || events.length === 0) return;
 
     // Small delay to ensure refs are set after render
     setTimeout(() => {
@@ -68,15 +68,8 @@ export function TimelinePanel({ events, chapterEventIds = [], currentBookId, cur
         element = eventRefs.current.get(chapterEventIds[0]) || null;
       }
 
-      if (element && containerRef.current) {
-        const containerRect = containerRef.current.getBoundingClientRect();
-        const elementRect = element.getBoundingClientRect();
-        const targetScroll = containerRef.current.scrollTop + elementRect.top - containerRect.top - 100;
-
-        containerRef.current.scrollTo({
-          top: Math.max(0, targetScroll),
-          behavior: 'smooth'
-        });
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }, 100);
   }, [currentBookId, currentChapter, chapterEventIds, events, settings.showTimeline]);
