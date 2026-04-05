@@ -12,7 +12,7 @@ import { ChapterParallelsView } from '@/components/bible/ChapterParallelsView';
 import { ToolsPanel } from '@/components/bible/ToolsPanel';
 import { MobileToolbar } from '@/components/bible/MobileToolbar';
 import { ScrollToVerse } from '@/components/bible/ScrollToVerse';
-import { TimelinePanel } from '@/components/bible/TimelinePanel';
+import { ReadingSidebar } from '@/components/bible/ReadingSidebar';
 import { ChapterKeyboardShortcuts } from '@/components/bible/ChapterKeyboardShortcuts';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { ReadingModeWrapper } from '@/components/bible/ReadingModeWrapper';
@@ -366,12 +366,16 @@ export function ChapterContent({
           </footer>
         </article>
 
-        <aside className={styles.rightSidebar} aria-label="Tidslinje">
-          <TimelinePanel
-            events={timelineEvents}
+        <aside className={styles.rightSidebar} aria-label="Verktøypanel">
+          <ReadingSidebar
+            bookId={bookId}
+            chapter={chapter}
+            bookName={bookName}
+            timelineEvents={timelineEvents}
             chapterEventIds={chapterEventIds}
-            currentBookId={bookId}
-            currentChapter={chapter}
+            bookSummary={bookSummary}
+            chapterSummary={summary}
+            historicalContext={context}
           />
         </aside>
       </div>

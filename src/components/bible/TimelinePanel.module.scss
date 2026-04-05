@@ -2,17 +2,7 @@
 @use '@/styles/mixins' as *;
 
 .panel {
-  background: $color-paper;
-  border-left: 1px solid $color-border;
   padding: $spacing-lg;
-  position: sticky;
-  top: 60px;
-  height: calc(100vh - 60px);
-  overflow-y: auto;
-
-  @include tablet {
-    display: none;
-  }
 }
 
 .header {
@@ -241,11 +231,6 @@
 
 // Dark mode
 :global(html.dark) {
-  .panel {
-    background: $dark-color-paper;
-    border-left-color: $dark-color-border;
-  }
-
   .header {
     border-bottom-color: $dark-color-border;
   }
