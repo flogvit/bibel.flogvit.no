@@ -31,6 +31,13 @@
   margin-bottom: $spacing-md;
 }
 
+.aliases {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+  font-style: italic;
+  margin-bottom: $spacing-md;
+}
+
 .meta {
   display: flex;
   flex-wrap: wrap;
@@ -209,6 +216,43 @@
   }
 }
 
+// References section
+.referencesSection {
+  margin-bottom: $spacing-2xl;
+
+  h2 {
+    color: $color-secondary;
+    font-size: $font-size-xl;
+    margin-bottom: $spacing-md;
+    font-family: $font-serif;
+    font-weight: 600;
+    border-bottom: 2px solid $color-border;
+    padding-bottom: $spacing-sm;
+  }
+}
+
+.refList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.refChip {
+  @include card;
+  padding: $spacing-sm $spacing-md;
+  text-decoration: none;
+  font-size: $font-size-sm;
+  font-weight: 600;
+  color: $color-secondary;
+  transition: box-shadow $transition-fast, transform $transition-fast;
+
+  &:hover {
+    box-shadow: $shadow-md;
+    transform: translateY(-1px);
+    text-decoration: underline;
+  }
+}
+
 // Related section
 .relatedSection {
   margin-bottom: $spacing-2xl;
@@ -294,8 +338,13 @@
     background: $dark-color-background;
   }
 
+  .aliases {
+    color: $dark-color-text-muted;
+  }
+
   .familySection h2,
   .eventsSection h2,
+  .referencesSection h2,
   .relatedSection h2 {
     color: $dark-color-secondary;
     border-bottom-color: $dark-color-border;
@@ -345,6 +394,16 @@
 
     &:hover {
       color: $dark-color-secondary;
+    }
+  }
+
+  .refChip {
+    background: $dark-color-paper;
+    border-color: $dark-color-border;
+    color: $dark-color-secondary;
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
   }
 

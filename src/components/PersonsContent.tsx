@@ -45,6 +45,7 @@ interface Person {
   era: string;
   summary: string;
   roles: string[];
+  aliases?: string[];
   eraLabel: string;
   roleLabels: string[];
   searchText: string;
@@ -92,6 +93,7 @@ export function PersonsContent() {
             person.summary,
             person.roles.join(' '),
             eraLabels[person.era] || person.era,
+            ...(person.aliases || []),
           ].join(' '),
         }));
 

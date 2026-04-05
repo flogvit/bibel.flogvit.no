@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom';
 import { PersonVerseDisplay } from '@/components/PersonVerseDisplay';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { ItemTagging } from '@/components/ItemTagging';
+import { InlineRefs } from '@/components/InlineRefs';
+import { Footnotes } from '@/components/Footnotes';
+import { booksData } from '@/lib/books-data';
+import { toUrlSlug } from '@/lib/url-utils';
 import styles from '@/styles/pages/person.module.scss';
 
 // Label maps for era and roles
@@ -58,6 +62,12 @@ interface PersonFamily {
   children?: string[];
 }
 
+interface PersonReference {
+  bookId: number;
+  chapterId: number;
+  verseId: number;
+}
+
 interface PersonData {
   id: string;
   name: string;
@@ -66,6 +76,9 @@ interface PersonData {
   lifespan?: string;
   summary: string;
   roles: string[];
+  aliases?: string[];
+  references?: PersonReference[];
+  footnotes?: { text: string; source?: string }[];
   family?: PersonFamily;
   relatedPersons?: string[];
   keyEvents: PersonKeyEvent[];
@@ -265,6 +278,9 @@ export function PersonContent({ personId }: PersonContentProps) {
         <header className={styles.personHeader}>
           <h1>{personData.name}</h1>
           <p className={styles.title}>{personData.title}</p>
+          {personData.aliases && personData.aliases.length > 0 && (
+            <p className={styles.aliases}>Også kjent som: {personData.aliases.join(', ')}</p>
+          )}
 
           <div className={styles.meta}>
             <span className={styles.eraBadge}>{eraLabels[personData.era] || personData.era}</span>
@@ -279,7 +295,9 @@ export function PersonContent({ personId }: PersonContentProps) {
           </div>
         </header>
 
-        <p className={styles.summary}>{personData.summary}</p>
+        <p className={styles.summary}><InlineRefs>{personData.summary}</InlineRefs>{personData.footnotes && personData.footnotes.length > 0 && (
+          <Footnotes footnotes={personData.footnotes} defaultOpen />
+        )}</p>
 
         <div className={styles.taggingSection}>
           <ItemTagging itemType="person" itemId={personData.id} />
@@ -303,6 +321,28 @@ export function PersonContent({ personId }: PersonContentProps) {
           <h2>Nøkkelhendelser</h2>
           <PersonVerseDisplay keyEvents={personData.keyEvents} />
         </section>
+
+        {personData.references && personData.references.length > 0 && (
+          <section className={styles.referencesSection}>
+            <h2>Nevnt i Bibelen ({personData.references.length})</h2>
+            <div className={styles.refList}>
+              {personData.references.map((ref, i) => {
+                const book = booksData.find(b => b.id === ref.bookId);
+                const bookName = book?.name_no || `Bok ${ref.bookId}`;
+                const slug = book ? toUrlSlug(book.short_name) : '';
+                return (
+                  <Link
+                    key={i}
+                    to={`/${slug}/${ref.chapterId}#v${ref.verseId}`}
+                    className={styles.refChip}
+                  >
+                    {bookName} {ref.chapterId}:{ref.verseId}
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {relatedPersons.length > 0 && (
           <section className={styles.relatedSection}>
