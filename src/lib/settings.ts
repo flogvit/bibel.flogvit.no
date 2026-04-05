@@ -14,6 +14,8 @@ export {
   type BibleVersion,
   type BibleSettings,
   type SearchResultTypes,
+  type LayoutMode,
+  type SidebarTab,
   defaultSettings,
   defaultSearchResultTypes,
   getSettings as loadSettings,

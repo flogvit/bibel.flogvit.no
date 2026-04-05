@@ -284,6 +284,9 @@ export const defaultSearchResultTypes: SearchResultTypes = {
   days: true,
 };
 
+export type LayoutMode = 'normal' | 'reading' | 'panel';
+export type SidebarTab = 'timeline' | 'context' | 'resources' | 'lookup';
+
 export interface BibleSettings {
   showBookSummary: boolean;
   showChapterSummary: boolean;
@@ -299,6 +302,10 @@ export interface BibleSettings {
   showContinueReading: boolean;
   showDailyVerse: boolean;
   readingMode: boolean;
+  layoutMode: LayoutMode;
+  sidebarTab: SidebarTab;
+  sidebarWidth: number;
+  showContextInline: boolean;
   fontSize: FontSize;
   darkMode: boolean;
   bible: BibleVersion;
@@ -326,6 +333,10 @@ export const defaultSettings: BibleSettings = {
   showContinueReading: true,
   showDailyVerse: true,
   readingMode: false,
+  layoutMode: 'normal',
+  sidebarTab: 'timeline',
+  sidebarWidth: 280,
+  showContextInline: false,
   fontSize: 'medium',
   darkMode: false,
   bible: 'osnb2',

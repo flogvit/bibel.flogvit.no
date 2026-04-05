@@ -31,6 +31,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     async function loadData() {
       await migrateToIndexedDB();
       const data = await getSettings();
+      // Migrate readingMode → layoutMode
+      if (data.readingMode && (!data.layoutMode || data.layoutMode === 'normal')) {
+        data.layoutMode = 'reading';
+        data.readingMode = false;
+      }
       setSettings(data);
       setLoaded(true);
     }
