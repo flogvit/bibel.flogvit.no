@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSettings } from '@/components/SettingsContext';
+import type { SidebarTab } from '@/lib/settings';
 
 interface ChapterKeyboardShortcutsProps {
   bookSlug: string;
@@ -9,6 +11,13 @@ interface ChapterKeyboardShortcutsProps {
   bibleQuery?: string;
 }
 
+const tabMap: Record<string, SidebarTab> = {
+  '1': 'timeline',
+  '2': 'context',
+  '3': 'resources',
+  '4': 'lookup',
+};
+
 export function ChapterKeyboardShortcuts({
   bookSlug,
   currentChapter,
@@ -17,6 +26,7 @@ export function ChapterKeyboardShortcuts({
   bibleQuery = '',
 }: ChapterKeyboardShortcutsProps) {
   const navigate = useNavigate();
+  const { updateSetting } = useSettings();
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -53,8 +63,15 @@ export function ChapterKeyboardShortcuts({
         return;
       }
 
-      // Number keys 1-9 to jump to verse
-      if (!e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey && /^[1-9]$/.test(e.key)) {
+      // Number keys 1-4: sidebar tab switching
+      if (!e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey && tabMap[e.key]) {
+        e.preventDefault();
+        updateSetting('sidebarTab', tabMap[e.key]);
+        return;
+      }
+
+      // Number keys 5-9: jump to verse
+      if (!e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey && /^[5-9]$/.test(e.key)) {
         const verseElement = document.getElementById(`v${e.key}`);
         if (verseElement) {
           e.preventDefault();
@@ -67,7 +84,7 @@ export function ChapterKeyboardShortcuts({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [bookSlug, currentChapter, maxChapter, nextBookSlug, bibleQuery, navigate]);
+  }, [bookSlug, currentChapter, maxChapter, nextBookSlug, bibleQuery, navigate, updateSetting]);
 
   // This component doesn't render anything - it just adds keyboard handlers
   return null;

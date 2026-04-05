@@ -24,7 +24,7 @@ export function KeyboardShortcuts({
   const navigate = useNavigate();
   const location = useLocation();
   const pathname = location.pathname;
-  const { toggleSetting } = useSettings();
+  const { updateSetting } = useSettings();
 
   // Detect Mac on client side
   useEffect(() => {
@@ -64,11 +64,23 @@ export function KeyboardShortcuts({
         return;
       }
 
-      // R to toggle reading mode
-      if (e.key === 'r' || e.key === 'R') {
-        if (!e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey) {
+      // Layout mode shortcuts
+      if (!e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey) {
+        if (e.key === 'r' || e.key === 'R') {
           e.preventDefault();
-          toggleSetting('readingMode');
+          updateSetting('layoutMode', 'reading');
+          (document.activeElement as HTMLElement)?.blur();
+          return;
+        }
+        if (e.key === 'n' || e.key === 'N') {
+          e.preventDefault();
+          updateSetting('layoutMode', 'normal');
+          (document.activeElement as HTMLElement)?.blur();
+          return;
+        }
+        if (e.key === 'p' || e.key === 'P') {
+          e.preventDefault();
+          updateSetting('layoutMode', 'panel');
           (document.activeElement as HTMLElement)?.blur();
           return;
         }
@@ -184,7 +196,7 @@ export function KeyboardShortcuts({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isInputFocused, showHelp, bookSlug, currentChapter, maxChapter, nextBookSlug, bibleQuery, navigate, toggleSetting]);
+  }, [isInputFocused, showHelp, bookSlug, currentChapter, maxChapter, nextBookSlug, bibleQuery, navigate, updateSetting]);
 
   // Close help on navigation
   useEffect(() => {
@@ -226,8 +238,16 @@ export function KeyboardShortcuts({
                 <dd>Gå til søkefeltet</dd>
               </div>
               <div className={styles.shortcut}>
+                <dt><kbd>N</kbd></dt>
+                <dd>Normal visning</dd>
+              </div>
+              <div className={styles.shortcut}>
                 <dt><kbd>R</kbd></dt>
-                <dd>Lesemodus på/av</dd>
+                <dd>Lesemodus</dd>
+              </div>
+              <div className={styles.shortcut}>
+                <dt><kbd>P</kbd></dt>
+                <dd>Panelmodus (50/50)</dd>
               </div>
               <div className={styles.shortcut}>
                 <dt><kbd>Esc</kbd></dt>
@@ -249,8 +269,12 @@ export function KeyboardShortcuts({
                 <dd>Neste kapittel</dd>
               </div>
               <div className={styles.shortcut}>
-                <dt><kbd>1</kbd>-<kbd>9</kbd></dt>
-                <dd>Hopp til vers 1-9</dd>
+                <dt><kbd>1</kbd>-<kbd>4</kbd></dt>
+                <dd>Bytt panelfane</dd>
+              </div>
+              <div className={styles.shortcut}>
+                <dt><kbd>5</kbd>-<kbd>9</kbd></dt>
+                <dd>Hopp til vers 5-9</dd>
               </div>
             </dl>
           </section>
