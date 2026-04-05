@@ -10,6 +10,7 @@ interface TimelineMobileOverlayProps {
   currentBookId: number;
   currentChapter: number;
   onClose: () => void;
+  embedded?: boolean;
 }
 
 function formatReference(ref: TimelineReference): string {
@@ -59,7 +60,7 @@ function findMarkerInsertIndex(
   return insertAfterIndex;
 }
 
-export function TimelineMobileOverlay({ events, currentBookId, currentChapter, onClose }: TimelineMobileOverlayProps) {
+export function TimelineMobileOverlay({ events, currentBookId, currentChapter, onClose, embedded = false }: TimelineMobileOverlayProps) {
   const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
   const eventRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const markerRef = useRef<HTMLDivElement>(null);
@@ -110,17 +111,9 @@ export function TimelineMobileOverlay({ events, currentBookId, currentChapter, o
     </div>
   );
 
-  return (
-    <div className={styles.overlay}>
-      <div className={styles.header}>
-        <button className={styles.closeButton} onClick={onClose} aria-label="Lukk tidslinje">
-          ← Tilbake
-        </button>
-        <h2 className={styles.title}>Tidslinje</h2>
-        <div className={styles.headerSpacer} />
-      </div>
-
-      <div className={styles.content} ref={containerRef}>
+  const timelineContent = (
+    <>
+      <div className={embedded ? undefined : styles.content} ref={containerRef}>
         <div className={styles.timeline}>
           {/* If marker should be before all events */}
           {markerInsertIndex === -1 && events.length > 0 && !events.some(e =>
@@ -194,6 +187,23 @@ export function TimelineMobileOverlay({ events, currentBookId, currentChapter, o
           </Link>
         </div>
       </div>
+    </>
+  );
+
+  if (embedded) {
+    return timelineContent;
+  }
+
+  return (
+    <div className={styles.overlay}>
+      <div className={styles.header}>
+        <button className={styles.closeButton} onClick={onClose} aria-label="Lukk tidslinje">
+          ← Tilbake
+        </button>
+        <h2 className={styles.title}>Tidslinje</h2>
+        <div className={styles.headerSpacer} />
+      </div>
+      {timelineContent}
     </div>
   );
 }

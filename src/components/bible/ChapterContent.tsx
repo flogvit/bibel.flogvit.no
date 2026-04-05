@@ -394,6 +394,9 @@ export function ChapterContent({
         bookId={bookId}
         timelineEvents={timelineEvents}
         hasParallels={hasParallels}
+        bookSummary={bookSummary}
+        chapterSummary={summary}
+        historicalContext={context}
       />
     </ReadingModeWrapper>
   );

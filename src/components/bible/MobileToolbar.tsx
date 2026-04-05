@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ToolsPanel } from './ToolsPanel';
-import { TimelineMobileOverlay } from './TimelineMobileOverlay';
+import { MobileSidebarOverlay } from './MobileSidebarOverlay';
 import { useSettings } from '@/components/SettingsContext';
 import styles from './MobileToolbar.module.scss';
 import type { TimelineEvent } from '@/lib/bible';
@@ -14,18 +14,32 @@ interface MobileToolbarProps {
   bookId: number;
   timelineEvents?: TimelineEvent[];
   hasParallels?: boolean;
+  bookSummary?: string | null;
+  chapterSummary?: string | null;
+  historicalContext?: string | null;
 }
 
-export function MobileToolbar({ bookName, chapter, maxChapter, bookSlug, bookId, timelineEvents = [], hasParallels = false }: MobileToolbarProps) {
+export function MobileToolbar({
+  bookName,
+  chapter,
+  maxChapter,
+  bookSlug,
+  bookId,
+  timelineEvents = [],
+  hasParallels = false,
+  bookSummary = null,
+  chapterSummary = null,
+  historicalContext = null,
+}: MobileToolbarProps) {
   const [showTools, setShowTools] = useState(false);
-  const [showTimeline, setShowTimeline] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
   const { settings } = useSettings();
   const [searchParams] = useSearchParams();
   const bible = searchParams.get('bible');
   const bibleQuery = bible ? `?bible=${bible}` : '';
 
   // Hide in reading mode
-  if (settings.readingMode) {
+  if (settings.layoutMode === 'reading') {
     return null;
   }
 
@@ -45,15 +59,13 @@ export function MobileToolbar({ bookName, chapter, maxChapter, bookSlug, bookId,
           {bookName} {chapter}
         </span>
 
-        {settings.showTimeline && timelineEvents.length > 0 && (
-          <button
-            className={styles.timelineButton}
-            onClick={() => setShowTimeline(true)}
-            title="Tidslinje"
-          >
-            📅
-          </button>
-        )}
+        <button
+          className={styles.sidebarButton}
+          onClick={() => setShowSidebar(true)}
+          title="Panel"
+        >
+          ▥
+        </button>
 
         <button
           className={styles.toolsButton}
@@ -81,12 +93,16 @@ export function MobileToolbar({ bookName, chapter, maxChapter, bookSlug, bookId,
         </div>
       )}
 
-      {showTimeline && (
-        <TimelineMobileOverlay
-          events={timelineEvents}
-          currentBookId={bookId}
-          currentChapter={chapter}
-          onClose={() => setShowTimeline(false)}
+      {showSidebar && (
+        <MobileSidebarOverlay
+          bookId={bookId}
+          chapter={chapter}
+          bookName={bookName}
+          timelineEvents={timelineEvents}
+          bookSummary={bookSummary}
+          chapterSummary={chapterSummary}
+          historicalContext={historicalContext}
+          onClose={() => setShowSidebar(false)}
         />
       )}
     </>

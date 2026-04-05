@@ -52,7 +52,7 @@
   color: $color-primary;
 }
 
-.timelineButton {
+.sidebarButton {
   @include button;
   background: $color-secondary;
   color: white;
@@ -127,7 +127,7 @@
     color: $dark-color-primary;
   }
 
-  .timelineButton {
+  .sidebarButton {
     background: $dark-color-secondary;
   }
 
