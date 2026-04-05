@@ -24,6 +24,7 @@ interface ReadingSidebarProps {
   bookSummary: string | null;
   chapterSummary: string | null;
   historicalContext: string | null;
+  onWidthChange?: (width: number) => void;
 }
 
 export function ReadingSidebar({
@@ -35,6 +36,7 @@ export function ReadingSidebar({
   bookSummary,
   chapterSummary,
   historicalContext,
+  onWidthChange,
 }: ReadingSidebarProps) {
   const { settings, updateSetting } = useSettings();
   const activeTab = settings.sidebarTab || 'timeline';
@@ -78,6 +80,7 @@ export function ReadingSidebar({
         Math.floor(window.innerWidth * 0.5)
       );
       setDragWidth(newWidth);
+      onWidthChange?.(newWidth);
     };
 
     const handleMouseUp = () => {
@@ -102,10 +105,7 @@ export function ReadingSidebar({
   }, [isDragging, dragWidth, updateSetting]);
 
   return (
-    <div
-      className={styles.sidebar}
-      style={isPanelMode ? undefined : { width: `${width}px` }}
-    >
+    <div className={styles.sidebar}>
       {!isPanelMode && (
         <div
           className={`${styles.resizeHandle} ${isDragging ? styles.dragging : ''}`}

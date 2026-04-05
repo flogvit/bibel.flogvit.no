@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useChapter } from '@/hooks/useChapter';
 import { useTimeline } from '@/hooks/useTimeline';
@@ -119,6 +119,12 @@ export function ChapterContent({
 
   // Determine original language based on book
   const originalLanguage = bookId <= 39 ? 'hebrew' : 'greek';
+
+  // Layout ref for live sidebar resize
+  const layoutRef = useRef<HTMLDivElement>(null);
+  const handleSidebarWidthChange = useCallback((width: number) => {
+    layoutRef.current?.style.setProperty('--sidebar-width', `${width}px`);
+  }, []);
 
   // Copy handler: intercept copy events to include verse numbers and clean formatting
   const versesRef = useRef<HTMLElement>(null);
@@ -245,6 +251,7 @@ export function ChapterContent({
       />
 
       <div
+        ref={layoutRef}
         className={styles.layout}
         style={{ '--sidebar-width': `${settings.sidebarWidth || 280}px` } as React.CSSProperties}
       >
@@ -383,6 +390,7 @@ export function ChapterContent({
             bookSummary={bookSummary}
             chapterSummary={summary}
             historicalContext={context}
+            onWidthChange={handleSidebarWidthChange}
           />
         </aside>
       </div>
