@@ -9,6 +9,7 @@ import { DevotionalSearchPanel } from '@/components/devotional/DevotionalSearchP
 import { ResourceSearchPanel } from '@/components/devotional/ResourceSearchPanel';
 import { ChapterContextPanel, type ChapterContextData } from '@/components/devotional/ChapterContextPanel';
 import { TimelineContextPanel } from '@/components/devotional/TimelineContextPanel';
+import { EditorHelpPanel } from '@/components/devotional/EditorHelpPanel';
 import { getCurrentContent } from '@/lib/devotional-utils';
 import type { DevotionalType } from '@/types/devotional';
 import styles from '@/styles/pages/devotionals.module.scss';
@@ -28,7 +29,7 @@ export function DevotionalEditorPage() {
 
   const [showLockDialog, setShowLockDialog] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
-  const [sidebarTab, setSidebarTab] = useState<'bible' | 'manuscripts' | 'resources' | 'context' | 'timeline'>('bible');
+  const [sidebarTab, setSidebarTab] = useState<'bible' | 'manuscripts' | 'resources' | 'context' | 'timeline' | 'help'>('bible');
   const [editorContent, setEditorContent] = useState(initialContent);
   const [chapterContextData, setChapterContextData] = useState<ChapterContextData[]>([]);
 
@@ -165,6 +166,12 @@ export function DevotionalEditorPage() {
                 >
                   Tidslinje
                 </button>
+                <button
+                  className={`${styles.sidebarTab} ${sidebarTab === 'help' ? styles.sidebarTabActive : ''}`}
+                  onClick={() => setSidebarTab('help')}
+                >
+                  ?
+                </button>
               </div>
               <button className={styles.sidebarClose} onClick={() => setShowSidebar(false)}>×</button>
             </div>
@@ -193,6 +200,10 @@ export function DevotionalEditorPage() {
 
               {sidebarTab === 'timeline' && (
                 <TimelineContextPanel contextData={chapterContextData} />
+              )}
+
+              {sidebarTab === 'help' && (
+                <EditorHelpPanel />
               )}
             </div>
           </aside>
