@@ -70,8 +70,8 @@ export function ChapterContent({
     secondaryBible,
   });
 
-  // Fetch timeline events (shared between desktop sidebar and mobile toolbar)
-  const { events: timelineEvents } = useTimeline();
+  // Fetch all timeline events + which ones are relevant for this chapter
+  const { events: timelineEvents, chapterEventIds } = useTimeline(bookId, chapter);
 
   // Fetch parallels for gospel chapters
   const { parallels, hasParallels } = useChapterParallels(bookId, chapter);
@@ -177,13 +177,17 @@ export function ChapterContent({
 
       e.preventDefault();
 
-      // Plain text: "1 Text here\n2 More text"
-      const plainText = parts.map(p => `${p.num} ${p.text}`).join('\n');
+      const includeNums = settings.copyVerseNumbers ?? true;
+
+      // Plain text: "1 Text here\n2 More text" or just "Text here\nMore text"
+      const plainText = parts.map(p => includeNums ? `${p.num} ${p.text}` : p.text).join('\n');
 
       // HTML: clean formatting for Word/rich text editors
       const escHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       const htmlLines = parts.map(p =>
-        `<p style="margin:0 0 4px 0;line-height:1.6;"><sup style="color:#8b7355;font-size:0.75em;">${escHtml(p.num)}</sup> ${escHtml(p.text)}</p>`
+        includeNums
+          ? `<p style="margin:0 0 4px 0;line-height:1.6;"><sup style="color:#8b7355;font-size:0.75em;">${escHtml(p.num)}</sup> ${escHtml(p.text)}</p>`
+          : `<p style="margin:0 0 4px 0;line-height:1.6;">${escHtml(p.text)}</p>`
       ).join('\n');
       const html = `<div style="font-family:Georgia,serif;font-size:12pt;color:#333333;background:white;">${htmlLines}</div>`;
 
@@ -193,7 +197,7 @@ export function ChapterContent({
 
     document.addEventListener('copy', handleCopy);
     return () => document.removeEventListener('copy', handleCopy);
-  }, []);
+  }, [settings.copyVerseNumbers]);
 
   // Show loading state only if we have no data at all
   if (isLoading && !verses.length && !initialData?.verses?.length) {
@@ -365,6 +369,7 @@ export function ChapterContent({
         <aside className={styles.rightSidebar} aria-label="Tidslinje">
           <TimelinePanel
             events={timelineEvents}
+            chapterEventIds={chapterEventIds}
             currentBookId={bookId}
             currentChapter={chapter}
           />

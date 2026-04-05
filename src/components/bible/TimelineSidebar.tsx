@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useSettings } from '@/components/SettingsContext';
+import { InlineRefs } from '@/components/InlineRefs';
 import styles from './TimelineSidebar.module.scss';
 import type { TimelineEvent, TimelineReference } from '@/lib/bible';
 import { toUrlSlug } from '@/lib/url-utils';
@@ -24,7 +25,21 @@ function getReferenceUrl(ref: TimelineReference): string {
 
 export function TimelineSidebar({ events, currentBookId, currentChapter }: TimelineSidebarProps) {
   const { settings } = useSettings();
-  const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
+  const currentEventRef = useRef<HTMLDivElement>(null);
+
+  // Find the first event matching the current chapter
+  const firstCurrentEventId = events.find(e =>
+    e.references?.some(ref => ref.book_id === currentBookId && ref.chapter === currentChapter)
+  )?.id || null;
+
+  const [expandedEvent, setExpandedEvent] = useState<string | null>(firstCurrentEventId);
+
+  // Scroll to the current event on mount
+  useEffect(() => {
+    if (currentEventRef.current) {
+      currentEventRef.current.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+  }, [firstCurrentEventId]);
 
   if (!settings.showTimeline) {
     return null;
@@ -63,6 +78,7 @@ export function TimelineSidebar({ events, currentBookId, currentChapter }: Timel
           return (
             <div
               key={event.id}
+              ref={event.id === firstCurrentEventId ? currentEventRef : undefined}
               className={`${styles.event} ${isCurrentChapter ? styles.currentChapter : ''} ${isExpanded ? styles.expanded : ''}`}
               style={{ '--period-color': event.period?.color || '#8b7355' } as React.CSSProperties}
             >
@@ -80,7 +96,7 @@ export function TimelineSidebar({ events, currentBookId, currentChapter }: Timel
               {isExpanded && (
                 <div className={styles.eventDetails}>
                   {event.description && (
-                    <p className={styles.eventDescription}>{event.description}</p>
+                    <p className={styles.eventDescription}><InlineRefs>{event.description}</InlineRefs></p>
                   )}
 
                   {event.references && event.references.length > 0 && (

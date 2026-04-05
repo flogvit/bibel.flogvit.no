@@ -6,14 +6,16 @@ import type { TimelineEvent } from '@/lib/bible';
 
 interface UseTimelineResult {
   events: TimelineEvent[];
+  chapterEventIds: string[];
   isLoading: boolean;
   error: string | null;
   isOffline: boolean;
   refetch: () => Promise<void>;
 }
 
-export function useTimeline(): UseTimelineResult {
+export function useTimeline(bookId?: number, chapter?: number): UseTimelineResult {
   const [events, setEvents] = useState<TimelineEvent[]>([]);
+  const [chapterEventIds, setChapterEventIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isOffline, setIsOffline] = useState(false);
@@ -24,7 +26,8 @@ export function useTimeline(): UseTimelineResult {
     setIsOffline(false);
 
     try {
-      const response = await fetch('/api/timeline');
+      const params = (bookId && chapter) ? `?bookId=${bookId}&chapter=${chapter}` : '';
+      const response = await fetch(`/api/timeline${params}`);
 
       if (!response.ok) {
         if (response.status === 503) {
@@ -48,6 +51,7 @@ export function useTimeline(): UseTimelineResult {
       }
 
       setEvents(timelineEvents);
+      setChapterEventIds(data.chapterEventIds || []);
 
       // Store in IndexedDB for offline use (if not already from IDB)
       if (!fromIndexedDB && timelineEvents.length > 0) {
@@ -81,7 +85,7 @@ export function useTimeline(): UseTimelineResult {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [bookId, chapter]);
 
   useEffect(() => {
     fetchTimeline();
@@ -110,6 +114,7 @@ export function useTimeline(): UseTimelineResult {
 
   return {
     events,
+    chapterEventIds,
     isLoading,
     error,
     isOffline,
