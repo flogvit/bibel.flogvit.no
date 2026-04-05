@@ -2,6 +2,7 @@
  * Static book data for client-side usage
  * This file can be imported in both client and server components
  */
+import { bookAliases } from './book-aliases';
 
 export interface BookInfo {
   id: number;
@@ -98,9 +99,18 @@ export function getBookInfoById(id: number): BookInfo | undefined {
 
 /**
  * Get book info by URL slug (client-safe)
+ * Falls back to book-aliases for alternate spellings (e.g., "1kron" → "1krøn")
  */
 export function getBookInfoBySlug(slug: string): BookInfo | undefined {
-  return booksBySlug.get(slug.toLowerCase());
+  const normalized = slug.toLowerCase();
+  const direct = booksBySlug.get(normalized);
+  if (direct) return direct;
+
+  // Fallback: check aliases
+  const bookId = bookAliases[normalized];
+  if (bookId) return booksById.get(bookId);
+
+  return undefined;
 }
 
 /**

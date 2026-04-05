@@ -5,11 +5,8 @@ import { ContinueReading } from '@/components/ContinueReading';
 import { DailyVerse } from '@/components/DailyVerse';
 import { TodaysDay } from '@/components/TodaysDay';
 import { TodaysReading } from '@/components/TodaysReading';
+import { toUrlSlug } from '@/lib/url-utils';
 import styles from '@/styles/pages/home.module.scss';
-
-function toUrlSlug(shortName: string): string {
-  return shortName.toLowerCase();
-}
 
 export function HomeContent() {
   const { settings } = useSettings();

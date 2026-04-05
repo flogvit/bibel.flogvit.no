@@ -3,13 +3,9 @@
  */
 
 /**
- * Convert Norwegian characters to ASCII for URL-safe slugs
- * å/Å → a, ø/Ø → o, æ/Æ → ae
+ * Convert book short names to URL slugs.
+ * Preserves Norwegian characters (ø, æ, å) since routes use them.
  */
 export function toUrlSlug(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/å/g, 'a')
-    .replace(/ø/g, 'o')
-    .replace(/æ/g, 'ae');
+  return text.toLowerCase();
 }
