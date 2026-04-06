@@ -28,6 +28,7 @@ const typeLabels: Record<string, string> = {
   word: 'Viktige ord',
   number: 'Tall',
   day: 'Dager',
+  readingText: 'Lesetekster',
 };
 
 export function ResourcesPanel({ bookId, chapter, bookName }: ResourcesPanelProps) {
@@ -79,6 +80,11 @@ export function ResourcesPanel({ bookId, chapter, bookName }: ResourcesPanelProp
           type: 'number', id: n.number, title: `${n.number}`, subtitle: n.meaning,
           description: n.description, url: `/tall/${n.number}`, verses: n.verses,
         }));
+        if (data.readingTexts) data.readingTexts.forEach((rt: any) => items.push({
+          type: 'readingText', id: rt.id, title: rt.name,
+          subtitle: rt.date, description: rt.title,
+          url: `/lesetekster/${rt.id}`, verses: rt.verses,
+        }));
         setChapterResults(items);
         setLoading(false);
       })
@@ -118,6 +124,10 @@ export function ResourcesPanel({ bookId, chapter, bookName }: ResourcesPanelProp
       }));
       if (data.timeline) data.timeline.forEach((t: any) => items.push({
         type: 'timeline', id: t.id, title: t.title, subtitle: t.year_display,
+      }));
+      if (data.readingTexts) data.readingTexts.forEach((rt: any) => items.push({
+        type: 'readingText', id: rt.id, title: rt.name, subtitle: rt.date,
+        url: `/lesetekster/${rt.id}`,
       }));
 
       setSearchResults(items);

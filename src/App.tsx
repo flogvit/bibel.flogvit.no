@@ -18,6 +18,8 @@ const ThemesPage = lazy(() => import('./pages/ThemesPage').then(m => ({ default:
 const ThemePage = lazy(() => import('./pages/ThemePage').then(m => ({ default: m.ThemePage })));
 const DaysListPage = lazy(() => import('./pages/DaysListPage').then(m => ({ default: m.DaysListPage })));
 const DayPage = lazy(() => import('./pages/DayPage').then(m => ({ default: m.DayPage })));
+const ReadingTextsPage = lazy(() => import('./pages/ReadingTextsPage').then(m => ({ default: m.ReadingTextsPage })));
+const ReadingTextPage = lazy(() => import('./pages/ReadingTextPage').then(m => ({ default: m.ReadingTextPage })));
 const NumberSymbolismListPage = lazy(() => import('./pages/NumberSymbolismListPage').then(m => ({ default: m.NumberSymbolismListPage })));
 const NumberSymbolismPage = lazy(() => import('./pages/NumberSymbolismPage').then(m => ({ default: m.NumberSymbolismPage })));
 const StoriesPage = lazy(() => import('./pages/StoriesPage').then(m => ({ default: m.StoriesPage })));
@@ -72,6 +74,8 @@ export function App() {
             <Route path="/temaer/:tema" element={<ThemePage />} />
             <Route path="/dager" element={<DaysListPage />} />
             <Route path="/dager/:dayId" element={<DayPage />} />
+            <Route path="/lesetekster" element={<ReadingTextsPage />} />
+            <Route path="/lesetekster/:id" element={<ReadingTextPage />} />
             <Route path="/tall" element={<NumberSymbolismListPage />} />
             <Route path="/tall/:number" element={<NumberSymbolismPage />} />
             <Route path="/historier" element={<StoriesPage />} />

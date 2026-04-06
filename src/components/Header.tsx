@@ -241,6 +241,9 @@ export function Header() {
               <Link to="/dager" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Dager {shortcut('D')}
               </Link>
+              <Link to="/lesetekster" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
+                Lesetekster
+              </Link>
               <Link to="/statistikk" className={styles.dropdownLink} onClick={handleNavClick} role="menuitem">
                 Statistikk {shortcut('I')}
               </Link>
@@ -275,6 +278,7 @@ export function Header() {
               <span className={styles.mobileGroupTitle}>Oversikt</span>
               <Link to="/tidslinje" className={styles.navLink} onClick={handleNavClick}>Tidslinje</Link>
               <Link to="/dager" className={styles.navLink} onClick={handleNavClick}>Dager</Link>
+              <Link to="/lesetekster" className={styles.navLink} onClick={handleNavClick}>Lesetekster</Link>
               <Link to="/statistikk" className={styles.navLink} onClick={handleNavClick}>Statistikk</Link>
               <Link to="/oversettelser" className={styles.navLink} onClick={handleNavClick}>Oversettelser</Link>
             </div>

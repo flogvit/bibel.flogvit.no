@@ -9,6 +9,9 @@ import {
   incrementSyncVersion,
   getSyncVersion,
 } from './import-utils';
+import { parseRefMarkup } from '@free-bible/kvn/ref';
+import { BOOK_IDS } from '@free-bible/kvn/types';
+import { UkvnMapper, loadUkvnMapping, ukvnEncode, ukvnDecode, resolveMappingId } from '@free-bible/kvn';
 
 const GENERATE_PATH = path.join(process.cwd(), '..', 'free-bible', 'generate');
 const DB_PATH = path.join(process.cwd(), 'data', 'bible.db');
@@ -41,6 +44,7 @@ interface ImportStats {
   stories: { updated: number; unchanged: number };
   numberSymbolism: { updated: number; unchanged: number };
   days: { updated: number; unchanged: number };
+  readingTexts: { updated: number; unchanged: number };
 }
 
 const stats: ImportStats = {
@@ -66,6 +70,7 @@ const stats: ImportStats = {
   stories: { updated: 0, unchanged: 0 },
   numberSymbolism: { updated: 0, unchanged: 0 },
   days: { updated: 0, unchanged: 0 },
+  readingTexts: { updated: 0, unchanged: 0 },
 };
 
 const deleted: Record<string, number> = {};
@@ -495,6 +500,33 @@ db.exec(`
     number INTEGER NOT NULL UNIQUE,
     content TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS reading_texts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT NOT NULL,
+    name TEXT NOT NULL,
+    series TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS reading_text_refs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    reading_text_id INTEGER NOT NULL,
+    title TEXT,
+    display_ref TEXT NOT NULL,
+    book_id INTEGER NOT NULL,
+    chapter INTEGER NOT NULL,
+    verse_start INTEGER NOT NULL,
+    verse_end INTEGER,
+    part_start TEXT,
+    part_end TEXT,
+    sort_order INTEGER DEFAULT 0,
+    FOREIGN KEY (reading_text_id) REFERENCES reading_texts(id)
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_reading_text_refs_chapter
+    ON reading_text_refs(book_id, chapter);
+  CREATE INDEX IF NOT EXISTS idx_reading_texts_date
+    ON reading_texts(date);
 
   CREATE TABLE IF NOT EXISTS stories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1856,6 +1888,202 @@ if (fs.existsSync(daysPath)) {
 
   const dayKeysOnDisk = new Set(dayFiles.map(f => f.replace('.json', '')));
   cleanupRemovedEntries(db, 'days', 'id', dayKeysOnDisk, 'day', 'dager');
+}
+
+// Importer lesetekster (DNK)
+console.log('Importerer lesetekster...');
+
+const insertReadingText = db.prepare(`
+  INSERT INTO reading_texts (date, name, series) VALUES (?, ?, ?)
+`);
+const insertReadingTextRef = db.prepare(`
+  INSERT INTO reading_text_refs (reading_text_id, title, display_ref, book_id, chapter, verse_start, verse_end, part_start, part_end, sort_order)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`);
+
+// Cache UkvnMappers for converting translation→osmain
+const kvnMapperCache = new Map<string, UkvnMapper>();
+function getKvnMapper(mappingId: string): UkvnMapper {
+  if (!kvnMapperCache.has(mappingId)) {
+    kvnMapperCache.set(mappingId, new UkvnMapper(loadUkvnMapping(mappingId)));
+  }
+  return kvnMapperCache.get(mappingId)!;
+}
+
+/**
+ * Normalize comma notation (Sal 24,1-10) to colon notation (Sal 24:1-10)
+ * in the ref part of a [ref:...] markup.
+ */
+function normalizeRefComma(markup: string): string {
+  return markup.replace(/\[ref:([^|@\]]+)/, (_, refPart: string) => {
+    const normalized = refPart.replace(/(\d+),(\d)/, '$1:$2');
+    return '[ref:' + normalized;
+  });
+}
+
+/**
+ * Parse a verseSpec like "1-10", "1a.2.6-7", "13-15a.17-18" into ranges.
+ * Dot separates discontinuous ranges. Each range has start, end, and part suffixes.
+ * "1a" means part 'a' of verse 1. "15a" means up to part 'a' of verse 15.
+ */
+function parseVerseRanges(verseSpec: string): { start: number; end: number; partStart: string | null; partEnd: string | null }[] {
+  if (!verseSpec) return [];
+  // Normalize en-dash (–) and em-dash (—) to hyphen
+  const normalized = verseSpec.replace(/[–—]/g, '-');
+  const parts = normalized.split('.');
+  return parts.map(part => {
+    const dashIdx = part.indexOf('-');
+    if (dashIdx === -1) {
+      // Single verse or verse with part: "2" or "1a"
+      const partMatch = part.match(/^(\d+)([a-c])?$/);
+      if (!partMatch) return null;
+      const v = parseInt(partMatch[1], 10);
+      const p = partMatch[2] || null;
+      return { start: v, end: v, partStart: p, partEnd: p };
+    }
+    const startStr = part.slice(0, dashIdx);
+    const endStr = part.slice(dashIdx + 1);
+    const startMatch = startStr.match(/^(\d+)([a-c])?$/);
+    const endMatch = endStr.match(/^(\d+)([a-c])?$/);
+    if (!startMatch || !endMatch) return null;
+    return {
+      start: parseInt(startMatch[1], 10),
+      end: parseInt(endMatch[1], 10),
+      partStart: startMatch[2] || null,
+      partEnd: endMatch[2] || null,
+    };
+  }).filter((r): r is NonNullable<typeof r> => r !== null && !isNaN(r.start));
+}
+
+/**
+ * Convert a verse number from a translation system to osmain coordinates.
+ */
+function toOsmain(bookId: number, chapter: number, verse: number, mappingId: string): { chapter: number; verse: number } {
+  const mapper = getKvnMapper(mappingId);
+  const tkvn = ukvnEncode(bookId, chapter, verse);
+  const osmainKvn = mapper.toKvn(tkvn);
+  const decoded = ukvnDecode(osmainKvn);
+  return { chapter: decoded.chapter, verse: decoded.verse };
+}
+
+const leseteksterPath = path.join(GENERATE_PATH, 'dnk_lesetekster');
+if (fs.existsSync(leseteksterPath)) {
+  const jsonFiles = fs.readdirSync(leseteksterPath).filter(f => f.endsWith('.json'));
+
+  // Check if any files changed
+  const allContent = jsonFiles.map(f => fs.readFileSync(path.join(leseteksterPath, f), 'utf-8'));
+  const combinedHash = computeHash(allContent.join(''));
+
+  if (isFullImport || hasContentChanged(db, 'readingTexts', 'all', combinedHash)) {
+    // Clear existing data and reimport
+    db.exec('DELETE FROM reading_text_refs');
+    db.exec('DELETE FROM reading_texts');
+
+    let totalTexts = 0;
+    let totalRefs = 0;
+
+    for (let fileIdx = 0; fileIdx < jsonFiles.length; fileIdx++) {
+      const content = allContent[fileIdx];
+      try {
+        const entries = JSON.parse(content) as Array<{
+          name: string;
+          date: string;
+          series: string;
+          readings: Array<{ reference: string; title: string }>;
+        }>;
+
+        for (const entry of entries) {
+          const result = insertReadingText.run(entry.date, entry.name, entry.series || null);
+          const readingTextId = result.lastInsertRowid as number;
+          totalTexts++;
+
+          for (let i = 0; i < entry.readings.length; i++) {
+            const reading = entry.readings[i];
+            const displayRef = reading.reference; // Keep original [ref:...@mapping|display] format
+
+            try {
+              const normalized = normalizeRefComma(reading.reference);
+              // Handle both [ref:...|display] and [ref:...] formats
+              let parsed;
+              try {
+                parsed = parseRefMarkup(normalized);
+              } catch {
+                // No pipe — parse the ref part directly
+                const match = normalized.match(/^\[ref:([^\]]+)\]$/);
+                if (!match) throw new Error(`Invalid ref: ${reading.reference}`);
+                let refPart = match[1].trim();
+                let system: string | undefined;
+                const atIdx = refPart.lastIndexOf('@');
+                if (atIdx !== -1) {
+                  system = refPart.slice(atIdx + 1).trim();
+                  refPart = refPart.slice(0, atIdx).trim();
+                }
+                const bookMatch = refPart.match(/^(.+?)\s+(\d.*)$/);
+                if (!bookMatch) throw new Error(`Invalid ref: ${reading.reference}`);
+                const book = bookMatch[1].trim();
+                const chapterVerse = bookMatch[2].trim();
+                const colonIdx = chapterVerse.indexOf(':');
+                if (colonIdx === -1) {
+                  parsed = { book, chapter: parseInt(chapterVerse, 10), verseSpec: '', system, displayText: refPart };
+                } else {
+                  parsed = { book, chapter: parseInt(chapterVerse.slice(0, colonIdx), 10), verseSpec: chapterVerse.slice(colonIdx + 1).trim(), system, displayText: refPart };
+                }
+              }
+              const bookId = BOOK_IDS[parsed.book];
+
+              if (bookId === undefined) {
+                console.warn(`  Ukjent bok: ${parsed.book} i ${reading.reference}`);
+                continue;
+              }
+
+              // Resolve mapping system
+              const mappingId = parsed.system ? (resolveMappingId(parsed.system) || parsed.system) : 'osnb2';
+
+              // Parse verse ranges (dot-separated)
+              const ranges = parseVerseRanges(parsed.verseSpec);
+
+              if (ranges.length === 0) {
+                // Whole chapter reference
+                const osmain = toOsmain(bookId, parsed.chapter, 1, mappingId);
+                insertReadingTextRef.run(readingTextId, reading.title, displayRef, bookId, osmain.chapter, 1, null, null, null, i);
+                totalRefs++;
+              } else {
+                for (let rangeIdx = 0; rangeIdx < ranges.length; rangeIdx++) {
+                  const range = ranges[rangeIdx];
+                  const osmainStart = toOsmain(bookId, parsed.chapter, range.start, mappingId);
+                  const osmainEnd = toOsmain(bookId, parsed.chapter, range.end, mappingId);
+                  insertReadingTextRef.run(
+                    readingTextId,
+                    reading.title,
+                    displayRef,
+                    bookId,
+                    osmainStart.chapter,
+                    osmainStart.verse,
+                    osmainEnd.verse,
+                    range.partStart,
+                    range.partEnd,
+                    i * 100 + rangeIdx,
+                  );
+                  totalRefs++;
+                }
+              }
+            } catch (e) {
+              console.warn(`  Kunne ikke parse referanse: ${reading.reference} — ${(e as Error).message}`);
+            }
+          }
+        }
+      } catch (e) {
+        console.error(`Ugyldig JSON i ${jsonFiles[fileIdx]}:`, e);
+      }
+    }
+
+    updateContentHash(db, 'readingTexts', 'all', combinedHash);
+    stats.readingTexts.updated = totalTexts;
+    console.log(`  Importerte ${totalTexts} lesetekster med ${totalRefs} referanser`);
+  } else {
+    stats.readingTexts.unchanged = 1;
+    console.log('  Lesetekster uendret');
+  }
 }
 
 // Opprett indekser

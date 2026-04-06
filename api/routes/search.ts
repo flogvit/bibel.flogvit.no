@@ -5,8 +5,10 @@ import {
   searchGospelParallels, searchReadingPlans, searchImportantWords,
   searchNumberSymbolism,
   searchDays,
+  searchReadingTexts,
   getPersonsByChapter, getPropheciesForChapter,
   getNumberSymbolismByChapter, getThemesByChapter, getStoriesByChapter,
+  getReadingTextsByChapter,
 } from '../../src/lib/bible';
 
 export const searchRouter = Router();
@@ -46,7 +48,7 @@ searchRouter.get('/all', (req: Request, res: Response) => {
   const query = (req.query.q as string) || '';
 
   if (query.length < 2 && !/^\d+$/.test(query.trim())) {
-    res.json({ stories: [], themes: [], persons: [], prophecies: [], timeline: [], parallels: [], plans: [], words: [], numberSymbolism: [], days: [] });
+    res.json({ stories: [], themes: [], persons: [], prophecies: [], timeline: [], parallels: [], plans: [], words: [], numberSymbolism: [], days: [], readingTexts: [] });
     return;
   }
 
@@ -61,9 +63,10 @@ searchRouter.get('/all', (req: Request, res: Response) => {
     const words = searchImportantWords(query);
     const numberSymbolism = searchNumberSymbolism(query);
     const days = searchDays(query);
+    const readingTexts = searchReadingTexts(query);
 
     res.set('Cache-Control', 'no-cache');
-    res.json({ stories, themes, persons, prophecies, timeline, parallels, plans, words, numberSymbolism, days });
+    res.json({ stories, themes, persons, prophecies, timeline, parallels, plans, words, numberSymbolism, days, readingTexts });
   } catch (error) {
     console.error('Error in combined search:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -148,8 +151,19 @@ searchRouter.get('/chapter-resources', (req: Request, res: Response) => {
       verses: s.verses,
     }));
 
+    const readingTexts = getReadingTextsByChapter(bookId, chapter).map(rt => ({
+      id: rt.id,
+      name: rt.name,
+      date: rt.date,
+      title: rt.title,
+      displayRef: rt.display_ref,
+      verses: rt.verse_start && rt.verse_end
+        ? Array.from({ length: rt.verse_end - rt.verse_start + 1 }, (_, i) => rt.verse_start + i)
+        : rt.verse_start ? [rt.verse_start] : [],
+    }));
+
     res.set('Cache-Control', 'no-cache');
-    res.json({ persons, prophecies, numbers, themes, stories });
+    res.json({ persons, prophecies, numbers, themes, stories, readingTexts });
   } catch (error) {
     console.error('Error fetching chapter resources:', error);
     res.status(500).json({ error: 'Internal server error' });

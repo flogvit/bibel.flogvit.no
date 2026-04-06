@@ -2330,3 +2330,98 @@ export function searchNumberSymbolism(query: string): NumberSymbolismSearchResul
     return { number: data.number, meaning: data.meaning, description: data.description };
   });
 }
+
+// ============================================================
+// Reading texts (lesetekster)
+// ============================================================
+
+export interface ReadingText {
+  id: number;
+  date: string;
+  name: string;
+  series: string | null;
+}
+
+export interface ReadingTextRef {
+  id: number;
+  reading_text_id: number;
+  title: string | null;
+  display_ref: string;
+  book_id: number;
+  chapter: number;
+  verse_start: number;
+  verse_end: number | null;
+  part_start: string | null;
+  part_end: string | null;
+  sort_order: number;
+}
+
+export interface ReadingTextWithRefs extends ReadingText {
+  readings: ReadingTextRef[];
+}
+
+export function getAllReadingTexts(): ReadingText[] {
+  const db = getDb();
+  return db.prepare('SELECT * FROM reading_texts ORDER BY date').all() as ReadingText[];
+}
+
+export function getReadingTextById(id: number): ReadingTextWithRefs | undefined {
+  const db = getDb();
+  const text = db.prepare('SELECT * FROM reading_texts WHERE id = ?').get(id) as ReadingText | undefined;
+  if (!text) return undefined;
+
+  const refs = db.prepare(
+    'SELECT * FROM reading_text_refs WHERE reading_text_id = ? ORDER BY sort_order'
+  ).all(id) as ReadingTextRef[];
+
+  return { ...text, readings: refs };
+}
+
+export function getReadingTextsByDate(date: string): ReadingTextWithRefs[] {
+  const db = getDb();
+  const texts = db.prepare('SELECT * FROM reading_texts WHERE date = ? ORDER BY id').all(date) as ReadingText[];
+
+  return texts.map(text => {
+    const refs = db.prepare(
+      'SELECT * FROM reading_text_refs WHERE reading_text_id = ? ORDER BY sort_order'
+    ).all(text.id) as ReadingTextRef[];
+    return { ...text, readings: refs };
+  });
+}
+
+export function getTodaysReadingTexts(): ReadingTextWithRefs[] {
+  const today = new Date().toISOString().substring(0, 10);
+  return getReadingTextsByDate(today);
+}
+
+export function getReadingTextsByChapter(bookId: number, chapter: number): {
+  id: number;
+  name: string;
+  date: string;
+  title: string | null;
+  display_ref: string;
+  verse_start: number;
+  verse_end: number | null;
+}[] {
+  const db = getDb();
+  return db.prepare(`
+    SELECT t.id, t.name, t.date, r.title, r.display_ref, r.verse_start, r.verse_end
+    FROM reading_text_refs r
+    JOIN reading_texts t ON r.reading_text_id = t.id
+    WHERE r.book_id = ? AND r.chapter = ?
+    ORDER BY t.date
+  `).all(bookId, chapter) as any[];
+}
+
+export function searchReadingTexts(query: string): { id: number; name: string; date: string; series: string | null }[] {
+  const db = getDb();
+  const words = query.toLowerCase().split(/\s+/).filter(w => w.length >= 2);
+  if (words.length === 0) return [];
+
+  const conditions = words.map(() => 'LOWER(name) LIKE ?').join(' AND ');
+  const params = words.map(w => `%${w}%`);
+
+  return db.prepare(
+    `SELECT * FROM reading_texts WHERE ${conditions} ORDER BY date LIMIT 50`
+  ).all(...params) as any[];
+}

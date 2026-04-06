@@ -29,6 +29,7 @@ import { chapterContextRouter } from './routes/chapter-context';
 import { storiesRouter } from './routes/stories';
 import { numberSymbolismRouter } from './routes/number-symbolism';
 import { daysRouter } from './routes/days';
+import { readingTextsRouter } from './routes/reading-texts';
 import { authRouter } from './routes/auth';
 import { syncRouter } from './routes/sync';
 
@@ -69,6 +70,7 @@ app.use('/api/chapter-context', chapterContextRouter);
 app.use('/api/stories', storiesRouter);
 app.use('/api/number-symbolism', numberSymbolismRouter);
 app.use('/api/days', daysRouter);
+app.use('/api/reading-texts', readingTextsRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/sync', express.json({ limit: '10mb' }), syncRouter);
 

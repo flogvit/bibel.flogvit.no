@@ -4,6 +4,7 @@ import { useSettings } from '@/components/SettingsContext';
 import { ContinueReading } from '@/components/ContinueReading';
 import { DailyVerse } from '@/components/DailyVerse';
 import { TodaysDay } from '@/components/TodaysDay';
+import { TodaysReadingText } from '@/components/TodaysReadingText';
 import { TodaysReading } from '@/components/TodaysReading';
 import { toUrlSlug } from '@/lib/url-utils';
 import styles from '@/styles/pages/home.module.scss';
@@ -23,6 +24,7 @@ export function HomeContent() {
 
         {(settings.showContinueReading ?? true) && <ContinueReading />}
         {(settings.showTodaysDay ?? true) && <TodaysDay />}
+        {(settings.showReadingTexts ?? true) && <TodaysReadingText />}
         {(settings.showDailyVerse ?? true) && <DailyVerse />}
         <TodaysReading />
 
