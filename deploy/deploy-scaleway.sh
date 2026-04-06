@@ -30,8 +30,19 @@ fi
 echo "🔑 Logging into Scaleway Registry..."
 scw registry login
 
+echo "📦 Copying KVN package for Docker build..."
+rm -rf kvn-package
+mkdir -p kvn-package
+cp -r ../free-bible/kvn/src kvn-package/src
+cp -r ../free-bible/kvn/mappings kvn-package/mappings
+cp ../free-bible/kvn/package.json kvn-package/package.json
+cp ../free-bible/kvn/tsconfig.json kvn-package/tsconfig.json
+
 echo "🔨 Building Docker image..."
 docker build --platform linux/amd64 -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest .
+
+echo "🧹 Cleaning up KVN package copy..."
+rm -rf kvn-package
 
 echo "📤 Pushing to Scaleway Registry..."
 docker push ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest

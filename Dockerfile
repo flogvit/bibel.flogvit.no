@@ -2,7 +2,10 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files
+# Copy KVN library (local dependency)
+COPY kvn-package/ ./kvn-package/
+
+# Copy package files (references kvn-package via file:)
 COPY package*.json ./
 
 # Install all dependencies (tsx is needed at runtime)

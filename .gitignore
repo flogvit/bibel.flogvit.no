@@ -52,3 +52,4 @@ data/*.db-wal
 
 tmp
 .playwright/
+kvn-package/
