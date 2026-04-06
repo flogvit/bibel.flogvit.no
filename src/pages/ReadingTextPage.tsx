@@ -76,7 +76,7 @@ export function ReadingTextPage() {
   }, [id, bible, mapping]);
 
   if (loading) return <main className={styles.main}><div className="reading-container"><p>Laster...</p></div></main>;
-  if (!data) return <main className={styles.main}><div className="reading-container"><p>Fant ikke leseteksten.</p></div></main>;
+  if (!data || !data.readings) return <main className={styles.main}><div className="reading-container"><p>Fant ikke leseteksten.</p></div></main>;
 
   // Group readings by unique display_ref
   const uniqueReadings: { displayRef: string; title: string | null }[] = [];

@@ -2050,21 +2050,43 @@ if (fs.existsSync(leseteksterPath)) {
               } else {
                 for (let rangeIdx = 0; rangeIdx < ranges.length; rangeIdx++) {
                   const range = ranges[rangeIdx];
-                  const osmainStart = toOsmain(bookId, parsed.chapter, range.start, mappingId);
-                  const osmainEnd = toOsmain(bookId, parsed.chapter, range.end, mappingId);
-                  insertReadingTextRef.run(
-                    readingTextId,
-                    reading.title,
-                    displayRef,
-                    bookId,
-                    osmainStart.chapter,
-                    osmainStart.verse,
-                    osmainEnd.verse,
-                    range.partStart,
-                    range.partEnd,
-                    i * 100 + rangeIdx,
-                  );
-                  totalRefs++;
+                  // Map each verse individually to detect cross-chapter splits
+                  const mappedVerses: { chapter: number; verse: number }[] = [];
+                  for (let v = range.start; v <= range.end; v++) {
+                    mappedVerses.push(toOsmain(bookId, parsed.chapter, v, mappingId));
+                  }
+
+                  // Group consecutive verses by chapter
+                  const groups: { chapter: number; verseStart: number; verseEnd: number; isFirst: boolean; isLast: boolean }[] = [];
+                  let currentGroup: typeof groups[0] | null = null;
+                  for (let vi = 0; vi < mappedVerses.length; vi++) {
+                    const mv = mappedVerses[vi];
+                    if (!currentGroup || mv.chapter !== currentGroup.chapter || mv.verse !== currentGroup.verseEnd + 1) {
+                      if (currentGroup) groups.push(currentGroup);
+                      currentGroup = { chapter: mv.chapter, verseStart: mv.verse, verseEnd: mv.verse, isFirst: vi === 0, isLast: vi === mappedVerses.length - 1 };
+                    } else {
+                      currentGroup.verseEnd = mv.verse;
+                      currentGroup.isLast = vi === mappedVerses.length - 1;
+                    }
+                  }
+                  if (currentGroup) groups.push(currentGroup);
+
+                  for (let gi = 0; gi < groups.length; gi++) {
+                    const g = groups[gi];
+                    insertReadingTextRef.run(
+                      readingTextId,
+                      reading.title,
+                      displayRef,
+                      bookId,
+                      g.chapter,
+                      g.verseStart,
+                      g.verseEnd,
+                      g.isFirst ? range.partStart : null,
+                      g.isLast ? range.partEnd : null,
+                      i * 100 + rangeIdx * 10 + gi,
+                    );
+                    totalRefs++;
+                  }
                 }
               }
             } catch (e) {
