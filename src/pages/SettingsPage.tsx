@@ -16,6 +16,7 @@ export function SettingsPage() {
   const { user, isAuthenticated, logout } = useAuth();
   const { status: syncStatus, lastSyncAt, syncNow } = useSync();
   const [allVersions, setAllVersions] = useState(bibleVersions);
+  const [kvnMappings, setKvnMappings] = useState<{ id: string; displayName: string }[]>([]);
   const {
     fileInputRef,
     importData,
@@ -38,6 +39,10 @@ export function SettingsPage() {
         ]);
       }
     });
+    fetch('/api/mappings/kvn')
+      .then(r => r.json())
+      .then(data => setKvnMappings(data.mappings || []))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -172,6 +177,22 @@ export function SettingsPage() {
         <Link to="/oversettelser" className={styles.translationsLink}>
           Last opp egne oversettelser →
         </Link>
+
+        {kvnMappings.length > 0 && (
+          <>
+            <h3 style={{ fontSize: '1rem', margin: '1.5rem 0 0.5rem 0' }}>Versnummerering</h3>
+            <p>Velg hvilken versnummerering som brukes ved bibellesing.</p>
+            <select
+              className={styles.secondaryBibleSelect}
+              value={settings.numberingSystem || 'osnb2'}
+              onChange={(e) => updateSetting('numberingSystem', e.target.value)}
+            >
+              {kvnMappings.map(m => (
+                <option key={m.id} value={m.id}>{m.displayName}</option>
+              ))}
+            </select>
+          </>
+        )}
       </div>
 
       {/* Section 2: Home page */}
@@ -205,6 +226,15 @@ export function SettingsPage() {
             />
             <span className={styles.checkmark}></span>
             <span className={styles.label}>Dagens helligdag</span>
+          </label>
+          <label className={styles.tool}>
+            <input
+              type="checkbox"
+              checked={settings.showReadingTexts ?? true}
+              onChange={() => toggleSetting('showReadingTexts')}
+            />
+            <span className={styles.checkmark}></span>
+            <span className={styles.label}>Dagens lesetekster</span>
           </label>
         </div>
       </div>

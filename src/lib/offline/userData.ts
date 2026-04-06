@@ -316,6 +316,7 @@ export interface BibleSettings {
   copyVerseNumbers: boolean;
   showVerseFootnotes: boolean;
   showTodaysDay: boolean;
+  showReadingTexts: boolean;
 }
 
 export const defaultSettings: BibleSettings = {
@@ -347,6 +348,7 @@ export const defaultSettings: BibleSettings = {
   copyVerseNumbers: true,
   showVerseFootnotes: true,
   showTodaysDay: true,
+  showReadingTexts: true,
 };
 
 export async function getSettings(): Promise<BibleSettings> {

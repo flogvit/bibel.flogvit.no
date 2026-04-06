@@ -33,6 +33,7 @@ export function ToolsPanel({ onClose, hasParallels = false }: ToolsPanelProps) {
   } = useDataImportExport();
 
   const [allVersions, setAllVersions] = useState(bibleVersions);
+  const [kvnMappings, setKvnMappings] = useState<{ id: string; name: string; shortname: string; displayName: string }[]>([]);
 
   useEffect(() => {
     getUserBibles().then(userBibles => {
@@ -43,6 +44,10 @@ export function ToolsPanel({ onClose, hasParallels = false }: ToolsPanelProps) {
         ]);
       }
     });
+    fetch('/api/mappings/kvn')
+      .then(r => r.json())
+      .then(data => setKvnMappings(data.mappings || []))
+      .catch(() => {});
   }, []);
 
   const currentBible = (searchParams.get('bible') as BibleVersion) || settings.bible || 'osnb2';
@@ -112,6 +117,21 @@ export function ToolsPanel({ onClose, hasParallels = false }: ToolsPanelProps) {
           ))}
         </div>
       </div>
+
+      {kvnMappings.length > 0 && (
+        <div className={styles.section}>
+          <span className={styles.sectionTitle}>Versnummerering</span>
+          <select
+            className={styles.secondaryBibleSelect}
+            value={settings.numberingSystem || 'osnb2'}
+            onChange={(e) => updateSetting('numberingSystem', e.target.value)}
+          >
+            {kvnMappings.map(m => (
+              <option key={m.id} value={m.id}>{m.displayName}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div className={styles.section}>
         <span className={styles.sectionTitle}>Vis/skjul</span>
