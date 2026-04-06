@@ -71,26 +71,94 @@ export function AboutPage() {
         </section>
 
         <section className={styles.section}>
+          <h2>Versnummerering (KVN)</h2>
+          <p>
+            Ulike bibeloversettelser nummererer vers forskjellig. Et vers som heter
+            1. Mosebok 31,55 i Bibelselskapets oversettelse (2024) heter 1. Mosebok 32,1
+            i vår grunntekst (osnb2), fordi den hebraiske tradisjonen deler kapitlene
+            annerledes enn den europeiske.
+          </p>
+          <p>
+            For eksempel i 1. Mosebok rundt kapittel 31&ndash;32:
+          </p>
+          <table className={styles.verseTable}>
+            <thead>
+              <tr>
+                <th>Bibelselskapets 2024</th>
+                <th>osnb2 (hebraisk)</th>
+                <th>Tekst</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1 Mos 31,55</td>
+                <td>1 Mos 32,1</td>
+                <td>Tidlig neste morgen kysset Laban...</td>
+              </tr>
+              <tr>
+                <td>1 Mos 32,1</td>
+                <td>1 Mos 32,2</td>
+                <td>Jakob fortsatte på sin vei...</td>
+              </tr>
+              <tr>
+                <td>1 Mos 32,2</td>
+                <td>1 Mos 32,3</td>
+                <td>Da Jakob så dem, sa han...</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            Slike forskjeller finnes i over tusen vers, særlig i Salmene (der
+            overskrifter noen ganger telles som eget vers), og i flere kapitler
+            i Mosebøkene, Joel og andre profeter der kapittelgrensene er forskjøvet.
+          </p>
+          <p>
+            For å håndtere dette bruker vi <strong>KVN</strong> (Kanonisk Versnummer) &ndash;
+            et system som gir hvert vers i Bibelen et unikt nummer uavhengig av
+            oversettelse. Når du velger en versnummerering under &laquo;Innstillinger&raquo;
+            eller i hjelpemiddelpanelet, brukes KVN til å vise riktige versnummer
+            for den valgte tradisjonen, selv om den underliggende teksten er den samme.
+          </p>
+          <p>
+            KVN støtter i dag {' '}
+            <a href="https://github.com/flogvit/free-bible/tree/main/kvn" target="_blank" rel="noopener noreferrer">
+              12 ulike nummereringssystemer
+            </a>
+            , inkludert Bibelselskapets oversettelser (1930, 1978, 2011, 2024),
+            Norsk Bibel (1988, 1994), King James Version og flere.
+          </p>
+        </section>
+
+        <section className={styles.section}>
           <h2>Hjelpemidler</h2>
+          <h3>Studieverktøy</h3>
           <ul>
             <li><strong>Grunntekst</strong> - Vis hebraisk/gresk originaltekst med ord-for-ord oversettelse</li>
             <li><strong>Referanser</strong> - Kryssreferanser mellom bibelvers</li>
             <li><strong>Boksammendrag</strong> - Oversikt over hver boks innhold</li>
             <li><strong>Kapittelsammendrag</strong> - Kort beskrivelse av hvert kapittel</li>
             <li><strong>Viktige ord</strong> - Nøkkelbegreper forklart</li>
-            <li><strong>Tidslinje</strong> - Bibelske hendelser i kronologisk rekkefølge</li>
-            <li><strong>Profetier</strong> - Profetier og deres oppfyllelser</li>
+            <li><strong>Kjente vers</strong> - Utvalgte, kjente bibelvers</li>
+            <li><strong>Bibelhistorier</strong> - Bibelens fortellinger samlet og gjengitt</li>
             <li><strong>Temaer</strong> - Tematiske oversikter med relevante bibelvers</li>
-            <li><strong>Leseplaner</strong> - Ulike planer for systematisk bibellesing</li>
+            <li><strong>Profetier</strong> - Profetier og deres oppfyllelser</li>
             <li><strong>Paralleller</strong> - Synoptiske paralleller mellom evangeliene</li>
             <li><strong>Personer</strong> - Bibelske personer med referanser</li>
+            <li><strong>Tall</strong> - Tallenes betydning i Bibelen</li>
+            <li><strong>Dager</strong> - Helligdager og merkedager i kristen tradisjon</li>
+            <li><strong>Tidslinje</strong> - Bibelske hendelser i kronologisk rekkefølge</li>
+          </ul>
+
+          <h3>Personlige verktøy</h3>
+          <ul>
             <li><strong>Favoritter</strong> - Lagre dine favorittvers</li>
             <li><strong>Emner</strong> - Tag vers med egne emner</li>
             <li><strong>Notater</strong> - Skriv egne notater til vers</li>
             <li><strong>Verslister</strong> - Samle bibelvers i navngitte lister for manuskripter og studier</li>
+            <li><strong>Leseplaner</strong> - Ulike planer for systematisk bibellesing</li>
             <li><strong>Manuskripter</strong> - Skriv andakter, prekener og bibeltimer med versreferanser</li>
-            <li><strong>Statistikk</strong> - Oversikt over lesing og bruk</li>
             <li><strong>Oversettelser</strong> - Last opp og bruk egne bibeloversettelser</li>
+            <li><strong>Statistikk</strong> - Oversikt over lesing og bruk</li>
           </ul>
         </section>
 
