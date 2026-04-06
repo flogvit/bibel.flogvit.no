@@ -5,15 +5,10 @@ import { parseBibleText, type MappingData, type ParseResult } from '@/lib/bibleT
 import type { StoredUserBible } from '@/lib/offline/db';
 import styles from '@/styles/pages/translations.module.scss';
 
-interface MappingListItem {
-  id: string;
-  name: string;
-  description: string | null;
-}
-
 export function TranslationsPage() {
   const [userBibles, setUserBibles] = useState<StoredUserBible[]>([]);
-  const [mappings, setMappings] = useState<MappingListItem[]>([]);
+  const [kvnMappings, setKvnMappings] = useState<{ id: string; name: string; displayName: string }[]>([]);
+  const [nameManuallyEdited, setNameManuallyEdited] = useState(false);
   const [selectedMapping, setSelectedMapping] = useState('');
   const [bibleName, setBibleName] = useState('');
   const [textContent, setTextContent] = useState('');
@@ -23,11 +18,13 @@ export function TranslationsPage() {
   const [importProgress, setImportProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadUserBibles();
-    loadMappings();
+    loadKvnMappings();
   }, []);
 
   async function loadUserBibles() {
@@ -35,13 +32,17 @@ export function TranslationsPage() {
     setUserBibles(bibles);
   }
 
-  async function loadMappings() {
+  async function loadKvnMappings() {
     try {
-      const res = await fetch('/api/mappings');
+      const res = await fetch('/api/mappings/kvn');
       const data = await res.json();
-      setMappings(data.mappings || []);
-      if (data.mappings?.length > 0) {
-        setSelectedMapping(data.mappings[0].id);
+      const mappings = data.mappings || [];
+      setKvnMappings(mappings);
+      if (mappings.length > 0 && !selectedMapping) {
+        setSelectedMapping(mappings[0].id);
+        if (!nameManuallyEdited) {
+          setBibleName(mappings[0].displayName);
+        }
       }
     } catch {
       setError('Kunne ikke laste versnummereringer fra serveren');
@@ -68,7 +69,7 @@ export function TranslationsPage() {
     setParseResult(null);
 
     try {
-      const res = await fetch(`/api/mappings/${selectedMapping}`);
+      const res = await fetch(`/api/mappings/kvn/${selectedMapping}`);
       if (!res.ok) throw new Error('Kunne ikke hente mapping');
       const mappingData: MappingData & { id: string; name: string } = await res.json();
 
@@ -119,6 +120,7 @@ export function TranslationsPage() {
       setTextContent('');
       setFileName('');
       setBibleName('');
+      setNameManuallyEdited(false);
       await loadUserBibles();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Import feilet');
@@ -136,6 +138,21 @@ export function TranslationsPage() {
       setSuccess(`"${bible.name}" ble slettet.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sletting feilet');
+    }
+  }
+
+  async function handleRename(bible: StoredUserBible) {
+    const newName = editingName.trim();
+    if (!newName || newName === bible.name) {
+      setEditingId(null);
+      return;
+    }
+    try {
+      await addUserBible({ ...bible, name: newName });
+      setEditingId(null);
+      await loadUserBibles();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Kunne ikke endre navn');
     }
   }
 
@@ -166,7 +183,27 @@ export function TranslationsPage() {
             {userBibles.map(bible => (
               <div key={bible.id} className={styles.bibleItem}>
                 <div className={styles.bibleInfo}>
-                  <h3>{bible.name}</h3>
+                  {editingId === bible.id ? (
+                    <form onSubmit={(e) => { e.preventDefault(); handleRename(bible); }} className={styles.renameForm}>
+                      <input
+                        type="text"
+                        className={styles.input}
+                        value={editingName}
+                        onChange={e => setEditingName(e.target.value)}
+                        onBlur={() => handleRename(bible)}
+                        onKeyDown={e => { if (e.key === 'Escape') setEditingId(null); }}
+                        autoFocus
+                      />
+                    </form>
+                  ) : (
+                    <h3
+                      className={styles.editableName}
+                      onClick={() => { setEditingId(bible.id); setEditingName(bible.name); }}
+                      title="Klikk for å endre navn"
+                    >
+                      {bible.name}
+                    </h3>
+                  )}
                   <span className={styles.bibleMeta}>
                     {bible.verseCounts
                       ? `${bible.verseCounts.books} bøker, ${bible.verseCounts.chapters} kapitler, ${bible.verseCounts.verses} vers`
@@ -193,11 +230,17 @@ export function TranslationsPage() {
               id="mapping"
               className={styles.select}
               value={selectedMapping}
-              onChange={e => setSelectedMapping(e.target.value)}
+              onChange={e => {
+                setSelectedMapping(e.target.value);
+                if (!nameManuallyEdited) {
+                  const m = kvnMappings.find(m => m.id === e.target.value);
+                  if (m) setBibleName(m.displayName);
+                }
+              }}
             >
-              {mappings.map(m => (
+              {kvnMappings.map(m => (
                 <option key={m.id} value={m.id}>
-                  {m.name}{m.description ? ` - ${m.description}` : ''}
+                  {m.name}
                 </option>
               ))}
             </select>
@@ -210,7 +253,10 @@ export function TranslationsPage() {
               type="text"
               className={styles.input}
               value={bibleName}
-              onChange={e => setBibleName(e.target.value)}
+              onChange={e => {
+                setBibleName(e.target.value);
+                setNameManuallyEdited(true);
+              }}
               placeholder="F.eks. Bibel 2011"
             />
           </div>

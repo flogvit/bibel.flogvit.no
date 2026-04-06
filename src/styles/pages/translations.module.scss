@@ -45,6 +45,19 @@
   }
 }
 
+.editableName {
+  cursor: pointer;
+  border-bottom: 1px dashed transparent;
+
+  &:hover {
+    border-bottom-color: $color-text-muted;
+  }
+}
+
+.renameForm {
+  margin-bottom: 0.25rem;
+}
+
 .bibleMeta {
   font-size: $font-size-sm;
   color: $color-text-muted;
@@ -285,7 +298,8 @@
     border-color: $dark-color-border;
   }
 
-  .bibleInfo h3 {
+  .bibleInfo h3,
+  .editableName {
     color: $dark-color-text;
   }
 
