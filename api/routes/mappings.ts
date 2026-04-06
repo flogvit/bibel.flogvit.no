@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { getAllVerseMappings, getVerseMappingById } from '../../src/lib/bible';
+import { getAvailableMappings, getKvnMappingData } from '../lib/verse-mapper';
 
 export const mappingsRouter = Router();
 
@@ -14,6 +15,41 @@ mappingsRouter.get('/', (_req: Request, res: Response) => {
     res.json({ mappings });
   } catch (error) {
     console.error('Error fetching mappings:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * GET /api/mappings/kvn
+ * Returns list of available KVN verse mappings
+ */
+mappingsRouter.get('/kvn', (_req: Request, res: Response) => {
+  try {
+    const mappings = getAvailableMappings();
+    res.set('Cache-Control', 'no-cache');
+    res.json({ mappings });
+  } catch (error) {
+    console.error('Error fetching KVN mappings:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * GET /api/mappings/kvn/:id
+ * Returns a KVN mapping as bookNames + verseMap for the bible text parser
+ */
+mappingsRouter.get('/kvn/:id', (req: Request, res: Response) => {
+  const id = req.params.id as string;
+  try {
+    const data = getKvnMappingData(id);
+    if (!data) {
+      res.status(404).json({ error: 'KVN mapping not found' });
+      return;
+    }
+    res.set('Cache-Control', 'no-cache');
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching KVN mapping data:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

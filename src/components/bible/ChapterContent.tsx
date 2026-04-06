@@ -61,6 +61,7 @@ export function ChapterContent({
   const { settings } = useSettings();
 
   const secondaryBible = settings.showOriginalText ? settings.secondaryBible : undefined;
+  const mapping = settings.numberingSystem || 'osnb2';
 
   // Use client-side data fetching
   const { data, isLoading, error, isOffline } = useChapter({
@@ -68,6 +69,7 @@ export function ChapterContent({
     chapter,
     bible,
     secondaryBible,
+    mapping: mapping !== 'osnb2' ? mapping : undefined,
   });
 
   // Fetch all timeline events + which ones are relevant for this chapter
