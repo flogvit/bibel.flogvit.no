@@ -75,7 +75,7 @@ const DISALLOW = [
 
 /**
  * Crawlere vi ber om å gå SAKTERE, og sekundene de skal vente mellom hver
- * forespørsel (#86).
+ * forespørsel (#86, #115).
  *
  * 60 × 503 fra lastvernet i vaktvinduet 2026-08-07 — alle 60 innenfor 32,7
  * sekunder, altså ÉN byge. PerplexityBot sto for 79 % av ankomstene i bygen og
@@ -98,8 +98,20 @@ const DISALLOW = [
  * den ene vi helst vil ha inn. Hjelper det ikke, er neste håndtak en
  * UA-basert rate-limit i Caddy (flogvit-com-server) — et dyrere valg, og et
  * som koster synlighet.
+ *
+ * ClaudeBot er den samme formen én måned senere (#115), bare større: 33 × 503
+ * i vinduet 2026-09-06, 5 991 av 8 287 forespørsler mot flata (72,3 %) fra ÉN
+ * adresse, og en eskalering time for time — 3 → 102 → 452 → 5 464. Den henter
+ * robots.txt, så håndtaket når den, og den lå i `*`-gruppa som aldri har hatt
+ * en fart i seg. Samme tall som over: 2 sekunder er 0,5 req/s, under en tredel
+ * av de 1,8 req/s `#19` målte at velter siden, så de øvrige aktørene deler
+ * resten.
+ *
+ * Lista er MÅLINGER, ikke en ønskeliste. En `Crawl-delay` koster synlighet hos
+ * den vi bremser, så en aktør som ikke har veltet noe hører ikke hjemme her —
+ * `MÅLTE_AKTØRER` i vakta bærer vinduet og tallet bak hver oppføring.
  */
-const CRAWL_DELAYS: Record<string, number> = { PerplexityBot: 2 };
+const CRAWL_DELAYS: Record<string, number> = { PerplexityBot: 2, ClaudeBot: 2 };
 
 /**
  * En navngitt gruppe ERSTATTER `*`-gruppa for den crawleren (RFC 9309

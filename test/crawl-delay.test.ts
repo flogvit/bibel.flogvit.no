@@ -1,4 +1,4 @@
-// FARTEN til én navngitt crawler (#86).
+// FARTEN til de navngitte crawlerne (#86, #115).
 //
 // 60 × 503 fra lastvernet i vaktvinduet 2026-08-07, og ALLE 60 lå innenfor
 // 32,7 sekunder — én byge, ikke et utfall. PerplexityBot sto for 92 av 117
@@ -18,6 +18,14 @@
 // åpnet hele handlingsflata fra #60 (498 672 adresser) for nettopp den
 // crawleren som går fortest. Symptomet ville vært stille: robots.txt ser mer
 // forsiktig ut enn før, og flata blir større.
+//
+// #115 er den SAMME formen én måned senere, og den er grunnen til at aktøren
+// ikke lenger er én konstant: ClaudeBot tok 72,3 % av volumet mot flata fra ÉN
+// adresse, tolvdoblet seg på en time (452 → 5 464) og fikk 33 × 503 — mens
+// `CRAWL_DELAYS` fortsatt bare kjente PerplexityBot. Halvdelene under er
+// formulert på HVER navngitt agent og arvet derfor fiksen gratis; det eneste
+// som måtte skrives på nytt, var at aktøren i det hele tatt ER navngitt.
+// `MÅLTE_AKTØRER` er den lista, og hver oppføring bærer sitt eget bevis.
 import { beforeAll, describe, expect, setDefaultTimeout, test } from 'bun:test';
 import { DB_TEST_TIMEOUT_MS } from './db-timeout.ts';
 import { createApp } from '../src/app.ts';
@@ -30,14 +38,33 @@ setDefaultTimeout(DB_TEST_TIMEOUT_MS);
 const app = createApp();
 
 /**
- * User-Agent-strengen slik den står uavkortet i Caddys access-logg i
- * bygevinduet. Produkt-tokenet vi skriver i robots.txt må finnes i den —
- * «Perplexity» eller «PerplexityBot/1.0» matcher ingen gruppe, og da er
- * seksjonen en stille no-op.
+ * Aktørene lastvernet FAKTISK har avvist, med User-Agent-strengen slik den står
+ * uavkortet i Caddys access-logg i det vinduet den ble målt.
+ *
+ * `token` er det vi skriver i robots.txt, og det må finnes i `ua`: «Perplexity»
+ * eller «PerplexityBot/1.0» matcher ingen gruppe (RFC 9309 §2.2.1 matcher
+ * produkt-tokenet), og da er seksjonen en stille no-op — den ser ut som et
+ * håndtak og er ingen.
+ *
+ * Lista er MÅLINGER, ikke en ønskeliste: hver oppføring har et vaktvindu og et
+ * tall bak seg, og en aktør som ikke har veltet noe hører ikke hjemme her (#86
+ * — en `Crawl-delay` koster synlighet hos den vi bremser).
  */
-const MÅLT_UA =
-  'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)';
-const BYGEAKTØREN = 'PerplexityBot';
+const MÅLTE_AKTØRER = [
+  {
+    token: 'PerplexityBot',
+    ua: 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)',
+    // 2026-08-07: 47 av 60 × 503, 7 req/s fra sju adresser (#86).
+    sak: '#86',
+  },
+  {
+    token: 'ClaudeBot',
+    ua: 'ClaudeBot/1.0',
+    // 2026-09-06: 33 × 503, 5 991 av 8 287 forespørsler (72,3 %) fra ÉN
+    // adresse, 3 → 102 → 452 → 5 464 i timen (#115).
+    sak: '#115',
+  },
+];
 
 /**
  * Taket for ÉN aktør, i forespørsler per sekund.
@@ -72,7 +99,7 @@ const FORBUDTE = [
   '/en/sal/94?mapping=amharic2000',
 ];
 
-describe('crawl-delay (#86)', () => {
+describe('crawl-delay (#86, #115)', () => {
   // 1. REGELEN — ren logikk mot en syntetisk robots.txt. Halvdelen finnes for
   //    å bevise at matcheren SER fella: uten gruppevalget ville vaktene under
   //    målt `*`-gruppa uansett hvilken agent de spurte om, og bestått på en
@@ -106,12 +133,17 @@ describe('crawl-delay (#86)', () => {
     });
   });
 
-  // 2. AKTØREN — bygeaktøren fra målingen er faktisk navngitt, og tokenet er
-  //    det hun kaller seg i loggen. Uten denne ville «fjern seksjonen helt»
-  //    bestått alt det andre i stillhet.
-  test('bygeaktøren har sin egen seksjon, med tokenet fra loggen', () => {
-    expect(namedAgents(robots)).toContain(BYGEAKTØREN);
-    expect(MÅLT_UA.toLowerCase()).toContain(BYGEAKTØREN.toLowerCase());
+  // 2. AKTØRENE — hver aktør lastvernet har avvist er faktisk navngitt, og
+  //    tokenet er det hun kaller seg i loggen. Uten denne ville «fjern
+  //    seksjonen helt» bestått alt det andre i stillhet — og den er formulert
+  //    på MÅLINGENE, ikke på ett navn, så neste byge blir rød her framfor å
+  //    bli oppdaget av at flata står i kø igjen.
+  test.each(MÅLTE_AKTØRER)('$token ($sak) har sin egen seksjon', ({ token }) => {
+    expect(namedAgents(robots)).toContain(token);
+  });
+
+  test.each(MÅLTE_AKTØRER)('$token er tokenet fra den målte User-Agenten', ({ token, ua }) => {
+    expect(ua.toLowerCase()).toContain(token.toLowerCase());
   });
 
   test('det FINNES en navngitt seksjon — ellers måler de to under ingenting', () => {
