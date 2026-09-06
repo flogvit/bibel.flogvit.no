@@ -2056,6 +2056,42 @@ rask, og med taket på 6 holder én slik aktør til å fylle semaforen alene.
   slengen: `parseRobots(txt, agent)` velger gruppe som RFC-en, `namedAgents()`
   og `crawlDelayFor()` leser resten. Åtte mutasjoner kjørt.
 
+#### Og lista er MÅLINGER — neste byge er en ny aktør, ikke en ny mekanisme (#115)
+
+Samme form én måned senere, bare større: ClaudeBot fikk **33 × 503** i vinduet
+2026-09-06, sto for 5 991 av 8 287 forespørsler mot flata (72,3 %) fra ÉN
+adresse, og eskalerte time for time — 3 → 102 → 452 → 5 464. Den henter
+robots.txt, altså når håndtaket den; den lå bare i `*`-gruppa, som aldri har
+hatt en fart i seg. `CRAWL_DELAYS` er nå `{ PerplexityBot: 2, ClaudeBot: 2 }`.
+
+- **Mekanismen fra #86 tålte den andre aktøren uten en linje.** `group()`
+  gjentar forbudene i HVER seksjon, så RFC 9309 §2.2.1-fella er stengt for en
+  ny oppføring gratis, og fem av vaktas seks halvdeler er formulert på HVER
+  navngitt agent. Det eneste som måtte skrives, var at aktøren i det hele tatt
+  ER navngitt — og den halvdelen er derfor lagt om fra én konstant til
+  `MÅLTE_AKTØRER`, der hver oppføring bærer vinduet, tallet og den uavkortede
+  User-Agenten bak seg. Neste byge er da en rad, ikke en omdøping.
+- **Lista er målinger, ikke en ønskeliste.** En `Crawl-delay` koster synlighet
+  hos den vi bremser, så en aktør som ikke har veltet noe hører ikke hjemme
+  der. Det er samme grunn som at #86 avviste en `Crawl-delay` i `*`-gruppa.
+- **Tallet er det samme, og det er ikke latskap:** 2 sekunder er 0,5 req/s,
+  under en tredel av de 1,8 req/s `#19` målte at velter siden. ClaudeBots
+  5 464/t er ~1,5 req/s fra én adresse — altså alene nok til å legge beslag på
+  semaforen (#19), som er nettopp det de 33 avvisningene er.
+- **UMÅLT ER IKKE GRØNT, som over.** Verifiseringen er den tidsavgrensede
+  awk-en i avsnittet foran med `PerplexityBot` byttet mot `ClaudeBot` og `fra`
+  satt til utrullingen. `sett=0` gir exit 1: en aktør som ikke har vært innom
+  har heller ingen 503-er, og da er stillhet ikke etterlevelse. Er svaret
+  `sett>0` og `503>0`, ignorerer den anmodningen, og håndtak 2 (UA-basert
+  rate-limit i Caddy, `flogvit-com-server`) står igjen — et dyrere valg som
+  koster synlighet, og Vegards, ikke vaktens.
+- **Seks mutasjoner kjørt** (oppføringen fjernet, `Crawl-delay: 0`, en desimal,
+  tokenet skrevet `Claude`, seksjon uten forbudene, og en seksjon som stenger
+  for mye). Den siste må være SMALERE enn `Allow: /` for å bli rød: `Disallow:
+  /` alene er en no-op, siden RFC 9309 §2.2.2 lar `Allow` vinne når to
+  mønstre er like lange. Mutasjonen er derfor `Disallow: /de/`, og den tar
+  hver `/de/`-URL i sitemapen ut av indeksen for den ene crawleren.
+
 ### Taket verner RENDEREN — ikke alt som passerer middlewaren (#64)
 
 `withPageCache` er montert på `*`, så `/robots.txt` sto bak semaforen som alle
